@@ -1,4 +1,4 @@
-package com.auction.server.database;
+package com.auction.server.dao;
 
 import java.io.File;
 import java.io.FileNotFoundException;

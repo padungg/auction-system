@@ -1,4 +1,4 @@
-package com.auction.client.view; // Kiểm tra lại dòng này cho khớp với package của cậu
+package com.auction.client; // Kiểm tra lại dòng này cho khớp với package của cậu
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;

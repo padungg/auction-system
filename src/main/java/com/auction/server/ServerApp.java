@@ -1,6 +1,6 @@
 package com.auction.server;
 
-import com.auction.server.database.UserDAOImpl;
+import com.auction.server.dao.UserDAOImpl;
 import java.io.*;
 import java.net.*;
 
