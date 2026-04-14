@@ -1,7 +1,6 @@
 package com.auction.model.entity;
 
 public class Art extends Item{
-    private static final long serialVersionUID = 1L;
     private String artistName, material;
     private int creationYear;
 

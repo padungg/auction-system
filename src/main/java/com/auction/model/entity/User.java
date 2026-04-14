@@ -1,7 +1,6 @@
 package com.auction.model.entity;
 
 public abstract class User extends Entity {
-    private static final long serialVersionUID = 1L;
     private String username, password, email, fullName, phone, address;
     private UserRole role;
     private boolean isActive; // true: đang hoạt động, false: bị khóa

@@ -1,7 +1,6 @@
 package com.auction.model.entity;
 
 public class Vehicle extends Item{
-    private static final long serialVersionUID = 1L;
     private String brand, model;
     private int year, km;
 

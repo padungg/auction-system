@@ -1,7 +1,6 @@
 package com.auction.model.entity;
 
 public class Seller extends User{
-    private static final long serialVersionUID = 1L;
     private String storeName;
     private double rating;
 

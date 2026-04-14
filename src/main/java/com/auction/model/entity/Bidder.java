@@ -1,7 +1,6 @@
 package com.auction.model.entity;
 
 public class Bidder extends User {
-    private static final long serialVersionUID = 1L;
     private double balance, rating;
 
     public Bidder(String id, String username, String password, String email, String fullName, String phone,
