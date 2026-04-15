@@ -5,5 +5,6 @@ public enum RequestType {
     REGISTER,           
     PLACE_BID,          
     GET_ALL_AUCTIONS,   
-    GET_AUCTION_DETAIL  
+    GET_AUCTION_DETAIL,
+    CREATE_AUCTION
 }
