@@ -2,15 +2,15 @@ package com.auction.model.entity;
 
 public abstract class Item extends Entity{
     private String name, description, condition, sellerId;
-    private double startingPirce;
+    private double startingPrice;
 
-    public Item(String id, String name, String description, String condition, String sellerId, double startingPirce) {
+    public Item(String id, String name, String description, String condition, String sellerId, double startingPrice) {
         super(id);
         this.name = name;
         this.description = description;
         this.condition = condition;
         this.sellerId = sellerId;
-        this.startingPirce = startingPirce;
+        this.startingPrice = startingPrice;
     }
 
     public abstract String getDetailInfo();
@@ -31,12 +31,12 @@ public abstract class Item extends Entity{
         this.description = description;
     }
 
-    public double getStartingPirce() {
-        return startingPirce;
+    public double getStartingPrice() {
+        return startingPrice;
     }
 
-    public void setStartingPirce(double startingPirce) {
-        this.startingPirce = startingPirce;
+    public void setStartingPrice(double startingPrice) {
+        this.startingPrice = startingPrice;
     }
 
     public String getCondition() {

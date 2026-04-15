@@ -9,7 +9,7 @@ public class Auction extends Entity{
     private LocalDateTime endTime;
     private AuctionStatus status;
 
-    public Auction(String id, String itemId, String currentWinnerId, double currentPrice, LocalDateTime startTime, LocalDateTime endTime) {
+    public Auction(String id, String itemId, double currentPrice, LocalDateTime startTime, LocalDateTime endTime) {
         super(id);
         this.itemId = itemId;
         this.currentWinnerId = null;

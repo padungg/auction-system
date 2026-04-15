@@ -3,16 +3,16 @@ package com.auction.model.entity;
 import java.time.LocalDateTime;
 
 public class BidTransaction extends Entity{
-    private String bidderId, itemId;
+    private String bidderId, auctionId;
     private double bidAmount;
     private LocalDateTime bidTime;
 
-    public BidTransaction(String id, String bidderId, String itemId, double bidAmount) {
+    public BidTransaction(String id, String bidderId, String auctionId, double bidAmount, LocalDateTime bidTime) {
         super(id);
         this.bidderId = bidderId;
-        this.itemId = itemId;
+        this.auctionId = auctionId;
         this.bidAmount = bidAmount;
-        this.bidTime = LocalDateTime.now();
+        this.bidTime = bidTime;
     }
 
     public String getBidderId() {
@@ -23,12 +23,12 @@ public class BidTransaction extends Entity{
         this.bidderId = bidderId;
     }
 
-    public String getItemId() {
-        return itemId;
+    public String getAuctionId() {
+        return auctionId;
     }
 
-    public void setItemId(String itemId) {
-        this.itemId = itemId;
+    public void setAuctionId(String auctionId) {
+        this.auctionId = auctionId;
     }
 
     public double getBidAmount() {
@@ -47,6 +47,6 @@ public class BidTransaction extends Entity{
         this.bidTime = bidTime;
     }
     public String getInfo(){
-        return "Id: " + this.getId() + " User: " + bidderId + " Item: " + itemId + " Amount: " + bidAmount + " Thời gian: " + bidTime;
+        return "Id: " + this.getId() + " User: " + bidderId + " AuctionId: " + auctionId + " Amount: " + bidAmount + " Thời gian: " + bidTime;
     }
 }
