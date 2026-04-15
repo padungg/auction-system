@@ -2,7 +2,8 @@ package com.auction.model.dto;
 
 /**
  * Gói tin DTO do Client gởi lên khi bấm nút "Đặt Giá".
- * Lưu ý: KHÔNG cần biến 'userId' vì Server sẽ tự biết ai đang gửi dựa vào luồng Socket.
+ * Lưu ý: KHÔNG cần biến 'userId' vì Server sẽ tự biết ai đang gửi dựa vào luồng
+ * Socket.
  */
 public class BidRequestDTO {
 

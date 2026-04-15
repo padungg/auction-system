@@ -1,20 +1,44 @@
 package com.auction.model.entity;
 
-public abstract class User extends Entity {
-    private String username, password, email, fullName, phone, address;
-    private UserRole role;
-    private boolean isActive; // true: đang hoạt động, false: bị khóa
+public class User {
 
-    public User(String id, String username, String password, String email, String fullName, String phone, String address, UserRole role) {
-        super(id);
+    private int id;
+    private String username;
+    private String password;
+    private String email;
+    private String fullName;
+    private String phone;
+    private String address;
+    private boolean isActive;
+    private UserRole role;
+    private double balance;
+    private String storeName;
+    private double rating;
+
+    public User() {
+    }
+
+    public User(int id, String username, String password, String email, String fullName, String phone, String address, boolean isActive, UserRole role, double balance, String storeName, double rating) {
+        this.id = id;
         this.username = username;
         this.password = password;
         this.email = email;
         this.fullName = fullName;
         this.phone = phone;
         this.address = address;
-        this.isActive = true;
+        this.isActive = isActive;
         this.role = role;
+        this.balance = balance;
+        this.storeName = storeName;
+        this.rating = rating;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getUsername() {
@@ -70,7 +94,7 @@ public abstract class User extends Entity {
     }
 
     public void setActive(boolean active) {
-        isActive = active;
+        this.isActive = active;
     }
 
     public UserRole getRole() {
@@ -79,5 +103,29 @@ public abstract class User extends Entity {
 
     public void setRole(UserRole role) {
         this.role = role;
+    }
+
+    public double getBalance() {
+        return balance;
+    }
+
+    public void setBalance(double balance) {
+        this.balance = balance;
+    }
+
+    public String getStoreName() {
+        return storeName;
+    }
+
+    public void setStoreName(String storeName) {
+        this.storeName = storeName;
+    }
+
+    public double getRating() {
+        return rating;
+    }
+
+    public void setRating(double rating) {
+        this.rating = rating;
     }
 }
