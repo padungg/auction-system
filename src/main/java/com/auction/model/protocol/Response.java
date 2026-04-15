@@ -9,6 +9,10 @@ public class Response {
     private String message;
     private Object payload; // Dữ liệu trả về (VD: danh sách UserResponseDTO)
 
+
+    public Response() {
+    }
+
     public Response(ResponseStatus status, String message, Object payload) {
         this.status = status;
         this.message = message;

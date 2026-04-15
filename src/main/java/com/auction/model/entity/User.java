@@ -1,8 +1,7 @@
 package com.auction.model.entity;
 
-public class User {
+public class User extends Entity {
 
-    private int id;
     private String username;
     private String password;
     private String email;
@@ -18,8 +17,8 @@ public class User {
     public User() {
     }
 
-    public User(int id, String username, String password, String email, String fullName, String phone, String address, boolean isActive, UserRole role, double balance, String storeName, double rating) {
-        this.id = id;
+    public User(String id, String username, String password, String email, String fullName, String phone, String address, boolean isActive, UserRole role, double balance, String storeName, double rating) {
+        super(id);
         this.username = username;
         this.password = password;
         this.email = email;
@@ -31,14 +30,6 @@ public class User {
         this.balance = balance;
         this.storeName = storeName;
         this.rating = rating;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
     }
 
     public String getUsername() {

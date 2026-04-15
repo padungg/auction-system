@@ -4,6 +4,10 @@ public class Art extends Item{
     private String artistName, material;
     private int creationYear;
 
+
+    public Art() {
+    }
+
     public Art(String id, String name, String description, String condition, String sellerId, double startingPrice, String artistName, String material, int creationYear) {
         super(id, name, description, condition, sellerId, startingPrice);
         this.artistName = artistName;

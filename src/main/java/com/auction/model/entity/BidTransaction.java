@@ -7,6 +7,10 @@ public class BidTransaction extends Entity{
     private double bidAmount;
     private LocalDateTime bidTime;
 
+
+    public BidTransaction() {
+    }
+
     public BidTransaction(String id, String bidderId, String auctionId, double bidAmount, LocalDateTime bidTime) {
         super(id);
         this.bidderId = bidderId;

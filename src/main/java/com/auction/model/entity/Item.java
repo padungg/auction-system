@@ -4,6 +4,10 @@ public abstract class Item extends Entity{
     private String name, description, condition, sellerId;
     private double startingPrice;
 
+
+    public Item() {
+    }
+
     public Item(String id, String name, String description, String condition, String sellerId, double startingPrice) {
         super(id);
         this.name = name;

@@ -8,6 +8,10 @@ public class Request {
     private RequestType type;
     private Object payload; // Chứa DTO tùy theo type (vd: LoginDTO, BidRequestDTO)
 
+
+    public Request() {
+    }
+
     public Request(RequestType type, Object payload) {
         this.type = type;
         this.payload = payload;

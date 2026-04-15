@@ -4,6 +4,10 @@ public class Electronics extends Item {
     private String brand;
     private int warrantyMonths;
 
+
+    public Electronics() {
+    }
+
     public Electronics(String id, String name, String description, String condition, String sellerId,
             double startingPrice, String brand, int warrantyMonths) {
         super(id, name, description, condition, sellerId, startingPrice);
