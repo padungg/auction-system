@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane prefHeight="720.0" prefWidth="1280.0" style="-fx-background-color: FFFFFF;" styleClass="main" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="bank.app.DashboardController">
+   <left>
+      <AnchorPane prefHeight="200.0" prefWidth="50.0" style="-fx-background-color: FFFFFF;" BorderPane.alignment="CENTER">
+         <children>
+            <Button layoutX="2.0" mnemonicParsing="false" style="-fx-background-color: FFFFF;" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="10.0">
+               <graphic>
+                  <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@images/bars-solid.png" />
+                     </image>
+                  </ImageView>
+               </graphic>
+            </Button>
+            <VBox layoutX="8.0" layoutY="239.0" prefHeight="253.0" prefWidth="56.0" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="5.0">
+               <children>
+                  <Button mnemonicParsing="false" style="-fx-background-color: FFFFF;">
+                     <graphic>
+                        <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@images/list-ol-solid.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                     <VBox.margin>
+                        <Insets top="10.0" />
+                     </VBox.margin>
+                  </Button>
+                  <Button mnemonicParsing="false" style="-fx-background-color: FFFFF;">
+                     <graphic>
+                        <ImageView fitHeight="40.0" fitWidth="40.0" opacity="0.54" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@images/cart-plus-solid.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                     <VBox.margin>
+                        <Insets top="10.0" />
+                     </VBox.margin>
+                  </Button>
+                  <Button mnemonicParsing="false" style="-fx-background-color: FFFFF;">
+                     <graphic>
+                        <ImageView fitHeight="40.0" fitWidth="40.0" opacity="0.54" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@images/gavel-solid.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                     <VBox.margin>
+                        <Insets top="10.0" />
+                     </VBox.margin>
+                  </Button>
+                  <Button mnemonicParsing="false" style="-fx-background-color: FFFFF;">
+                     <graphic>
+                        <ImageView fitHeight="40.0" fitWidth="40.0" opacity="0.54" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@images/user-tie-solid.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                     <VBox.margin>
+                        <Insets top="10.0" />
+                     </VBox.margin>
+                  </Button>
+               </children>
+            </VBox>
+         </children>
+      </AnchorPane>
+   </left>
+   <center>
+      <AnchorPane prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: #ededed;" BorderPane.alignment="CENTER">
+         <children>
+            <VBox layoutX="76.0" layoutY="-3.0" prefHeight="305.0" prefWidth="1093.0" style="-fx-background-radius: 0 0 40 40; -fx-background-color: FFFFFF;" AnchorPane.leftAnchor="60.0" AnchorPane.rightAnchor="60.0" AnchorPane.topAnchor="0.0">
+               <children>
+                  <HBox style="-fx-background-color: FFFFFF;">
+                     <children>
+                        <Label text="Danh sách" textFill="#2254f6">
+                           <padding>
+                              <Insets bottom="20.0" left="20.0" right="10.0" top="20.0" />
+                           </padding>
+                           <font>
+                              <Font name="System Bold" size="18.0" />
+                           </font>
+                        </Label>
+                        <Separator orientation="VERTICAL">
+                           <padding>
+                              <Insets bottom="20.0" left="10.0" right="20.0" top="20.0" />
+                           </padding>
+                        </Separator>
+                        <Label text="Xin chào SVUET, chúc bạn một ngày tốt lành !">
+                           <padding>
+                              <Insets bottom="20.0" left="20.0" right="10.0" top="20.0" />
+                           </padding>
+                           <font>
+                              <Font name="System Bold" size="18.0" />
+                           </font>
+                        </Label>
+                        <Label alignment="CENTER_RIGHT" prefHeight="67.0" prefWidth="512.0" text="2:30:59 Tháng Tư 2026">
+                           <padding>
+                              <Insets bottom="20.0" left="20.0" right="10.0" top="20.0" />
+                           </padding>
+                           <font>
+                              <Font name="System Bold" size="18.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </HBox>
+                  <HBox prefHeight="238.0" prefWidth="1093.0">
+                     <children>
+                        <VBox prefHeight="217.0" prefWidth="1093.0">
+                           <children>
+                              <Label prefHeight="50.0" prefWidth="136.0" text="Thanh toán">
+                                 <padding>
+                                    <Insets bottom="10.0" left="15.0" right="10.0" top="10.0" />
+                                 </padding>
+                                 <font>
+                                    <Font name="System Bold" size="20.0" />
+                                 </font>
+                              </Label>
+                              <HBox prefHeight="202.0" prefWidth="1093.0">
+                                 <children>
+                                    <Button mnemonicParsing="false">
+                                       <graphic>
+                                          <ImageView fitHeight="78.0" fitWidth="82.0" opacity="0.29" pickOnBounds="true" preserveRatio="true">
+                                             <image>
+                                                <Image url="@images/plus-solid.png" />
+                                             </image>
+                                          </ImageView>
+                                       </graphic>
+                                       <padding>
+                                          <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                                       </padding>
+                                       <HBox.margin>
+                                          <Insets left="20.0" top="10.0" />
+                                       </HBox.margin>
+                                    </Button>
+                                    <ImageView fitHeight="162.0" fitWidth="246.0" pickOnBounds="true" preserveRatio="true" style="-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 10, 0, 0, 0);">
+                                       <image>
+                                          <Image url="@images/img.png" />
+                                       </image>
+                                       <HBox.margin>
+                                          <Insets left="30.0" top="10.0" />
+                                       </HBox.margin>
+                                    </ImageView>
+                                 </children>
+                              </HBox>
+                           </children>
+                        </VBox>
+                     </children>
+                  </HBox>
+               </children></VBox>
+            <VBox layoutX="59.0" layoutY="350.0" prefHeight="579.0" prefWidth="1095.0" style="-fx-background-color: FFFFFF; -fx-background-radius: 40 40 0 0;">
+               <children>
+                  <HBox prefHeight="275.0" prefWidth="1095.0">
+                     <children>
+                        <HBox prefHeight="242.0" prefWidth="502.0" style="-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 10, 0, 0, 0); -fx-background-color: dedede; -fx-background-radius: 40 40 40 40;">
+                           <children>
+                              <ImageView fitHeight="242.0" fitWidth="193.0" pickOnBounds="true" preserveRatio="true">
+                                 <image>
+                                    <Image url="@images/img_1.png" />
+                                 </image>
+                                 <HBox.margin>
+                                    <Insets />
+                                 </HBox.margin>
+                              </ImageView>
+                              <VBox prefHeight="242.0" prefWidth="342.0">
+                                 <children>
+                                    <Label text="Đồ sưu tầm ...">
+                                       <padding>
+                                          <Insets bottom="20.0" left="20.0" right="10.0" top="20.0" />
+                                       </padding>
+                                       <font>
+                                          <Font name="System Bold" size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <Label text="Giá khởi điểm : 4.000.000 đ">
+                                       <padding>
+                                          <Insets bottom="10.0" left="20.0" right="10.0" top="10.0" />
+                                       </padding>
+                                       <font>
+                                          <Font size="16.0" />
+                                       </font>
+                                    </Label>
+                                    <Label text="Tiền đặt trước : 300.000đ">
+                                       <padding>
+                                          <Insets bottom="10.0" left="20.0" right="10.0" top="10.0" />
+                                       </padding>
+                                       <font>
+                                          <Font size="16.0" />
+                                       </font>
+                                    </Label>
+                                    <Label text="Thời gian tổ chức : 08:30 - 07/04/2026">
+                                       <padding>
+                                          <Insets bottom="10.0" left="20.0" right="10.0" top="10.0" />
+                                       </padding>
+                                       <font>
+                                          <Font size="16.0" />
+                                       </font>
+                                    </Label>
+                                 </children>
+                              </VBox>
+                           </children>
+                           <HBox.margin>
+                              <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+                           </HBox.margin>
+                        </HBox>
+                        <HBox prefHeight="282.0" prefWidth="467.0" style="-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 10, 0, 0, 0); -fx-background-color: dedede; -fx-background-radius: 40 40 40 40;">
+                           <children>
+                              <ImageView fitHeight="242.0" fitWidth="193.0" pickOnBounds="true" preserveRatio="true">
+                                 <image>
+                                    <Image url="@images/img_1.png" />
+                                 </image>
+                                 <HBox.margin>
+                                    <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+                                 </HBox.margin>
+                              </ImageView>
+                              <VBox prefHeight="242.0" prefWidth="342.0">
+                                 <children>
+                                    <Label text="Đồ sưu tầm ...">
+                                       <padding>
+                                          <Insets bottom="20.0" left="20.0" right="10.0" top="20.0" />
+                                       </padding>
+                                       <font>
+                                          <Font name="System Bold" size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <Label text="Giá khởi điểm : 4.000.000 đ">
+                                       <padding>
+                                          <Insets bottom="10.0" left="20.0" right="10.0" top="10.0" />
+                                       </padding>
+                                       <font>
+                                          <Font size="16.0" />
+                                       </font>
+                                    </Label>
+                                    <Label text="Tiền đặt trước : 300.000đ">
+                                       <padding>
+                                          <Insets bottom="10.0" left="20.0" right="10.0" top="10.0" />
+                                       </padding>
+                                       <font>
+                                          <Font size="16.0" />
+                                       </font>
+                                    </Label>
+                                    <Label text="Thời gian tổ chức : 08:30 - 07/04/2026">
+                                       <padding>
+                                          <Insets bottom="10.0" left="20.0" right="10.0" top="10.0" />
+                                       </padding>
+                                       <font>
+                                          <Font size="16.0" />
+                                       </font>
+                                    </Label>
+                                 </children>
+                              </VBox>
+                           </children>
+                        </HBox>
+                     </children>
+                  </HBox>
+               </children></VBox>
+         </children>
+      </AnchorPane>
+   </center>
+
+</BorderPane>
