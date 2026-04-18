@@ -15,7 +15,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane prefHeight="720.0" prefWidth="1280.0" style="-fx-background-color: FFFFFF;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.auction_app.AdminController">
+<BorderPane prefHeight="720.0" prefWidth="1280.0" style="-fx-background-color: FFFFFF;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.AdminController">
     <left>
         <AnchorPane prefHeight="200.0" prefWidth="50.0" style="-fx-background-color: FFFFFF; -fx-border-color: #e5e7eb; -fx-border-width: 0 1 0 0;" BorderPane.alignment="CENTER">
             <children>
@@ -32,11 +32,7 @@
                     <children>
                         <Button mnemonicParsing="false" style="-fx-background-color: transparent;">
                             <graphic>
-                                <ImageView fitHeight="30.0" fitWidth="30.0" opacity="0.5" pickOnBounds="true" preserveRatio="true">
-                                    <image>
-                                        <Image url="@images/users-solid.png" />
-                                    </image>
-                                </ImageView>
+
                             </graphic>
                         </Button>
                         <Button mnemonicParsing="false" style="-fx-background-color: transparent;">
@@ -100,9 +96,9 @@
                                 <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
                             </padding>
                             <children>
-                                <Button mnemonicParsing="false" prefWidth="150.0" style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-weight: bold;" text="KHÓA TÀI KHOẢN" />
-                                <Button mnemonicParsing="false" prefWidth="150.0" style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-font-weight: bold;" text="MỞ KHÓA" />
-                                <Button mnemonicParsing="false" prefWidth="150.0" style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-font-weight: bold;" text="CẤP QUYỀN SELLER" />
+                                <Button fx:id="btnLock" mnemonicParsing="false" onAction="#handleLockUser" prefWidth="150.0" style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-weight: bold;" text="KHÓA TÀI KHOẢN" />
+                                <Button fx:id="btnUnlock" mnemonicParsing="false" onAction="#handleUnlockUser" prefWidth="150.0" style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-font-weight: bold;" text="MỞ KHÓA" />
+                                <Button fx:id="btnGrantSeller" mnemonicParsing="false" onAction="#handleGrantSeller" prefWidth="150.0" style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-font-weight: bold;" text="CẤP QUYỀN SELLER" />
                             </children>
                         </HBox>
                     </children>
