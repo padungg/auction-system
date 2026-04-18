@@ -25,7 +25,7 @@ public class DashboardController {
     }
 
     public void refreshData() {
-        
+
         List<Product> products = getSampleData();
         displayProducts(products);
     }
@@ -35,7 +35,7 @@ public class DashboardController {
             productGrid.getChildren().clear();
             int column = 0;
             int row = 0;
-            int maxColumns = 3; 
+            int maxColumns = 3;
             for (Product product : products) {
                 try {
                     FXMLLoader loader = new FXMLLoader(getClass().getResource("/productcard.fxml"));
@@ -59,7 +59,7 @@ public class DashboardController {
 
     private List<Product> getSampleData() {
         List<Product> list = new java.util.ArrayList<>();
-       
+
         list.add(new Product(1, "iPhone 17 Pro", "Điện tử", 35000000, "🟢 Đang diễn ra", "20:00 20/04"));
         list.add(new Product(2, "MacBook Air M4", "Điện tử", 28000000, "🟢 Đang diễn ra", "22:00 21/04"));
         list.add(new Product(3, "Tranh sơn dầu", "Nghệ thuật", 5000000, "🟡 Sắp diễn ra", "10:00 25/04"));
@@ -93,6 +93,13 @@ public class DashboardController {
 
     @FXML
     private void handleDashboard(ActionEvent event) {
-        refreshData();
+        try {
+            Parent root = FXMLLoader.load(getClass().getResource("/view.fxml"));
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Danh sách đấu giá");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
