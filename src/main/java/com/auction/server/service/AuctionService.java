@@ -20,7 +20,8 @@ import java.util.List;
  * Chức năng:
  *   - Lấy danh sách các phiên đang mở (trang chủ)
  *   - Xem chi tiết 1 phiên đấu giá
- *   - Tạo phiên đấu giá mới (đăng bán sản phẩm)
+ *   - Tạo phiên đấu giá mới (đăng bán sản phẩm) (chưa làm)
+ *   - Đóng phiên đấu giá thủ công (chưa làm)
  */
 public class AuctionService {
     private final AuctionDAO auctionDAO;
@@ -100,12 +101,5 @@ public class AuctionService {
         detail.setStatus(auction.getStatus().name());
         return new Response(ResponseStatus.SUCCESS, "Lấy chi tiết phiên đấu giá thành công", detail);
     }
-    /**
-     * Tạo phiên đấu giá mới (đăng bán sản phẩm).
-     * Luồng:
-     *   1. Dùng ItemFactory tạo Item đúng loại (Vehicle/Electronics/Art)
-     *   2. Lưu Item vào database
-     *   3. Tạo Auction với trạng thái OPENING
-     *   4. Lưu Auction vào database
-     */
+
 }
