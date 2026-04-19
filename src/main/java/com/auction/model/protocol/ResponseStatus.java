@@ -1,9 +1,9 @@
 package com.auction.model.protocol;
 
 public enum ResponseStatus {
-    SUCCESS,
-    ERROR,
-    UNAUTHORIZED,
-    NOT_FOUND,
-    BAD_REQUEST
+    SUCCESS,        // Thành công
+    ERROR,          // Lỗi
+    UNAUTHORIZED,   // Không có quyền
+    NOT_FOUND,      // Không thấy dữ liệu
+    BAD_REQUEST     // Yêu cầu gửi sai
 }
