@@ -1,5 +1,6 @@
 package com.auction.client.controller;
-import com.auction.client.model.Product;
+
+import com.auction.model.dto.AuctionSummaryDTO;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -7,28 +8,33 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 
+/**
+ * Controller quản lý sản phẩm.
+ * Hiện tại vẫn dùng logic local (chưa gọi Server CREATE_AUCTION API).
+ * Đã chuyển sang dùng AuctionSummaryDTO thay vì Product cũ.
+ */
 public class ManagementController {
 
     @FXML
-    private TableView<Product> tableProducts;
+    private TableView<AuctionSummaryDTO> tableProducts;
 
     @FXML
-    private TableColumn<Product, Integer> colId;
+    private TableColumn<AuctionSummaryDTO, String> colId;
 
     @FXML
-    private TableColumn<Product, String> colName;
+    private TableColumn<AuctionSummaryDTO, String> colName;
 
     @FXML
-    private TableColumn<Product, String> colCategory;
+    private TableColumn<AuctionSummaryDTO, String> colCategory;
 
     @FXML
-    private TableColumn<Product, Double> colPrice;
+    private TableColumn<AuctionSummaryDTO, Double> colPrice;
 
     @FXML
-    private TableColumn<Product, String> colStatus;
+    private TableColumn<AuctionSummaryDTO, String> colStatus;
 
     @FXML
-    private TableColumn<Product, String> colTime;
+    private TableColumn<AuctionSummaryDTO, String> colTime;
 
     @FXML
     private TextField txtName;
@@ -60,28 +66,30 @@ public class ManagementController {
     @FXML
     private Button btnDelete;
 
-    private ObservableList<Product> productList = FXCollections.observableArrayList();
+    private ObservableList<AuctionSummaryDTO> productList = FXCollections.observableArrayList();
 
     private int currentId = 1;
 
     @FXML
     public void initialize() {
 
-        colId.setCellValueFactory(new PropertyValueFactory<>("id"));
-        colName.setCellValueFactory(new PropertyValueFactory<>("name"));
-        colCategory.setCellValueFactory(new PropertyValueFactory<>("category"));
-        colPrice.setCellValueFactory(new PropertyValueFactory<>("price"));
+        colId.setCellValueFactory(new PropertyValueFactory<>("auctionId"));
+        colName.setCellValueFactory(new PropertyValueFactory<>("itemName"));
+        colCategory.setCellValueFactory(new PropertyValueFactory<>("status"));
+        colPrice.setCellValueFactory(new PropertyValueFactory<>("currentPrice"));
         colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
-        colTime.setCellValueFactory(new PropertyValueFactory<>("endTime"));
+        // colTime sẽ dùng khi có AuctionDetailDTO, tạm ẩn
+        if (colTime != null) {
+            colTime.setCellValueFactory(new PropertyValueFactory<>("status"));
+        }
 
         tableProducts.setItems(productList);
 
         tableProducts.getSelectionModel().selectedItemProperty().addListener((obs, oldItem, newItem) -> {
             if (newItem != null) {
-                txtName.setText(newItem.getName());
-                cbCategory.setValue(newItem.getCategory());
-                txtPrice.setText(String.valueOf(newItem.getPrice()));
-                txtEndTime.setText(newItem.getEndTime());
+                txtName.setText(newItem.getItemName());
+                cbCategory.setValue(newItem.getStatus());
+                txtPrice.setText(String.valueOf(newItem.getCurrentPrice()));
             }
         });
 
@@ -90,28 +98,25 @@ public class ManagementController {
 
     @FXML
     private void handleAdd() {
-        Product p = new Product(
-                currentId++,
+        AuctionSummaryDTO item = new AuctionSummaryDTO(
+                "A" + String.format("%03d", currentId++),
                 txtName.getText(),
-                cbCategory.getValue(),
                 Double.parseDouble(txtPrice.getText()),
-                "Đang diễn ra",
-                txtEndTime.getText()
+                "PENDING"
         );
 
-        productList.add(p);
+        productList.add(item);
         clearForm();
     }
 
     @FXML
     private void handleUpdate() {
-        Product selected = tableProducts.getSelectionModel().getSelectedItem();
+        AuctionSummaryDTO selected = tableProducts.getSelectionModel().getSelectedItem();
         if (selected == null) return;
 
-        selected.setName(txtName.getText());
-        selected.setCategory(cbCategory.getValue());
-        selected.setPrice(Double.parseDouble(txtPrice.getText()));
-        selected.setEndTime(txtEndTime.getText());
+        selected.setItemName(txtName.getText());
+        selected.setCurrentPrice(Double.parseDouble(txtPrice.getText()));
+        selected.setStatus(cbCategory.getValue());
 
         tableProducts.refresh();
         clearForm();
@@ -119,7 +124,7 @@ public class ManagementController {
 
     @FXML
     private void handleDelete() {
-        Product selected = tableProducts.getSelectionModel().getSelectedItem();
+        AuctionSummaryDTO selected = tableProducts.getSelectionModel().getSelectedItem();
         if (selected == null) return;
 
         productList.remove(selected);

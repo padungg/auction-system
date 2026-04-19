@@ -1,6 +1,14 @@
 package com.auction.client.controller;
 
-import com.auction.client.model.Product;
+import com.auction.client.network.ClientSocketManager;
+import com.auction.model.dto.AuctionSummaryDTO;
+import com.auction.model.protocol.Request;
+import com.auction.model.protocol.RequestType;
+import com.auction.model.protocol.Response;
+import com.auction.model.protocol.ResponseStatus;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -12,6 +20,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class DashboardController {
@@ -25,24 +34,23 @@ public class DashboardController {
     }
 
     public void refreshData() {
-
-        List<Product> products = getSampleData();
-        displayProducts(products);
+        List<AuctionSummaryDTO> auctions = getAuctionsFromServer();
+        displayProducts(auctions);
     }
 
-    private void displayProducts(List<Product> products) {
+    private void displayProducts(List<AuctionSummaryDTO> auctions) {
         if (productGrid != null) {
             productGrid.getChildren().clear();
             int column = 0;
             int row = 0;
             int maxColumns = 3;
-            for (Product product : products) {
+            for (AuctionSummaryDTO auction : auctions) {
                 try {
                     FXMLLoader loader = new FXMLLoader(getClass().getResource("/productcard.fxml"));
                     VBox card = loader.load();
 
                     ProductcardController controller = loader.getController();
-                    controller.setData(product);
+                    controller.setData(auction);
 
                     productGrid.add(card, column, row);
                     column++;
@@ -57,13 +65,46 @@ public class DashboardController {
         }
     }
 
-    private List<Product> getSampleData() {
-        List<Product> list = new java.util.ArrayList<>();
+    /**
+     * Gọi Server lấy danh sách phiên đấu giá.
+     * Gửi: Request(GET_ALL_AUCTIONS, null)
+     * Nhận: Response chứa List<AuctionSummaryDTO> trong payload
+     */
+    private List<AuctionSummaryDTO> getAuctionsFromServer() {
+        try {
+            ClientSocketManager manager = ClientSocketManager.getInstance();
 
-        list.add(new Product(1, "iPhone 17 Pro", "Điện tử", 35000000, "🟢 Đang diễn ra", "20:00 20/04"));
-        list.add(new Product(2, "MacBook Air M4", "Điện tử", 28000000, "🟢 Đang diễn ra", "22:00 21/04"));
-        list.add(new Product(3, "Tranh sơn dầu", "Nghệ thuật", 5000000, "🟡 Sắp diễn ra", "10:00 25/04"));
-        list.add(new Product(4, "Honda SH 150i", "Phương tiện", 75000000, "🟢 Đang diễn ra", "18:00 22/04"));
+            if (!manager.isConnected()) {
+                System.err.println("[Dashboard] Chưa kết nối đến Server.");
+                return getSampleData();
+            }
+
+            Request request = new Request(RequestType.GET_ALL_AUCTIONS, null);
+            Response response = manager.sendRequest(request);
+
+            if (response.getStatus() == ResponseStatus.SUCCESS) {
+                Gson gson = manager.getGson();
+                String payloadJson = gson.toJson(response.getPayload());
+                List<AuctionSummaryDTO> list = gson.fromJson(payloadJson,
+                        new TypeToken<List<AuctionSummaryDTO>>() {}.getType());
+                return list != null ? list : new ArrayList<>();
+            } else {
+                System.err.println("[Dashboard] Server trả lỗi: " + response.getMessage());
+                return getSampleData();
+            }
+
+        } catch (IOException e) {
+            System.err.println("[Dashboard] Lỗi kết nối: " + e.getMessage());
+            return getSampleData();
+        }
+    }
+
+    private List<AuctionSummaryDTO> getSampleData() {
+        List<AuctionSummaryDTO> list = new ArrayList<>();
+        list.add(new AuctionSummaryDTO("A001", "iPhone 17 Pro", 35000000, "OPENING"));
+        list.add(new AuctionSummaryDTO("A002", "MacBook Air M4", 28000000, "OPENING"));
+        list.add(new AuctionSummaryDTO("A003", "Tranh sơn dầu", 5000000, "PENDING"));
+        list.add(new AuctionSummaryDTO("A004", "Honda SH 150i", 75000000, "OPENING"));
         return list;
     }
 
@@ -93,13 +134,6 @@ public class DashboardController {
 
     @FXML
     private void handleDashboard(ActionEvent event) {
-        try {
-            Parent root = FXMLLoader.load(getClass().getResource("/view.fxml"));
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.setTitle("Danh sách đấu giá");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        refreshData();
     }
 }

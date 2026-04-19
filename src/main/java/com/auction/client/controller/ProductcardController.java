@@ -4,7 +4,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
-import com.auction.client.model.Product;
+import com.auction.model.dto.AuctionSummaryDTO;
 
 public class ProductcardController {
 
@@ -29,12 +29,29 @@ public class ProductcardController {
     @FXML
     private Button btnJoin;
 
-    public void setData(Product product) {
-        lblProductName.setText(product.getName());
-        lblStatus.setText(product.getStatus());
-        lblStartPrice.setText("Danh mục: " + product.getCategory());
-        lblCurrentPrice.setText(String.format("%.0f đ", product.getPrice()));
-        lblTimeLeft.setText("Kết thúc: " + product.getEndTime());
+    /**
+     * Nhận dữ liệu từ AuctionSummaryDTO (DTO của server) và hiển thị lên card.
+     */
+    public void setData(AuctionSummaryDTO auction) {
+        lblProductName.setText(auction.getItemName());
+        lblStatus.setText(mapStatus(auction.getStatus()));
+        lblStartPrice.setText("ID: " + auction.getAuctionId());
+        lblCurrentPrice.setText(String.format("%.0f đ", auction.getCurrentPrice()));
+        lblTimeLeft.setText("Trạng thái: " + auction.getStatus());
+    }
+
+    /**
+     * Chuyển đổi status code từ server sang hiển thị thân thiện.
+     */
+    private String mapStatus(String status) {
+        if (status == null) return "";
+        switch (status) {
+            case "OPENING": return "🟢 Đang diễn ra";
+            case "PENDING": return "🟡 Sắp diễn ra";
+            case "CLOSED":  return "🔴 Đã kết thúc";
+            case "CANCELLED": return "⚪ Đã hủy";
+            default: return status;
+        }
     }
 
     @FXML
