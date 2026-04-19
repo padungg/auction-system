@@ -1,7 +1,7 @@
 package com.auction.model.protocol;
 
 /**
- * Khung giao thức (Envelope) cho mọi yêu cầu gửi từ Client lên Server.
+ * Khung giao thức cho mọi yêu cầu gửi từ Client lên Server.
  */
 public class Request {
 

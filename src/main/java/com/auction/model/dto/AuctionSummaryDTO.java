@@ -3,7 +3,6 @@ package com.auction.model.dto;
 /**
  * Gói tin DTO dạng RÚT GỌN của một phiên đấu giá.
  * Được dùng khi Client muốn load dạnh sách hàng tá phiên đấu giá ở trang chủ.
- * Bỏ qua mô tả thô dài dòng hay lịch sử bid để tối ưu tốc độ mạng.
  */
 public class AuctionSummaryDTO {
 
