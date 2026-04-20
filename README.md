@@ -24,10 +24,10 @@ Dự án được tổ chức chặt chẽ theo mô hình Client-Server với c�
 
 | STT | Họ và tên                 | MSSV | GitHub       | Chuyên trách chính        | Chi tiết công việc tương ứng với Cấu trúc thư mục |
 |:---:|:--------------------------|:-----|:-------------|:--------------------------|:--------------------------------------------------|
-| 1   | **Phùng Anh Dũng** | —    | `padungg`    | **Model Layer** | Chịu trách nhiệm gói `com.auction.model`. Xây dựng các lớp đối tượng cốt lõi (Entity), định nghĩa cấu trúc gói tin giao tiếp (Request/Response Protocol) và áp dụng các tính chất OOP. |
-| 2   | **Nguyễn Minh Nhật Anh** | —    | `nhatdog34`     | **Server & Database** | Chịu trách nhiệm gói `com.auction.server`. Xây dựng Server Socket đa luồng, xử lý Database (MySQL, DAO Layer), điều hướng logic và xử lý nghiệp vụ trung tâm. |
-| 3   | **Nguyễn Viết Hưng** | —    | `ngvh2312`   | **Client Logic & Network**| Chịu trách nhiệm gói `com.auction.client`. Xây dựng Socket Client kết nối đến Server, xử lý luồng dữ liệu (JSON/Gson) và lập trình các lớp Controller điều khiển sự kiện trên UI. |
-| 4   | **Đậu Đình Gia Bảo** | —    | `baothebean` | **Giao diện (UI/UX FXML)**| Chịu trách nhiệm thư mục `resources`. Thiết kế toàn bộ giao diện JavaFX bằng các file `.fxml` (Login, Admin, Dashboard, Manage, View...), tổ chức tài nguyên hình ảnh, đảm bảo UI/UX. |****
+| 1   | **Phùng Anh Dũng** | 25020077   | `padungg`    | **Model Layer** | Chịu trách nhiệm gói `com.auction.model`. Xây dựng các lớp đối tượng cốt lõi (Entity), định nghĩa cấu trúc gói tin giao tiếp (Request/Response Protocol) và áp dụng các tính chất OOP. |
+| 2   | **Nguyễn Minh Nhật Anh** | 25020022    | `nhatdog34`     | **Server & Database** | Chịu trách nhiệm gói `com.auction.server`. Xây dựng Server Socket đa luồng, xử lý Database (MySQL, DAO Layer), điều hướng logic và xử lý nghiệp vụ trung tâm. |
+| 3   | **Nguyễn Viết Hưng** | 25020196    | `ngvh2312`   | **Client Logic & Network**| Chịu trách nhiệm gói `com.auction.client`. Xây dựng Socket Client kết nối đến Server, xử lý luồng dữ liệu (JSON/Gson) và lập trình các lớp Controller điều khiển sự kiện trên UI. |
+| 4   | **Đậu Đình Gia Bảo** | 25020034    | `baothebean` | **Giao diện (UI/UX FXML)**| Chịu trách nhiệm thư mục `resources`. Thiết kế toàn bộ giao diện JavaFX bằng các file `.fxml` (Login, Admin, Dashboard, Manage, View...), tổ chức tài nguyên hình ảnh, đảm bảo UI/UX. |****
 
 ## 📐 Sơ đồ kiến trúc hệ thống
 
@@ -284,6 +284,13 @@ classDiagram
 ```
 
 ---
+
+## Sơ đồ UML vẽ tay
+
+[entity](https://l.facebook.com/l.php?u=https%3A%2F%2Fdrive.google.com%2Ffile%2Fd%2F1G4etrUPZ1jvi_sqeis4XiocJr0mLGIVP%2Fview%3Fusp%3Dsharing%26fbclid%3DIwZXh0bgNhZW0CMTAAYnJpZBExVDJYRXZSNzA5QkhycnI1eXNydGMGYXBwX2lkEDIyMjAzOTE3ODgyMDA4OTIAAR4KpWcD3N7d5V3LKoRwFccqYD8-wA4EJF3r8i-fZ9cudIiotoR6ko2x9ifl3w_aem_y5x8W48YKPTohHPJ_pBfXQ&h=AT6Y4lJVpOLPBV7b6m32S9WAGy-7IxU7krRZQ4Cr3F6esF9r9cyNUTsxa8iTI5D0gx1XagG6RrLyDEEYO1jK64y4XMBR5qU62deb77XPM1Avmkg5kL19lG7EzJtb6AqpZnmLNQ)
+
+[dto](https://l.facebook.com/l.php?u=https%3A%2F%2Fdrive.google.com%2Ffile%2Fd%2F1jHCR5SaKD71a0NJKBXE9Bmt-a_yOwDwb%2Fview%3Fusp%3Dsharing%26fbclid%3DIwZXh0bgNhZW0CMTAAYnJpZBExVDJYRXZSNzA5QkhycnI1eXNydGMGYXBwX2lkEDIyMjAzOTE3ODgyMDA4OTIAAR5HFZQLycUkiloyg14b1lAga8h3Jc65qbs6hVl3v0QanYiIlSFF0KmLeCQcVA_aem_jVQGf1q8WzRG175jxmF7Rw&h=AT6Y4lJVpOLPBV7b6m32S9WAGy-7IxU7krRZQ4Cr3F6esF9r9cyNUTsxa8iTI5D0gx1XagG6RrLyDEEYO1jK64y4XMBR5qU62deb77XPM1Avmkg5kL19lG7EzJtb6AqpZnmLNQ)
+
 
 ## 🎨 Design Patterns áp dụng
 
