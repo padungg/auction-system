@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox prefWidth="350.0" style="-fx-background-color: white; -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.ProductcardController">
+    <children>
+        <ImageView fx:id="imgProduct" fitHeight="200.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="false" style="-fx-border-radius: 15 15 0 0;" />
+
+        <VBox spacing="10.0">
+            <padding>
+                <Insets bottom="20.0" left="20.0" right="20.0" top="15.0" />
+            </padding>
+            <children>
+                <HBox alignment="CENTER_LEFT">
+                    <children>
+                        <Label fx:id="lblProductName" style="-fx-text-fill: #1f2937;" text="Tên sản phẩm" wrapText="true">
+                            <font>
+                                <Font name="System Bold" size="18.0" />
+                            </font>
+                        </Label>
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Label fx:id="lblStatus" style="-fx-background-color: #dcfce7; -fx-text-fill: #166534; -fx-padding: 5 10; -fx-background-radius: 12;" text="🟢 Đang diễn ra">
+                            <font>
+                                <Font name="System Bold" size="12.0" />
+                            </font>
+                        </Label>
+                    </children>
+                </HBox>
+
+                <Label fx:id="lblStartPrice" style="-fx-text-fill: #6b7280;" text="Giá khởi điểm: 0 đ" />
+
+                <HBox alignment="BASELINE_LEFT" spacing="10.0">
+                    <children>
+                        <Label style="-fx-text-fill: #6b7280;" text="Giá cao nhất:" />
+                        <Label fx:id="lblCurrentPrice" style="-fx-text-fill: #ef4444;" text="0 đ">
+                            <font>
+                                <Font name="System Bold" size="20.0" />
+                            </font>
+                        </Label>
+                    </children>
+                </HBox>
+
+                <Label fx:id="lblTimeLeft" style="-fx-text-fill: #2563eb;" text="Kết thúc trong: --:--:--">
+                    <font>
+                        <Font name="System Bold" size="14.0" />
+                    </font>
+                </Label>
+
+                <Button fx:id="btnJoin" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleJoin" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-background-radius: 8; -fx-cursor: hand;" text="Tham gia ngay">
+                    <font>
+                        <Font name="System Bold" size="14.0" />
+                    </font>
+                    <padding>
+                        <Insets bottom="10.0" top="10.0" />
+                    </padding>
+                    <VBox.margin>
+                        <Insets top="10.0" />
+                    </VBox.margin>
+                </Button>
+            </children>
+        </VBox>
+    </children>
+</VBox>
