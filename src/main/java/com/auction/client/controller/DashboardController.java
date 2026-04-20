@@ -65,11 +65,7 @@ public class DashboardController {
         }
     }
 
-    /**
-     * Gọi Server lấy danh sách phiên đấu giá.
-     * Gửi: Request(GET_ALL_AUCTIONS, null)
-     * Nhận: Response chứa List<AuctionSummaryDTO> trong payload
-     */
+
     private List<AuctionSummaryDTO> getAuctionsFromServer() {
         try {
             ClientSocketManager manager = ClientSocketManager.getInstance();

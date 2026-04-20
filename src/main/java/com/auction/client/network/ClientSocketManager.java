@@ -18,15 +18,15 @@ import java.time.LocalDateTime;
  *   - Gửi: com.auction.model.protocol.Request (chứa RequestType + DTO payload)
  *   - Nhận: com.auction.model.protocol.Response (chứa ResponseStatus + message + payload)
  *
- * Mỗi lần gửi/nhận là 1 dòng JSON (line-delimited JSON).
+ * Protocol: DataOutputStream.writeUTF / DataInputStream.readUTF.
  */
 public class ClientSocketManager {
 
     private static ClientSocketManager instance;
 
     private Socket socket;
-    private PrintWriter out;
-    private BufferedReader in;
+    private DataOutputStream out;
+    private DataInputStream in;
     private final Gson gson;
 
     private String host;
@@ -50,15 +50,15 @@ public class ClientSocketManager {
      * Mở kết nối TCP đến Server.
      *
      * @param host Địa chỉ server (vd: "localhost")
-     * @param port Cổng server (vd: 1234)
+     * @param port Cổng server (vd: 8080)
      */
     public void connect(String host, int port) throws IOException {
         this.host = host;
         this.port = port;
 
         socket = new Socket(host, port);
-        out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"), true);
-        in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
+        out = new DataOutputStream(socket.getOutputStream());
+        in = new DataInputStream(socket.getInputStream());
 
         System.out.println("[ClientSocketManager] Đã kết nối đến " + host + ":" + port);
     }
@@ -68,8 +68,8 @@ public class ClientSocketManager {
      *
      * Luồng:
      * 1. Serialize Request (model.protocol.Request) → JSON string
-     * 2. Gửi 1 dòng JSON qua PrintWriter
-     * 3. Đọc 1 dòng JSON từ BufferedReader
+     * 2. Gửi JSON qua DataOutputStream.writeUTF()
+     * 3. Đọc phản hồi qua DataInputStream.readUTF()
      * 4. Deserialize JSON → Response (model.protocol.Response)
      * 5. Trả Response cho Controller
      *
@@ -85,11 +85,12 @@ public class ClientSocketManager {
         String jsonRequest = gson.toJson(request);
         System.out.println("[ClientSocketManager] >>> Gửi: " + jsonRequest);
 
-        // 2. Gửi 1 dòng JSON
-        out.println(jsonRequest);
+        // 2. Gửi JSON (writeUTF)
+        out.writeUTF(jsonRequest);
+        out.flush();
 
-        // 3. Đọc 1 dòng JSON response
-        String jsonResponse = in.readLine();
+        // 3. Đọc phản hồi (readUTF)
+        String jsonResponse = in.readUTF();
         if (jsonResponse == null) {
             throw new IOException("Server đã đóng kết nối!");
         }
@@ -128,9 +129,9 @@ public class ClientSocketManager {
     }
 
     /**
-     * Lấy BufferedReader (cho ServerListener dùng khi cần lắng nghe push notification).
+     * Lấy DataInputStream (cho ServerListener dùng khi cần lắng nghe push notification).
      */
-    public BufferedReader getReader() {
+    public DataInputStream getDataInputStream() {
         return in;
     }
 }

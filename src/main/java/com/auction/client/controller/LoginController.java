@@ -78,7 +78,7 @@ public class LoginController {
 
             // Kết nối nếu chưa kết nối
             if (!manager.isConnected()) {
-                manager.connect("localhost", 1234);
+                manager.connect("localhost", 8080);
             }
 
             // Tạo DTO và Request theo format server
