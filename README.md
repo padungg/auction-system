@@ -285,3 +285,16 @@ classDiagram
 
 ---
 
+## 🎨 Design Patterns áp dụng
+
+| Pattern | Vị trí áp dụng |
+|:--------|:----------------|
+| **Factory Pattern** | `ItemFactory` — Tạo các loại Item (Vehicle, Electronics, Art) |
+| **DTO Pattern** | Tách biệt dữ liệu truyền mạng và entity, bảo mật password |
+| **DAO Pattern** | `UserDAOImpl` — Tách riêng logic truy xuất cơ sở dữ liệu |
+| **MVC Pattern** | Controller (JavaFX) → Service → DAO |
+| **Envelope Pattern** | `Request` / `Response` — Đóng gói thống nhất giao thức mạng |
+
+---
+
+<div align="center">
