@@ -35,3 +35,4 @@ public interface AuctionDAO {
      */
     boolean update(Auction auction);
 }
+

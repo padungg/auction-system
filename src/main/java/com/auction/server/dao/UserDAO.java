@@ -34,3 +34,4 @@ public interface UserDAO {
      */
     boolean existsByUsername(String username);
 }
+

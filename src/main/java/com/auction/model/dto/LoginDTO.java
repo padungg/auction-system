@@ -2,7 +2,6 @@ package com.auction.model.dto;
 
 /**
  * Gói tin DTO dùng khi Client muốn Đăng Nhập.
- * Chứa thông tin nhạy cảm (mật khẩu) nên chỉ đi một chiều từ Client -> Server.
  */
 public class LoginDTO {
 

@@ -1,7 +1,7 @@
 package com.auction.model.protocol;
 
 /**
- * Khung giao thức (Envelope) cho mọi kết quả trả về từ Server cho Client.
+ * Khung giao thức cho mọi kết quả trả về từ Server cho Client.
  */
 public class Response {
 

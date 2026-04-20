@@ -2,7 +2,6 @@ package com.auction.model.dto;
 
 /**
  * Gói tin DTO Client gửi lên khi muốn Đăng Bán (Tạo phiến đấu giá mới).
- * DTO này là dạng phẳng (Flattened DTO) gộp tất cả tham số của các loại Item.
  * Phía Server sẽ dựa vào itemType để trích xuất ra đúng tham số cần thiết.
  */
 public class CreateAuctionDTO {
