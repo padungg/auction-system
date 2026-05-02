@@ -15,22 +15,23 @@ import java.time.LocalDateTime;
  *
  * Sử dụng Singleton pattern — toàn bộ app dùng chung 1 kết nối.
  * Giao tiếp bằng JSON theo protocol của Server:
- *   - Gửi: com.auction.model.protocol.Request (chứa RequestType + DTO payload)
- *   - Nhận: com.auction.model.protocol.Response (chứa ResponseStatus + message + payload)
+ * - Gửi: com.auction.model.protocol.Request (chứa RequestType + DTO payload)
+ * - Nhận: com.auction.model.protocol.Response (chứa ResponseStatus + message +
+ * payload)
  *
  * Protocol: DataOutputStream.writeUTF / DataInputStream.readUTF.
  */
 public class ClientSocketManager {
 
-    private static ClientSocketManager instance;
+    private static ClientSocketManager instance;// singleton pattern
 
-    private Socket socket;
-    private DataOutputStream out;
-    private DataInputStream in;
-    private final Gson gson;
+    private Socket socket;// socket kết nối
+    private DataOutputStream out;// luồng ghi dữ liệu
+    private DataInputStream in;// luồng đọc dữ liệu
+    private final Gson gson;// gson để serialize và deserialize
 
-    private String host;
-    private int port;
+    private String host;// địa chỉ server
+    private int port;// cổng server
 
     private ClientSocketManager() {
         // Đăng ký LocalDateTimeAdapter vì AuctionDetailDTO có LocalDateTime
@@ -39,7 +40,7 @@ public class ClientSocketManager {
                 .create();
     }
 
-    public static ClientSocketManager getInstance() {
+    public static ClientSocketManager getInstance() {// kiểm tra singleton
         if (instance == null) {
             instance = new ClientSocketManager();
         }
@@ -56,9 +57,9 @@ public class ClientSocketManager {
         this.host = host;
         this.port = port;
 
-        socket = new Socket(host, port);
-        out = new DataOutputStream(socket.getOutputStream());
-        in = new DataInputStream(socket.getInputStream());
+        socket = new Socket(host, port);// tạo socket
+        out = new DataOutputStream(socket.getOutputStream());// tạo luồng ghi
+        in = new DataInputStream(socket.getInputStream());// tạo luồng đọc
 
         System.out.println("[ClientSocketManager] Đã kết nối đến " + host + ":" + port);
     }
@@ -86,10 +87,11 @@ public class ClientSocketManager {
         System.out.println("[ClientSocketManager] >>> Gửi: " + jsonRequest);
 
         // 2. Gửi JSON (writeUTF)
-        out.writeUTF(jsonRequest);
-        out.flush();
+        out.writeUTF(jsonRequest);// ghi dữ liệu vào luồng
+        out.flush();// ép dữ liệu được gửi đi ngay lập tức
 
         // 3. Đọc phản hồi (readUTF)
+        // đợi JSON từ server
         String jsonResponse = in.readUTF();
         if (jsonResponse == null) {
             throw new IOException("Server đã đóng kết nối!");
@@ -101,13 +103,16 @@ public class ClientSocketManager {
     }
 
     /**
-     * Đóng kết nối.
+     * Đóng kết nối để giải phóng tài nguyên
      */
     public void disconnect() {
         try {
-            if (out != null) out.close();
-            if (in != null) in.close();
-            if (socket != null && !socket.isClosed()) socket.close();
+            if (out != null)
+                out.close();
+            if (in != null)
+                in.close();
+            if (socket != null && !socket.isClosed())
+                socket.close();
             System.out.println("[ClientSocketManager] Đã ngắt kết nối.");
         } catch (IOException e) {
             System.err.println("[ClientSocketManager] Lỗi khi đóng kết nối: " + e.getMessage());
@@ -129,7 +134,8 @@ public class ClientSocketManager {
     }
 
     /**
-     * Lấy DataInputStream (cho ServerListener dùng khi cần lắng nghe push notification).
+     * Lấy DataInputStream (cho ServerListener dùng khi cần lắng nghe push
+     * notification).
      */
     public DataInputStream getDataInputStream() {
         return in;

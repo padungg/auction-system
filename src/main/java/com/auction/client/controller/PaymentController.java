@@ -1,11 +1,11 @@
 package com.auction.client.controller;
 
 import com.auction.client.network.ClientSocketManager;
+import com.auction.model.dto.BidRequestDTO;
 import com.auction.model.protocol.Request;
 import com.auction.model.protocol.RequestType;
 import com.auction.model.protocol.Response;
 import com.auction.model.protocol.ResponseStatus;
-import com.auction.model.dto.BidRequestDTO;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -33,7 +33,7 @@ public class PaymentController {
     private TableColumn<Bid, String> priceColumn;
 
     private long currentPrice = 15500000;
-    private String auctionId = "A001"; // ID sản phẩm đang xem (sau này truyền từ Dashboard)
+    private String auctionId = "A001"; // ID phiên đấu giá đang xem (sau này truyền từ Dashboard)
 
     private ObservableList<Bid> list = FXCollections.observableArrayList();
 
@@ -50,15 +50,15 @@ public class PaymentController {
         currentPriceLabel.setText(currentPrice + " VNĐ");
 
         // Đăng ký nhận push notification real-time (khi có người đặt giá mới)
-        // registerRealTimeListener(); // Tạm thời comment vì mô hình hiện tại không dùng push kiểu này nữa
+        // registerRealTimeListener(); // Tạm tắt — ClientSocketManager chưa hỗ trợ addNotificationListener
     }
 
     /**
      * Gửi request đặt giá đến Server.
      *
-     * Gửi:  {"action":"PLACE_BID","data":{"productId":1,"amount":16000000}}
-     * Nhận:  {"status":"OK","action":"PLACE_BID","message":"Đặt giá thành công"}
-     *        hoặc {"status":"ERROR","action":"PLACE_BID","message":"Giá phải cao hơn hiện tại"}
+     * Gửi:  Request(PLACE_BID, BidRequestDTO{auctionId, bidAmount})
+     * Nhận:  Response(SUCCESS, "Đặt giá thành công", payload)
+     *        hoặc Response(ERROR/BAD_REQUEST, "Giá phải cao hơn hiện tại", null)
      */
     @FXML
     private void handleBid() {
@@ -74,7 +74,7 @@ public class PaymentController {
             ClientSocketManager client = ClientSocketManager.getInstance();
 
             if (client.isConnected()) {
-                // Gửi request PLACE_BID đến Server
+                // Gửi request PLACE_BID đến Server — dùng BidRequestDTO + RequestType enum
                 BidRequestDTO dto = new BidRequestDTO(auctionId, (double) newPrice);
                 Request request = new Request(RequestType.PLACE_BID, dto);
 
@@ -106,7 +106,10 @@ public class PaymentController {
 
     /**
      * Đăng ký nhận push notification từ Server khi có người đặt giá mới.
-     * (Tạm thời comment vì ClientSocketManager mới không hỗ trợ addNotificationListener).
+     * (Tạm thời comment vì ClientSocketManager chưa hỗ trợ addNotificationListener).
+     *
+     * TODO: Bật lại khi ClientSocketManager được bổ sung addNotificationListener()
+     *       và Server hoàn thiện phần push notification qua Observer pattern.
      */
     /*
     private void registerRealTimeListener() {
@@ -114,7 +117,8 @@ public class PaymentController {
 
         if (client.isConnected()) {
             client.addNotificationListener(response -> {
-                // ... logic cũ ...
+                // Xử lý push notification từ server khi có bid mới
+                // Cần cập nhật lại khi ClientSocketManager hỗ trợ
             });
         }
     }
