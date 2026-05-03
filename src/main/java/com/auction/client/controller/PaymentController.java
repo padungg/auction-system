@@ -124,7 +124,7 @@ public class PaymentController {
     }
     */
 
-    // Class lưu dữ liệu bảng
+    // Class lưu dữ liệu bảng.
     public static class Bid {
         String time;
         String user;
