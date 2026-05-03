@@ -1,8 +1,11 @@
 package com.auction.client.controller;
 
 import com.auction.client.network.ClientSocketManager;
-import com.auction.client.network.Request;
-import com.auction.client.network.Response;
+import com.auction.model.dto.BidRequestDTO;
+import com.auction.model.protocol.Request;
+import com.auction.model.protocol.RequestType;
+import com.auction.model.protocol.Response;
+import com.auction.model.protocol.ResponseStatus;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -30,7 +33,7 @@ public class PaymentController {
     private TableColumn<Bid, String> priceColumn;
 
     private long currentPrice = 15500000;
-    private int productId = 1; // ID sản phẩm đang xem (sau này truyền từ Dashboard)
+    private String auctionId = "A001"; // ID phiên đấu giá đang xem (sau này truyền từ Dashboard)
 
     private ObservableList<Bid> list = FXCollections.observableArrayList();
 
@@ -47,15 +50,15 @@ public class PaymentController {
         currentPriceLabel.setText(currentPrice + " VNĐ");
 
         // Đăng ký nhận push notification real-time (khi có người đặt giá mới)
-        registerRealTimeListener();
+        // registerRealTimeListener(); // Tạm tắt — ClientSocketManager chưa hỗ trợ addNotificationListener
     }
 
     /**
      * Gửi request đặt giá đến Server.
      *
-     * Gửi:  {"action":"PLACE_BID","data":{"productId":1,"amount":16000000}}
-     * Nhận:  {"status":"OK","action":"PLACE_BID","message":"Đặt giá thành công"}
-     *        hoặc {"status":"ERROR","action":"PLACE_BID","message":"Giá phải cao hơn hiện tại"}
+     * Gửi:  Request(PLACE_BID, BidRequestDTO{auctionId, bidAmount})
+     * Nhận:  Response(SUCCESS, "Đặt giá thành công", payload)
+     *        hoặc Response(ERROR/BAD_REQUEST, "Giá phải cao hơn hiện tại", null)
      */
     @FXML
     private void handleBid() {
@@ -71,14 +74,13 @@ public class PaymentController {
             ClientSocketManager client = ClientSocketManager.getInstance();
 
             if (client.isConnected()) {
-                // Gửi request PLACE_BID đến Server
-                Request request = new Request("PLACE_BID")
-                        .put("productId", productId)
-                        .put("amount", newPrice);
+                // Gửi request PLACE_BID đến Server — dùng BidRequestDTO + RequestType enum
+                BidRequestDTO dto = new BidRequestDTO(auctionId, (double) newPrice);
+                Request request = new Request(RequestType.PLACE_BID, dto);
 
                 Response response = client.sendRequest(request);
 
-                if (response != null && response.isSuccess()) {
+                if (response != null && response.getStatus() == ResponseStatus.SUCCESS) {
                     // Server xác nhận → cập nhật UI
                     currentPrice = newPrice;
                     currentPriceLabel.setText(currentPrice + " VNĐ");
@@ -104,37 +106,23 @@ public class PaymentController {
 
     /**
      * Đăng ký nhận push notification từ Server khi có người đặt giá mới.
+     * (Tạm thời comment vì ClientSocketManager chưa hỗ trợ addNotificationListener).
      *
-     * Server sẽ gửi:
-     * {"status":"OK","action":"NOTIFY_NEW_BID","data":{"productId":1,"newPrice":17000000,"bidder":"user2"}}
-     *
-     * Callback này được gọi trên UI thread (safe để cập nhật UI).
+     * TODO: Bật lại khi ClientSocketManager được bổ sung addNotificationListener()
+     *       và Server hoàn thiện phần push notification qua Observer pattern.
      */
+    /*
     private void registerRealTimeListener() {
         ClientSocketManager client = ClientSocketManager.getInstance();
 
         if (client.isConnected()) {
             client.addNotificationListener(response -> {
-                if ("NOTIFY_NEW_BID".equals(response.getAction()) && response.getData() != null) {
-                    // Kiểm tra đúng sản phẩm đang xem
-                    Object pidObj = response.getData().get("productId");
-                    int pid = pidObj instanceof Number ? ((Number) pidObj).intValue() : -1;
-
-                    if (pid == productId) {
-                        long newPrice = ((Number) response.getData().get("newPrice")).longValue();
-                        String bidder = (String) response.getData().get("bidder");
-
-                        // Cập nhật UI (đã ở UI thread nhờ Platform.runLater trong ClientSocketManager)
-                        currentPrice = newPrice;
-                        currentPriceLabel.setText(currentPrice + " VNĐ");
-                        list.add(0, new Bid("now", bidder, newPrice + ""));
-
-                        System.out.println("[PaymentController] Real-time: " + bidder + " đặt giá " + newPrice);
-                    }
-                }
+                // Xử lý push notification từ server khi có bid mới
+                // Cần cập nhật lại khi ClientSocketManager hỗ trợ
             });
         }
     }
+    */
 
     // Class lưu dữ liệu bảng
     public static class Bid {
