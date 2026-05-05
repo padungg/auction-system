@@ -1,14 +1,12 @@
 package com.auction.client.network;
 
-import com.auction.client.util.LocalDateTimeAdapter;
 import com.auction.model.protocol.Request;
 import com.auction.model.protocol.Response;
+import com.auction.model.util.GsonProvider;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import java.io.*;
 import java.net.Socket;
-import java.time.LocalDateTime;
 
 /**
  * Quản lý kết nối Socket TCP từ Client đến Server.
@@ -33,10 +31,8 @@ public class ClientSocketManager {
     private int port;
 
     private ClientSocketManager() {
-        // Đăng ký LocalDateTimeAdapter vì AuctionDetailDTO có LocalDateTime
-        this.gson = new GsonBuilder()
-                .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
-                .create();
+        // GsonFactory.getInstance() — dùng instance duy nhất, không tạo mới mỗi lần
+        this.gson = GsonProvider.getInstance();
     }
 
     public static ClientSocketManager getInstance() {
