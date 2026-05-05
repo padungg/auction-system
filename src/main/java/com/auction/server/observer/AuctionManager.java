@@ -11,8 +11,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
  *
  * Khi có bid mới → AuctionManager duyệt danh sách observer → gọi onBidUpdated() cho từng người.
  *
- *   - ConcurrentHashMap: Bảo đảm an toàn khi tạo/xóa danh sách của từng phiên mà không chặn (block) toàn bộ đối tượng.
- *   - CopyOnWriteArrayList: Cho phép đọc + ghi đồng thời trên danh sách người xem mà không dính lỗi ConcurrentModificationException.
+ * Thread-safety:
+ *   - ConcurrentHashMap    : an toàn khi đọc/ghi map (nhiều thread subscribe cùng lúc)
+ *   - CopyOnWriteArrayList : an toàn khi notify đang chạy mà có subscribe mới xảy ra
+ *   - computeIfAbsent      : tạo list atomícally, không bị race condition khi khởi tạo
+ *   - try-catch trong notify: 1 client lỗi không làm gãy toàn bộ thông báo
+ * Không dùng polling — chỉ push đúng khi có sự kiện (event-based).
  */
 public class AuctionManager {
     //Singleton
@@ -30,28 +34,29 @@ public class AuctionManager {
     }
     /**
      * Đăng ký theo dõi 1 phiên đấu giá.
+     * computeIfAbsent: tạo list atomically — thậm chí 2 thread gọi cùng lúc cũng chỉ có 1 list.
      */
-    public void subscribe(String auctionId, AuctionObserver observer){
-        List<AuctionObserver> observers = observerMap.get(auctionId);
-        if (observers == null){
-            observers = new CopyOnWriteArrayList<>();
-            observerMap.put(auctionId, observers);
+    public void subscribe(String auctionId, AuctionObserver observer) {
+        List<AuctionObserver> observers = observerMap
+                .computeIfAbsent(auctionId, k -> new CopyOnWriteArrayList<>());
+        if (!observers.contains(observer)) { // tránh subscribe trùng lặp
+            observers.add(observer);
         }
-        observers.add(observer);
-        System.out.println("Observer: +1 người theo dõi phiên " + auctionId
-                + " (tổng: " + observers.size() + ")");
+        System.out.println("[AuctionManager] SUBSCRIBE: phiên=" + auctionId
+                + " | tổng observer=" + observers.size());
     }
     /**
      * Hủy theo dõi 1 phiên đấu giá.
      */
-    public void unsubscribe(String auctionId, AuctionObserver observer){
+    public void unsubscribe(String auctionId, AuctionObserver observer) {
         List<AuctionObserver> observers = observerMap.get(auctionId);
-        if (observers != null){
+        if (observers != null) {
             observers.remove(observer);
-            if (observers.isEmpty()){
+            if (observers.isEmpty()) {
                 observerMap.remove(auctionId, observers);
             }
         }
+        System.out.println("[AuctionManager] UNSUBSCRIBE: phiên=" + auctionId);
     }
     /**
      * Hủy toàn bộ theo dõi của 1 observer (khi client ngắt kết nối).
@@ -67,19 +72,24 @@ public class AuctionManager {
     }
     /**
      * Thông báo cho TẤT CẢ observer đang xem phiên này rằng có bid mới.
+     * Không dùng polling — chỉ gọi khi có sự kiện xảy ra (event-based).
+     * try-catch từng observer: 1 client lỗi không làm gãy việc thông báo các client khác.
      */
     public void notifyBidUpdate(String auctionId, double newPrice, String bidderId) {
         List<AuctionObserver> observers = observerMap.get(auctionId);
-        if (observers != null && !observers.isEmpty()){
-            for (AuctionObserver observer : observers){
-                try{
-                    observer.onBidUpdated(auctionId, newPrice, bidderId);
-                }catch (Exception e){
-                    System.out.println("Observer : Lỗi thông báo " + e.getMessage());
-                }
+        if (observers == null || observers.isEmpty()) return;
+
+        int count = 0;
+        for (AuctionObserver observer : observers) {
+            try {
+                observer.onBidUpdated(auctionId, newPrice, bidderId);
+                count++;
+            } catch (Exception e) {
+                System.out.println("[AuctionManager] NOTIFY_ERROR: " + e.getMessage());
             }
-            System.out.println("Observer : Đã thông báo " + observers.size()
-                    + " người về bid mới trên phiên " + auctionId);
         }
+        System.out.println("[AuctionManager] NOTIFY: phiên=" + auctionId
+                + " | giá=" + String.format("%,.0f", newPrice)
+                + " | đã notify " + count + " client");
     }
 }

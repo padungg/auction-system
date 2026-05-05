@@ -26,7 +26,7 @@ public class BidService {
     private final BidTransactionDAO bidTransactionDAO;
 
     public BidService(AuctionDAO auctionDAO, BidTransactionDAO bidTransactionDAO) {
-        this.auctionDAO = auctionDAO;
+        this.auctionDAO        = auctionDAO;
         this.bidTransactionDAO = bidTransactionDAO;
     }
     /**
