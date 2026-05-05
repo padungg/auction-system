@@ -10,6 +10,7 @@ import com.auction.server.dao.AuctionDAO;
 import com.auction.server.dao.BidTransactionDAO;
 import com.auction.server.observer.AuctionManager;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -35,7 +36,7 @@ public class BidService {
      *   4. Lưu lịch sử BidTransaction
      *   5. OBSERVER: Thông báo cho tất cả client đang xem
      */
-    public synchronized Response palceBid(BidRequestDTO dto, String bidderId){
+    public synchronized Response placeBid(BidRequestDTO dto, String bidderId){
         // Validation cơ bản (null check, kiểm tra login)
         if (dto == null || dto.getAuctionId() == null){
             return new Response(ResponseStatus.BAD_REQUEST, "Thiếu thông tin đặt giá", null);
@@ -44,7 +45,7 @@ public class BidService {
             return new Response(ResponseStatus.UNAUTHORIZED, "Bạn chưa đăng nhập", null);
         }
         if (dto.getBidAmount() <= 0){
-            return new Response(ResponseStatus.BAD_REQUEST, "Sóo tiền đặt giá phải lớn hơn 0", null);
+            return new Response(ResponseStatus.BAD_REQUEST, "Số tiền đặt giá phải lớn hơn 0", null);
         }
         // Tìm phiên đấu giá
         Auction auction = auctionDAO.findById(dto.getAuctionId());
@@ -79,11 +80,26 @@ public class BidService {
                 dto.getAuctionId(),
                 bidAmount,
                 LocalDateTime.now());
-        // Observer thông báo cho tất cả client đang xem
+        bidTransactionDAO.save(transaction); // Lưu lịch sử bid
+
+        // ── ANTI-SNIPING ──────────────────────────────────────────────────────
+        // Nếu bid diễn ra trong 60 giây cuối → gia hạn thêm 120 giây
+        // Mục đích: ngăn “sniper” đặt giá vào đúng giây chót để thắng mà không ai kịp phản đứng
+        long secondsLeft = Duration.between(LocalDateTime.now(), auction.getEndTime()).getSeconds();
+        if (secondsLeft > 0 && secondsLeft <= 60) {
+            auction.setEndTime(auction.getEndTime().plusSeconds(120));
+            auctionDAO.update(auction);
+            System.out.println("[BidService] ANTI-SNIPE: Phiên " + dto.getAuctionId()
+                    + " còn " + secondsLeft + "s → Gia hạn thêm 120 giây");
+        }
+        // ── OBSERVER: push realtime cho tất cả client đang xem phiên này ────
         AuctionManager.getInstance().notifyBidUpdate(dto.getAuctionId(), bidAmount, bidderId);
-        // Thônng báo và trả về kết quả
-        System.out.println("BidService : Bid thành công! Phiên: " + dto.getAuctionId() + " Giá cũ: " + String.format("%,.0f", oldPrice) + " Giá mới: " + String.format("%,.0f", bidAmount));
-        return new Response(ResponseStatus.SUCCESS, "Đặt giá thành công! Giá mới: " + String.format("%,.0f", bidAmount) + " VNĐ", bidAmount);
+
+        System.out.println("[BidService] PLACE_BID: phiên=" + dto.getAuctionId()
+                + " | bidder=" + bidderId
+                + " | " + String.format("%,.0f", oldPrice) + " → " + String.format("%,.0f", bidAmount) + " VNĐ");
+        return new Response(ResponseStatus.SUCCESS,
+                "Đặt giá thành công! Giá mới: " + String.format("%,.0f", bidAmount) + " VNĐ", bidAmount);
     }
     /**
      * Lấy lịch sử bid của 1 phiên đấu giá.
@@ -94,11 +110,11 @@ public class BidService {
         }
         Auction auction = auctionDAO.findById(auctionId);
         if (auction == null){
-            return new Response(ResponseStatus.NOT_FOUND, "Phiên đấu giá khongo tồn tại", null);
+            return new Response(ResponseStatus.NOT_FOUND, "Phiên đấu giá không tồn tại", null);
         }
         // Lấy danh sách lịch sử Bid
         List<BidTransaction> history = bidTransactionDAO.findByAuctionId(auctionId.trim());
-        System.out.println("BidService: Trả về " + history.size() + " lịch sử bid cho phiên " + auctionId);
+        System.out.println("[BidService] GET_HISTORY: phiên=" + auctionId + " | " + history.size() + " bản ghi");
         return new Response(ResponseStatus.SUCCESS, "Lấy lịch sử bid thành công", history);
     }
 }
