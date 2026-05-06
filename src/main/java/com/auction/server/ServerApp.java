@@ -9,23 +9,23 @@ import com.auction.server.service.AuctionScheduler;
  * ĐIỂM KHỞI ĐỘNG SERVER.
  *
  * Thứ tự khởi động:
- *   1. AuctionScheduler.start() — đóng các phiên đã hết hạn từ trước lần restart
- *   2. SocketServer.start()     — bắt đầu nhận kết nối từ client (blocking)
+ * 1. AuctionScheduler.start() — đóng các phiên đã hết hạn từ trước lần restart
+ * 2. SocketServer.start() — bắt đầu nhận kết nối từ client (blocking)
  *
  * Shutdown Hook (Ctrl+C hoặc kill):
- *   - Đảm bảo AuctionScheduler dừng sạch (không cắt giữa lúc đang update DB)
- *   - Đảm bảo SocketServer dừng sạch (không cắt giữa lúc đang xử lý bid)
+ * - Đảm bảo AuctionScheduler dừng sạch (không cắt giữa lúc đang update DB)
+ * - Đảm bảo SocketServer dừng sạch (không cắt giữa lúc đang xử lý bid)
  */
 public class ServerApp {
 
-    private static final int PORT        = 8080;
+    private static final int PORT = 8080;
     private static final int MAX_CLIENTS = 20;
 
     public static void main(String[] args) {
 
         // ── 1. Khởi tạo DAO cho Scheduler ───────────────────────
-        AuctionDAO       auctionDAO = new AuctionDAOImpl();
-        AuctionScheduler scheduler  = new AuctionScheduler(auctionDAO);
+        AuctionDAO auctionDAO = new AuctionDAOImpl();
+        AuctionScheduler scheduler = new AuctionScheduler(auctionDAO);
 
         // ── 2. Khởi tạo SocketServer ─────────────────────────────
         SocketServer socketServer = new SocketServer(PORT, MAX_CLIENTS);
@@ -33,8 +33,8 @@ public class ServerApp {
         // ── 3. Shutdown Hook — chạy khi JVM nhận tín hiệu tắt ───
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("\n[ServerApp] SHUTDOWN: đang dừng server...");
-            scheduler.stop();     // dừng Scheduler trước (không block lâu)
-            socketServer.stop();  // dừng SocketServer sau (chờ client xử lý xong)
+            scheduler.stop(); // dừng Scheduler trước (không block lâu)
+            socketServer.stop(); // dừng SocketServer sau (chờ client xử lý xong)
             System.out.println("[ServerApp] SHUTDOWN: hoàn tất — goodbye!");
         }, "ShutdownHook-Thread"));
 
@@ -49,4 +49,4 @@ public class ServerApp {
             System.exit(1);
         }
     }
-}
+}

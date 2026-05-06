@@ -11,9 +11,9 @@ import java.util.List;
  *
  * MỤC ĐÍCH: Cho phép Server chạy và test NGAY khi chưa có database thật.
  * Khi người làm DAO hoàn thành UserDAOImpl (MySQL), chỉ cần thay dòng:
- *     UserDAO userDAO = new UserDAOMock();
+ * UserDAO userDAO = new UserDAOMock();
  * thành:
- *     UserDAO userDAO = new UserDAOImpl();
+ * UserDAO userDAO = new UserDAOImpl();
  *
  * ⚠️ Dữ liệu sẽ MẤT khi tắt server (vì chỉ lưu trên RAM).
  */

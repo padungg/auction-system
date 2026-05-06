@@ -102,40 +102,42 @@ public class RequestController {
     // CÁC HANDLER RIÊNG — mỗi handler phụ trách 1 loại request
     // ════════════════════════════════════════════════════════════════
 
+    private <T> T parsePayload(Request request, Class<T> clazz) {
+        return GSON.fromJson(GSON.toJson(request.getPayload()), clazz);
+    }
+
     private Response handleLogin(Request request) {
-        // Gson deserialize payload (LinkedTreeMap) → LoginDTO
-        LoginDTO dto = GSON.fromJson(GSON.toJson(request.getPayload()), LoginDTO.class);
+        LoginDTO dto = parsePayload(request, LoginDTO.class);
         return userService.login(dto);
     }
 
     private Response handleRegister(Request request) {
-        RegisterDTO dto = GSON.fromJson(GSON.toJson(request.getPayload()), RegisterDTO.class);
+        RegisterDTO dto = parsePayload(request, RegisterDTO.class);
         return userService.register(dto);
     }
 
     private Response handleGetAuctionDetail(Request request) {
-        // payload là String auctionId
-        String auctionId = GSON.fromJson(GSON.toJson(request.getPayload()), String.class);
+        String auctionId = parsePayload(request, String.class);
         return auctionService.getAuctionDetail(auctionId);
     }
 
     private Response handleCreateAuction(Request request, String sellerId) {
-        CreateAuctionDTO dto = GSON.fromJson(GSON.toJson(request.getPayload()), CreateAuctionDTO.class);
+        CreateAuctionDTO dto = parsePayload(request, CreateAuctionDTO.class);
         return auctionService.createAuction(dto, sellerId);
     }
 
     private Response handleCloseAuction(Request request) {
-        String auctionId = GSON.fromJson(GSON.toJson(request.getPayload()), String.class);
+        String auctionId = parsePayload(request, String.class);
         return auctionService.closeAuction(auctionId);
     }
 
     private Response handlePlaceBid(Request request, String bidderId) {
-        BidRequestDTO dto = GSON.fromJson(GSON.toJson(request.getPayload()), BidRequestDTO.class);
+        BidRequestDTO dto = parsePayload(request, BidRequestDTO.class);
         return bidService.placeBid(dto, bidderId);
     }
 
     private Response handleGetBidHistory(Request request) {
-        String auctionId = GSON.fromJson(GSON.toJson(request.getPayload()), String.class);
+        String auctionId = parsePayload(request, String.class);
         return bidService.getBidHistory(auctionId);
     }
 }

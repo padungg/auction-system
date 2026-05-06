@@ -24,35 +24,35 @@ import java.util.concurrent.TimeUnit;
  * SOCKET SERVER — Lắng nghe port, tạo thread cho từng client.
  *
  * Cơ chế:
- *   - Dùng ThreadPool (FixedThreadPool) thay vì new Thread() thô:
- *       → Giới hạn tối đa maxClients thread đồng thời
- *       → Tái sử dụng thread → tránh chi phí khởi tạo thread liên tục
- *       → Khi pool đầy: client mới phải chờ (không bị reject ngay)
+ * - Dùng ThreadPool (FixedThreadPool) thay vì new Thread() thô:
+ * → Giới hạn tối đa maxClients thread đồng thời
+ * → Tái sử dụng thread → tránh chi phí khởi tạo thread liên tục
+ * → Khi pool đầy: client mới phải chờ (không bị reject ngay)
  *
  * Dependency injection:
- *   - SocketServer tạo toàn bộ DAO → Service → RequestController 1 lần duy nhất
- *   - Mỗi ClientHandler nhận RequestController đã khởi tạo sẵn (không tạo lại)
- *   → Tất cả handler dùng chung cùng 1 bộ Service + DAO → nhất quán dữ liệu
+ * - SocketServer tạo toàn bộ DAO → Service → RequestController 1 lần duy nhất
+ * - Mỗi ClientHandler nhận RequestController đã khởi tạo sẵn (không tạo lại)
+ * → Tất cả handler dùng chung cùng 1 bộ Service + DAO → nhất quán dữ liệu
  *
  * Vòng đời:
- *   ServerApp.main() → socketServer.start() → vòng lặp accept()
- *   ServerApp shutdown hook → socketServer.stop()
+ * ServerApp.main() → socketServer.start() → vòng lặp accept()
+ * ServerApp shutdown hook → socketServer.stop()
  */
 public class SocketServer {
 
-    private final int  port;
-    private final int  maxClients;
+    private final int port;
+    private final int maxClients;
 
-    private ServerSocket        serverSocket;
-    private ExecutorService     threadPool;
+    private ServerSocket serverSocket;
+    private ExecutorService threadPool;
 
     /** Controller dùng chung cho tất cả ClientHandler */
-    private RequestController   sharedController;
+    private RequestController sharedController;
 
     private volatile boolean running = false;
 
     public SocketServer(int port, int maxClients) {
-        this.port       = port;
+        this.port = port;
         this.maxClients = maxClients;
     }
 
@@ -62,16 +62,16 @@ public class SocketServer {
 
     /**
      * Khởi động server:
-     *   1. Khởi tạo toàn bộ DAO → Service → Controller (DI)
-     *   2. Mở ServerSocket
-     *   3. Vòng lặp accept() — blocking, chạy trên thread gọi start()
+     * 1. Khởi tạo toàn bộ DAO → Service → Controller (DI)
+     * 2. Mở ServerSocket
+     * 3. Vòng lặp accept() — blocking, chạy trên thread gọi start()
      */
     public void start() throws IOException {
         initDependencies();
 
         serverSocket = new ServerSocket(port);
-        threadPool   = Executors.newFixedThreadPool(maxClients);
-        running      = true;
+        threadPool = Executors.newFixedThreadPool(maxClients);
+        running = true;
 
         System.out.println("[SocketServer] START: lắng nghe port " + port
                 + " | tối đa " + maxClients + " client đồng thời");
@@ -93,9 +93,9 @@ public class SocketServer {
 
     /**
      * Dừng server sạch:
-     *   1. Đánh dấu running = false → vòng lặp accept thoát
-     *   2. Đóng ServerSocket → unblock accept() đang chờ
-     *   3. Chờ thread pool hoàn thành tối đa 15s, sau đó force stop
+     * 1. Đánh dấu running = false → vòng lặp accept thoát
+     * 2. Đóng ServerSocket → unblock accept() đang chờ
+     * 3. Chờ thread pool hoàn thành tối đa 15s, sau đó force stop
      */
     public void stop() {
         running = false;
@@ -129,22 +129,22 @@ public class SocketServer {
 
     /**
      * Khởi tạo toàn bộ dependency theo thứ tự:
-     *   DAO (truy cập DB) → Service (nghiệp vụ) → Controller (router)
+     * DAO (truy cập DB) → Service (nghiệp vụ) → Controller (router)
      *
      * Thực hiện 1 lần khi server start.
      * Tất cả ClientHandler dùng chung sharedController này.
      */
     private void initDependencies() {
         // ── Tầng DAO ─────────────────────────────────────────────
-        UserDAO            userDAO            = new UserDAOImpl();
-        AuctionDAO         auctionDAO         = new AuctionDAOImpl();
-        ItemDAO            itemDAO            = new ItemDAOImpl();
-        BidTransactionDAO  bidTransactionDAO  = new BidTransactionDAOImpl();
+        UserDAO userDAO = new UserDAOImpl();
+        AuctionDAO auctionDAO = new AuctionDAOImpl();
+        ItemDAO itemDAO = new ItemDAOImpl();
+        BidTransactionDAO bidTransactionDAO = new BidTransactionDAOImpl();
 
         // ── Tầng Service ─────────────────────────────────────────
-        UserService    userService    = new UserService(userDAO);
+        UserService userService = new UserService(userDAO);
         AuctionService auctionService = new AuctionService(auctionDAO, itemDAO, userDAO);
-        BidService     bidService     = new BidService(auctionDAO, bidTransactionDAO);
+        BidService bidService = new BidService(auctionDAO, bidTransactionDAO);
 
         // ── Tầng Controller ──────────────────────────────────────
         sharedController = new RequestController(userService, auctionService, bidService);

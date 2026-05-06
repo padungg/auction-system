@@ -141,17 +141,17 @@ public class AuctionService {
         Item item;
 
         switch (dto.getItemType().toUpperCase()) {
-            case "ELECTRONICS":
+            case ItemFactory.TYPE_ELECTRONICS:
                 item = ItemFactory.createElectronics(
                         itemId, dto.getName(), dto.getDescription(), condition, sellerId,
                         dto.getStartingPrice(), dto.getBrand(), dto.getWarrantyMonths());
                 break;
-            case "ART":
+            case ItemFactory.TYPE_ART:
                 item = ItemFactory.createArt(
                         itemId, dto.getName(), dto.getDescription(), condition, sellerId,
                         dto.getStartingPrice(), dto.getArtistName(), dto.getMaterial(), dto.getCreationYear());
                 break;
-            case "VEHICLE":
+            case ItemFactory.TYPE_VEHICLE:
                 item = ItemFactory.createVehicle(
                         itemId, dto.getName(), dto.getDescription(), condition, sellerId,
                         dto.getStartingPrice(), dto.getBrand(), dto.getModel(), dto.getYear(), dto.getKm());
