@@ -10,4 +10,12 @@ public interface AuctionObserver {
      * Được gọi tự động khi có bid mới trên phiên đấu giá mà observer đang theo dõi.
      */
     void onBidUpdated(String auctionId, double newPrice, String bidderId);
+
+    /**
+     * Được gọi khi phiên đấu giá kết thúc (hết hạn hoặc người bán đóng sớm).
+     * ClientHandler nhận → gửi thông báo "AUCTION_CLOSED" về client → client khóa form bid.
+     *
+     * @param winnerId null nếu không có ai đặt giá
+     */
+    void onAuctionClosed(String auctionId, double finalPrice, String winnerId);
 }

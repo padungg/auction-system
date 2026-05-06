@@ -148,11 +148,12 @@ public class AuctionScheduler {
         auctionDAO.update(auction);
 
         // Bước 2: Notify sau khi DB đã an toàn
-        // Nếu notify thất bại → client không biết ngay, nhưng DB đúng → lần refresh sau sẽ thấy CLOSED
-        AuctionManager.getInstance().notifyBidUpdate(
+        // Dùng notifyAuctionClosed() (không phải notifyBidUpdate) để client phân biệt
+        // được đây là sự kiện đóng phiên → khóa form bid, hiển thị "Phiên đã kết thúc"
+        AuctionManager.getInstance().notifyAuctionClosed(
                 auction.getId(),
                 auction.getCurrentPrice(),
-                "SYSTEM_CLOSE"
+                auction.getCurrentWinnerId()
         );
 
         System.out.println("[AuctionScheduler] CLOSE: auctionId=" + auction.getId()

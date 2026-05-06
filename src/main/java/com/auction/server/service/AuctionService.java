@@ -217,8 +217,8 @@ public class AuctionService {
         auctionDAO.update(auction);
 
         // Thông báo realtime cho tất cả client đang xem phiên này
-        AuctionManager.getInstance().notifyBidUpdate(
-                auctionId, auction.getCurrentPrice(), "SYSTEM_CLOSE");
+        AuctionManager.getInstance().notifyAuctionClosed(
+                auctionId, auction.getCurrentPrice(), auction.getCurrentWinnerId());
 
         // Tìm tên winner
         String winnerName = "Không có người đặt giá";
