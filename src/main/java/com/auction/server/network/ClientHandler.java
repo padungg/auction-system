@@ -18,43 +18,46 @@ import java.io.PrintWriter;
 import java.net.Socket;
 
 /**
- * CLIENT HANDLER — Mỗi client kết nối tạo ra 1 instance, chạy trên 1 thread riêng.
+ * CLIENT HANDLER — Mỗi client kết nối tạo ra 1 instance, chạy trên 1 thread
+ * riêng.
  *
  * Vai trò kép:
- *   1. Runnable  — vòng lặp đọc Request → xử lý → gửi Response về client.
- *   2. AuctionObserver — nhận push realtime từ AuctionManager khi có bid mới / phiên đóng,
- *      ghi ngay xuống socket về client (không cần client phải poll).
+ * 1. Runnable — vòng lặp đọc Request → xử lý → gửi Response về client.
+ * 2. AuctionObserver — nhận push realtime từ AuctionManager khi có bid mới /
+ * phiên đóng,
+ * ghi ngay xuống socket về client (không cần client phải poll).
  *
  * Vòng đời:
- *   SocketServer.accept() → new ClientHandler(socket) → new Thread(handler).start()
- *   → run() loop đọc từng dòng JSON
- *   → khi client ngắt kết nối hoặc lỗi: cleanup() → unsubscribeAll → đóng socket
+ * SocketServer.accept() → new ClientHandler(socket) → new
+ * Thread(handler).start()
+ * → run() loop đọc từng dòng JSON
+ * → khi client ngắt kết nối hoặc lỗi: cleanup() → unsubscribeAll → đóng socket
  *
  * Thread-safety:
- *   - PrintWriter out được dùng bởi 2 luồng:
- *       (a) Thread của chính handler này (gửi Response sau khi xử lý request)
- *       (b) Thread của AuctionManager (push notify khi có bid/close)
- *   - Dùng synchronized(out) ở mọi chỗ ghi → tránh 2 luồng ghi socket cùng lúc.
+ * - PrintWriter out được dùng bởi 2 luồng:
+ * (a) Thread của chính handler này (gửi Response sau khi xử lý request)
+ * (b) Thread của AuctionManager (push notify khi có bid/close)
+ * - Dùng synchronized(out) ở mọi chỗ ghi → tránh 2 luồng ghi socket cùng lúc.
  *
  * Session:
- *   - loggedInUserId: null khi chưa login, set sau khi login thành công.
- *   - Dùng để truyền vào RequestController (phân quyền bid, tạo phiên...).
+ * - loggedInUserId: null khi chưa login, set sau khi login thành công.
+ * - Dùng để truyền vào RequestController (phân quyền bid, tạo phiên...).
  */
 public class ClientHandler implements Runnable, AuctionObserver {
 
     private static final Gson GSON = GsonProvider.getInstance();
 
-    private final Socket            socket;
+    private final Socket socket;
     private final RequestController controller;
 
     private BufferedReader in;
-    private PrintWriter    out;
+    private PrintWriter out;
 
     /** UserId đang đăng nhập — null nếu chưa login */
     private String loggedInUserId = null;
 
     public ClientHandler(Socket socket, RequestController controller) {
-        this.socket     = socket;
+        this.socket = socket;
         this.controller = controller;
     }
 
@@ -69,7 +72,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
 
         try {
             // Khởi tạo stream — UTF-8 để xử lý tiếng Việt trong JSON
-            in  = new BufferedReader(new InputStreamReader(socket.getInputStream(),  "UTF-8"));
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
             out = new PrintWriter(socket.getOutputStream(), true); // autoFlush=true
 
             String line;
@@ -161,10 +164,10 @@ public class ClientHandler implements Runnable, AuctionObserver {
     public void onBidUpdated(String auctionId, double newPrice, String bidderId) {
         // Tạo push notification dạng JSON riêng (không phải Response thông thường)
         JsonObject push = new JsonObject();
-        push.addProperty("event",    "BID_UPDATE");
+        push.addProperty("event", "BID_UPDATE");
         push.addProperty("auctionId", auctionId);
-        push.addProperty("newPrice",   newPrice);
-        push.addProperty("bidderId",   bidderId);
+        push.addProperty("newPrice", newPrice);
+        push.addProperty("bidderId", bidderId);
         sendPush(push.toString());
     }
 
@@ -177,9 +180,9 @@ public class ClientHandler implements Runnable, AuctionObserver {
     @Override
     public void onAuctionClosed(String auctionId, double finalPrice, String winnerId) {
         JsonObject push = new JsonObject();
-        push.addProperty("event",      "AUCTION_CLOSED");
-        push.addProperty("auctionId",   auctionId);
-        push.addProperty("finalPrice",  finalPrice);
+        push.addProperty("event", "AUCTION_CLOSED");
+        push.addProperty("auctionId", auctionId);
+        push.addProperty("finalPrice", finalPrice);
         // winnerId có thể null → chỉ thêm khi != null
         if (winnerId != null) {
             push.addProperty("winnerId", winnerId);
@@ -213,13 +216,14 @@ public class ClientHandler implements Runnable, AuctionObserver {
 
     /**
      * Dọn dẹp khi client ngắt kết nối:
-     *   1. Hủy tất cả subscription → AuctionManager không push vào socket đã đóng
-     *   2. Đóng socket
+     * 1. Hủy tất cả subscription → AuctionManager không push vào socket đã đóng
+     * 2. Đóng socket
      */
     private void cleanup(String clientAddr) {
         AuctionManager.getInstance().unsubscribeAll(this);
         try {
-            if (!socket.isClosed()) socket.close();
+            if (!socket.isClosed())
+                socket.close();
         } catch (IOException e) {
             System.out.println("[ClientHandler] CLEANUP_ERROR: " + e.getMessage());
         }

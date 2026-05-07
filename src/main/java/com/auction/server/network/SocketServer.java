@@ -10,6 +10,7 @@ import com.auction.server.dao.ItemDAOImpl;
 import com.auction.server.dao.UserDAO;
 import com.auction.server.dao.UserDAOImpl;
 import com.auction.server.service.AuctionService;
+import com.auction.server.service.AutoBidService;
 import com.auction.server.service.BidService;
 import com.auction.server.service.UserService;
 
@@ -136,19 +137,25 @@ public class SocketServer {
      */
     private void initDependencies() {
         // ── Tầng DAO ─────────────────────────────────────────────
-        UserDAO userDAO = new UserDAOImpl();
-        AuctionDAO auctionDAO = new AuctionDAOImpl();
-        ItemDAO itemDAO = new ItemDAOImpl();
+        UserDAO           userDAO           = new UserDAOImpl();
+        AuctionDAO        auctionDAO        = new AuctionDAOImpl();
+        ItemDAO           itemDAO           = new ItemDAOImpl();
         BidTransactionDAO bidTransactionDAO = new BidTransactionDAOImpl();
 
         // ── Tầng Service ─────────────────────────────────────────
-        UserService userService = new UserService(userDAO);
+        UserService    userService    = new UserService(userDAO);
         AuctionService auctionService = new AuctionService(auctionDAO, itemDAO, userDAO);
-        BidService bidService = new BidService(auctionDAO, bidTransactionDAO);
+
+        // AutoBidService cần AuctionDAO + BidTransactionDAO để persist auto-bid
+        AutoBidService autoBidService = new AutoBidService(auctionDAO, bidTransactionDAO);
+
+        // BidService nhận AutoBidService để trigger sau mỗi bid thủ công
+        BidService bidService = new BidService(auctionDAO, bidTransactionDAO, autoBidService);
 
         // ── Tầng Controller ──────────────────────────────────────
-        sharedController = new RequestController(userService, auctionService, bidService);
+        sharedController = new RequestController(userService, auctionService,
+                                                 bidService, autoBidService);
 
-        System.out.println("[SocketServer] INIT: DAO → Service → Controller khởi tạo xong");
+        System.out.println("[SocketServer] INIT: DAO → Service → AutoBidService → Controller khởi tạo xong");
     }
 }

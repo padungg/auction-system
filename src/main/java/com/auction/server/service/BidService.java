@@ -19,15 +19,19 @@ import java.util.UUID;
  * Service xử lý nghiệp vụ Đặt Giá (Bid).
  *   - SYNCHRONIZED: Khóa method → tránh race condition khi nhiều người bid cùng lúc
  *   - OBSERVER: Sau khi bid thành công → thông báo cho tất cả client đang xem phiên đó
+ *   - AUTO-BID: Sau mỗi bid, kích hoạt AutoBidService để xử lý các lượt tự động phản giá
  *   - Lịch sử bid: Trả về danh sách BidTransaction của 1 phiên
  */
 public class BidService {
-    private final AuctionDAO auctionDAO;
-    private final BidTransactionDAO bidTransactionDAO;
+    private final AuctionDAO         auctionDAO;
+    private final BidTransactionDAO  bidTransactionDAO;
+    private final AutoBidService     autoBidService;   // xử lý auto-bid sau mỗi bid
 
-    public BidService(AuctionDAO auctionDAO, BidTransactionDAO bidTransactionDAO) {
+    public BidService(AuctionDAO auctionDAO, BidTransactionDAO bidTransactionDAO,
+                      AutoBidService autoBidService) {
         this.auctionDAO        = auctionDAO;
         this.bidTransactionDAO = bidTransactionDAO;
+        this.autoBidService    = autoBidService;
     }
     /**
      * Xử lý đặt giá — SYNCHRONIZED để tránh race condition.
@@ -103,6 +107,12 @@ public class BidService {
         System.out.println("[BidService] PLACE_BID: phiên=" + dto.getAuctionId()
                 + " | bidder=" + bidderId
                 + " | " + String.format("%,.0f", oldPrice) + " → " + String.format("%,.0f", bidAmount) + " VNĐ");
+
+        // ── AUTO-BID: kích hoạt các lượt tự động phản giá đã đăng ký ────────────────
+        // Gọi SAU khi bid của bidder đã được lưu vào DB và notify xong
+        // AutoBidService sẽ tự loop cho đến khi không còn ai phản giá được
+        autoBidService.triggerAutoBids(dto.getAuctionId(), bidAmount, bidderId);
+
         return new Response(ResponseStatus.SUCCESS,
                 "Đặt giá thành công! Giá mới: " + String.format("%,.0f", bidAmount) + " VNĐ", bidAmount);
     }

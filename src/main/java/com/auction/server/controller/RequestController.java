@@ -1,5 +1,6 @@
 package com.auction.server.controller;
 
+import com.auction.model.dto.AutoBidDTO;
 import com.auction.model.dto.BidRequestDTO;
 import com.auction.model.dto.CreateAuctionDTO;
 import com.auction.model.dto.LoginDTO;
@@ -9,6 +10,7 @@ import com.auction.model.protocol.Response;
 import com.auction.model.protocol.ResponseStatus;
 import com.auction.model.util.GsonProvider;
 import com.auction.server.service.AuctionService;
+import com.auction.server.service.AutoBidService;
 import com.auction.server.service.BidService;
 import com.auction.server.service.UserService;
 import com.google.gson.Gson;
@@ -34,13 +36,16 @@ public class RequestController {
     private final UserService    userService;
     private final AuctionService auctionService;
     private final BidService     bidService;
+    private final AutoBidService autoBidService;
 
     public RequestController(UserService userService,
                              AuctionService auctionService,
-                             BidService bidService) {
+                             BidService bidService,
+                             AutoBidService autoBidService) {
         this.userService    = userService;
         this.auctionService = auctionService;
         this.bidService     = bidService;
+        this.autoBidService = autoBidService;
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -87,6 +92,13 @@ public class RequestController {
 
             case GET_BID_HISTORY:
                 return handleGetBidHistory(request);
+
+            // ── AUTO-BID ───────────────────────────────────
+            case REGISTER_AUTO_BID:
+                return handleRegisterAutoBid(request, loggedInUserId);
+
+            case CANCEL_AUTO_BID:
+                return handleCancelAutoBid(request, loggedInUserId);
 
             // ── SUBSCRIBE: được xử lý trực tiếp tại ClientHandler ─
             // SUBSCRIBE_AUCTION và UNSUBSCRIBE_AUCTION không qua đây
@@ -139,5 +151,15 @@ public class RequestController {
     private Response handleGetBidHistory(Request request) {
         String auctionId = parsePayload(request, String.class);
         return bidService.getBidHistory(auctionId);
+    }
+
+    private Response handleRegisterAutoBid(Request request, String userId) {
+        AutoBidDTO dto = parsePayload(request, AutoBidDTO.class);
+        return autoBidService.register(dto, userId);
+    }
+
+    private Response handleCancelAutoBid(Request request, String userId) {
+        String auctionId = parsePayload(request, String.class);
+        return autoBidService.cancel(auctionId, userId);
     }
 }
