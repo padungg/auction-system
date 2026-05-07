@@ -78,7 +78,13 @@ public class ClientHandler implements Runnable, AuctionObserver {
             String line;
             // Mỗi message là 1 dòng JSON (line-delimited protocol)
             while ((line = in.readLine()) != null) {
-                handleRawMessage(line);
+                try {
+                    handleRawMessage(line);
+                } catch (Exception e) {
+                    System.err.println("[ClientHandler] LỖI NGOẠI LỆ không mong muốn: " + e.getMessage());
+                    e.printStackTrace();
+                    sendResponse(new Response(ResponseStatus.ERROR, "Lỗi máy chủ nội bộ (500): " + e.getMessage(), null));
+                }
             }
 
         } catch (IOException e) {

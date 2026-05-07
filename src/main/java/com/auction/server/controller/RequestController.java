@@ -64,49 +64,55 @@ public class RequestController {
             return new Response(ResponseStatus.BAD_REQUEST, "Request không hợp lệ", null);
         }
 
-        switch (request.getType()) {
+        try {
+            switch (request.getType()) {
 
-            // ── USER ──────────────────────────────────────────────
-            case LOGIN:
-                return handleLogin(request);
+                // ── USER ──────────────────────────────────────────────
+                case LOGIN:
+                    return handleLogin(request);
 
-            case REGISTER:
-                return handleRegister(request);
+                case REGISTER:
+                    return handleRegister(request);
 
-            // ── AUCTION ───────────────────────────────────────────
-            case GET_ALL_AUCTIONS:
-                return auctionService.getAllAuctions();
+                // ── AUCTION ───────────────────────────────────────────
+                case GET_ALL_AUCTIONS:
+                    return auctionService.getAllAuctions();
 
-            case GET_AUCTION_DETAIL:
-                return handleGetAuctionDetail(request);
+                case GET_AUCTION_DETAIL:
+                    return handleGetAuctionDetail(request);
 
-            case CREATE_AUCTION:
-                return handleCreateAuction(request, loggedInUserId);
+                case CREATE_AUCTION:
+                    return handleCreateAuction(request, loggedInUserId);
 
-            case CLOSE_AUCTION:
-                return handleCloseAuction(request);
+                case CLOSE_AUCTION:
+                    return handleCloseAuction(request);
 
-            // ── BID ───────────────────────────────────────────────
-            case PLACE_BID:
-                return handlePlaceBid(request, loggedInUserId);
+                // ── BID ───────────────────────────────────────────────
+                case PLACE_BID:
+                    return handlePlaceBid(request, loggedInUserId);
 
-            case GET_BID_HISTORY:
-                return handleGetBidHistory(request);
+                case GET_BID_HISTORY:
+                    return handleGetBidHistory(request);
 
-            // ── AUTO-BID ───────────────────────────────────
-            case REGISTER_AUTO_BID:
-                return handleRegisterAutoBid(request, loggedInUserId);
+                // ── AUTO-BID ───────────────────────────────────
+                case REGISTER_AUTO_BID:
+                    return handleRegisterAutoBid(request, loggedInUserId);
 
-            case CANCEL_AUTO_BID:
-                return handleCancelAutoBid(request, loggedInUserId);
+                case CANCEL_AUTO_BID:
+                    return handleCancelAutoBid(request, loggedInUserId);
 
-            // ── SUBSCRIBE: được xử lý trực tiếp tại ClientHandler ─
-            // SUBSCRIBE_AUCTION và UNSUBSCRIBE_AUCTION không qua đây
-            // vì cần tham chiếu đến chính ClientHandler (observer).
+                // ── SUBSCRIBE: được xử lý trực tiếp tại ClientHandler ─
+                // SUBSCRIBE_AUCTION và UNSUBSCRIBE_AUCTION không qua đây
+                // vì cần tham chiếu đến chính ClientHandler (observer).
 
-            default:
-                return new Response(ResponseStatus.BAD_REQUEST,
-                        "Loại request không được hỗ trợ: " + request.getType(), null);
+                default:
+                    return new Response(ResponseStatus.BAD_REQUEST,
+                            "Loại request không được hỗ trợ: " + request.getType(), null);
+            }
+        } catch (Exception e) {
+            System.err.println("[RequestController] LỖI NGOẠI LỆ nội bộ: " + e.getMessage());
+            e.printStackTrace();
+            return new Response(ResponseStatus.ERROR, "Lỗi máy chủ (500): " + e.getMessage(), null);
         }
     }
 
