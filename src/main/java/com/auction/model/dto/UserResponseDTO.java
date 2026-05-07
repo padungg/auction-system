@@ -4,7 +4,6 @@ import com.auction.model.entity.UserRole;
 
 /**
  * Gói tin DTO Server trả về cho Client sau khi xác thực thành công.
- * TUYỆT ĐỐI KHÔNG chứa trường Password để đảm bảo bảo mật.
  */
 public class UserResponseDTO {
 

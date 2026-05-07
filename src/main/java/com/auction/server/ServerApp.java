@@ -1,92 +1,56 @@
 package com.auction.server;
 
-import com.auction.server.controller.AuctionController;
-import com.auction.server.controller.BidController;
-import com.auction.server.controller.UserController;
-import com.auction.server.network.ClientHandler;
-import com.auction.server.controller.RequestRouter;
-import com.auction.server.service.AuctionService;
-import com.auction.server.service.BidService;
-import com.auction.server.service.UserService;
-import com.auction.server.dao.*;
-
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import com.auction.server.dao.AuctionDAO;
+import com.auction.server.dao.AuctionDAOImpl;
+import com.auction.server.network.SocketServer;
+import com.auction.server.service.AuctionScheduler;
+import com.auction.server.database.DatabaseInitializer;
 
 /**
- * Socket Server đa luồng — "Trái tim" của hệ thống.
+ * ĐIỂM KHỞI ĐỘNG SERVER.
  *
- * Khởi tạo theo thứ tự:
- *   1. DAO       → truy cập dữ liệu
- *   2. Service   → xử lý logic nghiệp vụ
- *   3. Controller → convert payload + gọi Service
- *   4. Router    → điều hướng request → Controller
- *   5. Server    → lắng nghe kết nối, tạo ClientHandler
+ * Thứ tự khởi động:
+ * 1. AuctionScheduler.start() — đóng các phiên đã hết hạn từ trước lần restart
+ * 2. SocketServer.start() — bắt đầu nhận kết nối từ client (blocking)
  *
- * Luồng hoàn chỉnh:
- *   Client → ClientHandler → Router → Controller → Service → DAO
+ * Shutdown Hook (Ctrl+C hoặc kill):
+ * - Đảm bảo AuctionScheduler dừng sạch (không cắt giữa lúc đang update DB)
+ * - Đảm bảo SocketServer dừng sạch (không cắt giữa lúc đang xử lý bid)
  */
 public class ServerApp {
 
-    private static final int PORT = 1234;
+    private static final int PORT = 8080;
     private static final int MAX_CLIENTS = 20;
 
     public static void main(String[] args) {
 
-        // ========== 1. KHỞI TẠO SINGLETON TÀI NGUYÊN ==========
-        System.out.println(">>> [Hệ thống]: Đang khởi tạo kết nối Database (Singleton)...");
-        com.auction.server.database.DatabaseConnection.getInstance();
-        
-        System.out.println(">>> [Hệ thống]: Đang khởi tạo Tổng đài Thực thi (Singleton)...");
-        com.auction.server.observer.AuctionManager.getInstance();
+        // ── 0. Khởi tạo Database (tạo bảng nếu chưa có) ──────────
+        DatabaseInitializer.initialize();
 
-        // ========== 2. KHỞI TẠO DAO ==========
-        // TODO: Khi người làm DAO hoàn thành, thay Mock bằng Implementation thật
-        UserDAO userDAO = new UserDAOImpl();
-        ItemDAO itemDAO = new ItemDAOImpl();
+        // ── 1. Khởi tạo DAO cho Scheduler ───────────────────────
         AuctionDAO auctionDAO = new AuctionDAOImpl();
-        BidTransactionDAO bidTransactionDAO = new BidTransactionDAOImpl();
+        AuctionScheduler scheduler = new AuctionScheduler(auctionDAO);
 
-        // ========== 2. KHỞI TẠO SERVICE ==========
-        UserService userService = new UserService(userDAO);
-        AuctionService auctionService = new AuctionService(auctionDAO, itemDAO, userDAO);
-        BidService bidService = new BidService(auctionDAO, bidTransactionDAO);
+        // ── 2. Khởi tạo SocketServer ─────────────────────────────
+        SocketServer socketServer = new SocketServer(PORT, MAX_CLIENTS);
 
-        // ========== 3. KHỞI TẠO CONTROLLER ==========
-        UserController userController = new UserController(userService);
-        AuctionController auctionController = new AuctionController(auctionService);
-        BidController bidController = new BidController(bidService);
+        // ── 3. Shutdown Hook — chạy khi JVM nhận tín hiệu tắt ───
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("\n[ServerApp] SHUTDOWN: đang dừng server...");
+            scheduler.stop(); // dừng Scheduler trước (không block lâu)
+            socketServer.stop(); // dừng SocketServer sau (chờ client xử lý xong)
+            System.out.println("[ServerApp] SHUTDOWN: hoàn tất — goodbye!");
+        }, "ShutdownHook-Thread"));
 
-        // ========== 4. KHỞI TẠO ROUTER ==========
-        RequestRouter router = new RequestRouter(userController, auctionController, bidController);
+        // ── 4. Start Scheduler (non-blocking, chạy ngầm) ─────────
+        scheduler.start();
 
-        // ========== 5. KHỞI ĐỘNG SERVER SOCKET ==========
-        ExecutorService threadPool = Executors.newFixedThreadPool(MAX_CLIENTS);
-
-        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-
-            System.out.println("============================================");
-            System.out.println("   HỆ THỐNG ĐẤU GIÁ TRỰC TUYẾN — SERVER");
-            System.out.println("============================================");
-            System.out.println(">>> [Hệ thống]: SERVER ĐANG CHẠY...");
-            System.out.println(">>> [Hệ thống]: ĐANG ĐỢI KẾT NỐI TẠI CỔNG " + PORT + "...");
-            System.out.println(">>> [Hệ thống]: Tối đa " + MAX_CLIENTS + " client đồng thời");
-            System.out.println("--------------------------------------------");
-
-            while (true) {
-                Socket clientSocket = serverSocket.accept();
-                ClientHandler handler = new ClientHandler(clientSocket, router);
-                threadPool.execute(handler);
-            }
-
-        } catch (IOException e) {
-            System.out.println(">>> [HỆ THỐNG]: LỖI SERVER: " + e.getMessage());
-        } finally {
-            threadPool.shutdown();
-            System.out.println(">>> [HỆ THỐNG]: Server đã dừng.");
+        // ── 5. Start SocketServer (blocking — giữ main thread sống) ─
+        try {
+            socketServer.start(); // vòng lặp accept() — block tại đây
+        } catch (Exception e) {
+            System.out.println("[ServerApp] FATAL: " + e.getMessage());
+            System.exit(1);
         }
     }
 }

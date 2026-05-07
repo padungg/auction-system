@@ -1,6 +1,8 @@
 package com.auction.server.observer;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -9,47 +11,39 @@ import java.util.concurrent.CopyOnWriteArrayList;
  *
  * Khi có bid mới → AuctionManager duyệt danh sách observer → gọi onBidUpdated() cho từng người.
  *
- * Tại sao Singleton?
- *   - Toàn server chỉ cần 1 AuctionManager duy nhất
- *   - Mọi BidService, ClientHandler đều trỏ về cùng 1 instance
- *
- * Tại sao ConcurrentHashMap + CopyOnWriteArrayList?
- *   - ConcurrentHashMap: Bảo đảm an toàn khi tạo/xóa danh sách của từng phiên mà không chặn (block) toàn bộ đối tượng.
- *   - CopyOnWriteArrayList: Cho phép đọc + ghi đồng thời trên danh sách người xem mà không dính lỗi ConcurrentModificationException.
+ * Thread-safety:
+ *   - ConcurrentHashMap    : an toàn khi đọc/ghi map (nhiều thread subscribe cùng lúc)
+ *   - CopyOnWriteArrayList : an toàn khi notify đang chạy mà có subscribe mới xảy ra
+ *   - computeIfAbsent      : tạo list atomícally, không bị race condition khi khởi tạo
+ *   - try-catch trong notify: 1 client lỗi không làm gãy toàn bộ thông báo
+ * Không dùng polling — chỉ push đúng khi có sự kiện (event-based).
  */
 public class AuctionManager {
-
-    // Singleton instance declaration
-    private static AuctionManager instance;
-
-    // Map: auctionId → danh sách observer đang theo dõi phiên đó
+    // Singleton — Holder pattern: lazy + thread-safe, không cần synchronized
+    private static class Holder {
+        private static final AuctionManager INSTANCE = new AuctionManager();
+    }
+    // Map: auctionId -> danh sách observer đang theo dõi phiên đó
     private final Map<String, List<AuctionObserver>> observerMap;
-
-    // Constructor private
     private AuctionManager() {
-        // Sử dụng ConcurrentHashMap để an toàn về multi-thread mà không cần synchronized block
         this.observerMap = new ConcurrentHashMap<>();
     }
-
-    // Lấy instance duy nhất (synchronized lần đầu khởi tạo)
-    public static synchronized AuctionManager getInstance() {
-        if (instance == null) {
-            instance = new AuctionManager();
-        }
-        return instance;
+    public static AuctionManager getInstance() {
+        return Holder.INSTANCE;
     }
-
     /**
      * Đăng ký theo dõi 1 phiên đấu giá.
+     * computeIfAbsent: tạo list atomically — thậm chí 2 thread gọi cùng lúc cũng chỉ có 1 list.
      */
     public void subscribe(String auctionId, AuctionObserver observer) {
-        observerMap
-                .computeIfAbsent(auctionId, k -> new CopyOnWriteArrayList<>())
-                .add(observer);
-        System.out.println(">>> [Observer] +1 người theo dõi phiên " + auctionId
-                + " (tổng: " + observerMap.get(auctionId).size() + ")");
+        List<AuctionObserver> observers = observerMap
+                .computeIfAbsent(auctionId, k -> new CopyOnWriteArrayList<>());
+        if (!observers.contains(observer)) { // tránh subscribe trùng lặp
+            observers.add(observer);
+        }
+        System.out.println("[AuctionManager] SUBSCRIBE: phiên=" + auctionId
+                + " | tổng observer=" + observers.size());
     }
-
     /**
      * Hủy theo dõi 1 phiên đấu giá.
      */
@@ -57,44 +51,73 @@ public class AuctionManager {
         List<AuctionObserver> observers = observerMap.get(auctionId);
         if (observers != null) {
             observers.remove(observer);
-            // Dọn dẹp an toàn nếu không còn ai xem (ConcurrentHashMap có hàm remove so sánh đối tượng)
             if (observers.isEmpty()) {
                 observerMap.remove(auctionId, observers);
             }
         }
+        System.out.println("[AuctionManager] UNSUBSCRIBE: phiên=" + auctionId);
     }
-
     /**
      * Hủy toàn bộ theo dõi của 1 observer (khi client ngắt kết nối).
      */
-    public void unsubscribeAll(AuctionObserver observer) {
+    public void unsubscribeAll(AuctionObserver observer){
         for (Map.Entry<String, List<AuctionObserver>> entry : observerMap.entrySet()) {
             List<AuctionObserver> observers = entry.getValue();
             observers.remove(observer);
-            
-            if (observers.isEmpty()) {
+            if (observers.isEmpty()){
                 observerMap.remove(entry.getKey(), observers);
             }
         }
     }
-
     /**
      * Thông báo cho TẤT CẢ observer đang xem phiên này rằng có bid mới.
+     * Không dùng polling — chỉ gọi khi có sự kiện xảy ra (event-based).
+     * try-catch từng observer: 1 client lỗi không làm gãy việc thông báo các client khác.
      */
-    public void notifyBidUpdate(String auctionId, double newPrice, String bidderId) {
+    public void notifyBidUpdate(String auctionId, double newPrice, String bidderId, String bidTime) {
         List<AuctionObserver> observers = observerMap.get(auctionId);
-        if (observers != null && !observers.isEmpty()) {
-            for (AuctionObserver observer : observers) {
-                try {
-                    observer.onBidUpdated(auctionId, newPrice, bidderId);
-                } catch (Exception e) {
-                    // Observer lỗi → bỏ qua, không ảnh hưởng observer khác
-                    System.out.println(">>> [Observer] Lỗi thông báo: " + e.getMessage());
-                }
+        if (observers == null || observers.isEmpty()) return;
+
+        int count = 0;
+        for (AuctionObserver observer : observers) {
+            try {
+                observer.onBidUpdated(auctionId, newPrice, bidderId, bidTime);
+                count++;
+            } catch (Exception e) {
+                System.out.println("[AuctionManager] NOTIFY_ERROR: " + e.getMessage());
             }
-            System.out.println(">>> [Observer] Đã thông báo " + observers.size()
-                    + " người về bid mới trên phiên " + auctionId);
         }
+        System.out.println("[AuctionManager] NOTIFY: phiên=" + auctionId
+                + " | giá=" + String.format("%,.0f", newPrice)
+                + " | đã notify " + count + " client");
+    }
+
+    /**
+     * Thông báo phiên đấu giá đã đóng (khác với bid thường).
+     * Được gọi bởi AuctionScheduler khi hết hạn, hoặc người bán kết thúc sớm.
+     *
+     * Client nhận được sự kiện này → hiển thị "Phiên đã kết thúc", khóa form bid.
+     */
+    public void notifyAuctionClosed(String auctionId, double finalPrice, String winnerId) {
+        List<AuctionObserver> observers = observerMap.get(auctionId);
+        if (observers == null || observers.isEmpty()) {
+            observerMap.remove(auctionId); // dọn bộ nhớ
+            return;
+        }
+
+        // Snapshot để tránh ConcurrentModificationException khi unsubscribe trong callback
+        List<AuctionObserver> snapshot = new ArrayList<>(observers);
+        for (AuctionObserver observer : snapshot) {
+            try {
+                observer.onAuctionClosed(auctionId, finalPrice, winnerId);
+            } catch (Exception e) {
+                System.out.println("[AuctionManager] CLOSE_NOTIFY_ERROR: " + e.getMessage());
+            }
+        }
+        // Dọn map sau khi phiên đóng — không còn observer nào cần theo dõi
+        observerMap.remove(auctionId);
+        System.out.println("[AuctionManager] AUCTION_CLOSED: phiên=" + auctionId
+                + " | giá cuối=" + String.format("%,.0f", finalPrice)
+                + " | winner=" + (winnerId != null ? winnerId : "Không có"));
     }
 }
-

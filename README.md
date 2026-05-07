@@ -1,74 +1,33 @@
-<div align="center">
-
-# 🏛️ HỆ THỐNG ĐẤU GIÁ TRỰC TUYẾN
+# HỆ THỐNG ĐẤU GIÁ TRỰC TUYẾN
 ### Online Auction System
 
-**Bài tập lớn môn Lập trình mạng**
-
-**Giảng viên hướng dẫn:** *(Tên giảng viên)*
-
-Học kỳ II — Năm học 2025–2026
-
-</div>
-
----
-
-## 📖 Giới thiệu
+## Giới thiệu
 
 **Hệ thống Đấu giá Trực tuyến** là một ứng dụng phân tán Client-Server cho phép nhiều người dùng tham gia mua bán, đấu giá sản phẩm theo thời gian thực thông qua mạng.
 
-Dự án giải quyết bài toán **mô phỏng quy trình đấu giá trực tuyến**: người bán đăng sản phẩm lên hệ thống, nhiều người mua cùng tham gia đặt giá cạnh tranh trong một khoảng thời gian giới hạn, hệ thống tự động xác định người thắng cuộc khi phiên đấu giá kết thúc. Ứng dụng hỗ trợ phân quyền Admin/Member, quản lý nhiều loại sản phẩm (Phương tiện, Đồ điện tử, Nghệ thuật) và xử lý đồng thời nhiều kết nối từ các client khác nhau.
+Dự án giải quyết bài toán **mô phỏng quy trình đấu giá trực tuyến**: người bán đăng sản phẩm lên hệ thống, nhiều người mua cùng tham gia đặt giá cạnh tranh trong một khoảng thời gian giới hạn, hệ thống tự động xác định người thắng cuộc khi phiên đấu giá kết thúc. Ứng dụng hỗ trợ phân quyền Admin/Member, quản lý nhiều loại sản phẩm (Phương tiện, Đồ điện tử, Nghệ thuật,...) và xử lý đồng thời nhiều kết nối từ các client khác nhau.
 
 ---
 
-## 👥 Thành viên nhóm & Phân công công việc
-
-| STT | Họ và tên | MSSV | GitHub | Công việc |
-|:---:|:----------|:----:|:-------|:----------|
-| 1 | Phùng Anh Dũng | — | `padungg` | **Thiết kế kiến trúc & Model Layer:** Khởi tạo dự án, cấu hình Maven/CI-CD, thiết kế toàn bộ Entity (User, Item, Auction, BidTransaction), DTO, Protocol, áp dụng Factory Pattern |
-| 2 | Nguyễn Văn Hưng | — | `ngvh2312` | **Front-end (Client):** Thiết kế giao diện JavaFX (đăng nhập, trang chủ, chi tiết đấu giá, tạo phiên mới), xử lý sự kiện UI, kết nối Client Socket đến Server |
-| 3 | Bảo | — | `baothebean` | **Back-end (Server):** Xây dựng Socket Server đa luồng, triển khai DAO Layer (UserDAO, ItemDAO, AuctionDAO, BidTransactionDAO), kết nối MySQL, xử lý các Request từ Client |
-| 4 | *(Tên thành viên 4)* | — | — | **Service Layer & Business Logic:** Xây dựng các Service (UserService, AuctionService, BidService), xử lý logic đấu giá, validation dữ liệu, đồng bộ hóa khi nhiều user bid cùng lúc, viết Unit Test |
+## Cấu trúc thư mục (Dự kiến)
+Dự án được tổ chức chặt chẽ theo mô hình Client-Server với cấu trúc gói (package) như sau:
+* `com.auction.client`: Chứa toàn bộ logic phía Client (Controller, Network xử lý giao tiếp, Util khởi chạy app).
+* `com.auction.model`: Chứa các lớp thực thể (Entity, DTO), Request/Response dùng chung cho cả Client và Server.
+* `com.auction.server`: Chứa logic phía Server (Socket Server đa luồng, xử lý Database, DAO, Service).
+* `resources`: Chứa các tài nguyên giao diện, hình ảnh và tệp `.fxml`.
 
 ---
 
-## 🛠 Công nghệ sử dụng
+## Thành viên nhóm & Phân công công việc
 
-| Công nghệ | Phiên bản | Vai trò |
-|:-----------|:---------:|:--------|
-| **Java** | 25 | Ngôn ngữ lập trình chính |
-| **JavaFX** | 22.0.1 | Xây dựng giao diện người dùng (GUI) |
-| **Java Socket** | — | Giao tiếp mạng Client ↔ Server |
-| **MySQL** | 8.0+ | Cơ sở dữ liệu quan hệ |
-| **Gson** | 2.10.1 | Serialize / Deserialize JSON qua Socket |
-| **Maven** | 3.9+ | Quản lý thư viện & build dự án |
-| **JUnit 5** | 5.10.0 | Viết Unit Test |
-| **GitHub Actions** | — | CI/CD tự động kiểm tra build |
+**Công việc chung của toàn nhóm:** Thiết kế Model (Entity, DTO, Request/Response Protocol) và thảo luận thiết kế Cấu trúc kiến trúc phân tầng của dự án.
 
----
-
-## ⭐ Chức năng chính
-
-### Người dùng (Member)
-- ✅ **Đăng ký / Đăng nhập** tài khoản với xác thực bảo mật
-- ✅ **Xem danh sách** phiên đấu giá đang diễn ra (trang chủ)
-- ✅ **Xem chi tiết** phiên đấu giá (thông tin sản phẩm, giá hiện tại, thời gian còn lại)
-- ✅ **Đặt giá (Bid)** theo thời gian thực — hệ thống kiểm tra giá hợp lệ trước khi chấp nhận
-- ✅ **Đăng bán sản phẩm** — tạo phiên đấu giá mới với thời gian tùy chọn
-- ✅ **Hỗ trợ 3 loại sản phẩm:** Phương tiện (xe cộ), Đồ điện tử, Tác phẩm nghệ thuật
-
-### Quản trị viên (Admin)
-- ✅ **Quản lý người dùng** — kích hoạt/vô hiệu hóa tài khoản
-- ✅ **Quản lý phiên đấu giá** — duyệt, hủy phiên đấu giá
-
-### Kỹ thuật nổi bật
-- 🔥 **Multi-thread Server** — xử lý đồng thời nhiều Client kết nối cùng lúc
-- 🔥 **JSON Protocol** — giao thức Request/Response chuẩn hóa qua Socket
-- 🔥 **Factory Pattern** — tạo linh hoạt các loại sản phẩm khác nhau
-- 🔥 **DTO Pattern** — tách biệt dữ liệu truyền mạng và entity nội bộ, bảo mật thông tin nhạy cảm (password)
-- 🔥 **Synchronized Bidding** — đồng bộ hóa khi nhiều user đặt giá cùng một phiên
-
----
+| STT | Họ và tên                 | MSSV | GitHub       | Chuyên trách chính        | Chi tiết công việc tương ứng với Cấu trúc thư mục |
+|:---:|:--------------------------|:-----|:-------------|:--------------------------|:--------------------------------------------------|
+| 1   | **Phùng Anh Dũng** | 25020077   | `padungg`    | **Model Layer** | Chịu trách nhiệm gói `com.auction.model`. Xây dựng các lớp đối tượng cốt lõi (Entity), định nghĩa cấu trúc gói tin giao tiếp (Request/Response Protocol) và áp dụng các tính chất OOP. |
+| 2   | **Nguyễn Minh Nhật Anh** | 25020022    | `nhatdog34`     | **Server & Database** | Chịu trách nhiệm gói `com.auction.server`. Xây dựng Server Socket đa luồng, xử lý Database (MySQL, DAO Layer), điều hướng logic và xử lý nghiệp vụ trung tâm. |
+| 3   | **Nguyễn Viết Hưng** | 25020196    | `ngvh2312`   | **Client Logic & Network**| Chịu trách nhiệm gói `com.auction.client`. Xây dựng Socket Client kết nối đến Server, xử lý luồng dữ liệu (JSON/Gson) và lập trình các lớp Controller điều khiển sự kiện trên UI. |
+| 4   | **Đậu Đình Gia Bảo** | 25020034    | `baothebean` | **Giao diện (UI/UX FXML)**| Chịu trách nhiệm thư mục `resources`. Thiết kế toàn bộ giao diện JavaFX bằng các file `.fxml` (Login, Admin, Dashboard, Manage, View...), tổ chức tài nguyên hình ảnh, đảm bảo UI/UX. |****
 
 ## 📐 Sơ đồ kiến trúc hệ thống
 
@@ -326,100 +285,12 @@ classDiagram
 
 ---
 
-## 📁 Cấu trúc thư mục
+## Sơ đồ UML vẽ tay
 
-```
-auction-system/
-├── pom.xml                              # Cấu hình Maven
-├── database.txt                         # Dữ liệu mẫu
-├── src/
-│   ├── main/java/com/auction/
-│   │   ├── client/                      # CLIENT
-│   │   │   ├── Main.java
-│   │   │   └── ClientApp.java
-│   │   ├── model/                       # MODEL (Shared)
-│   │   │   ├── entity/                  #   Entity classes
-│   │   │   ├── dto/                     #   Data Transfer Objects
-│   │   │   └── protocol/               #   Request / Response
-│   │   └── server/                      # SERVER
-│   │       ├── Main.java
-│   │       ├── ServerApp.java
-│   │       ├── controller/
-│   │       └── dao/
-│   └── resources/
-│       ├── hello-view.fxml              # Giao diện đăng nhập
-│       ├── views/                       # Các file FXML khác
-│       └── images/                      # Tài nguyên ảnh
-└── .github/workflows/                   # CI/CD Pipeline
-```
+[entity](https://l.facebook.com/l.php?u=https%3A%2F%2Fdrive.google.com%2Ffile%2Fd%2F1G4etrUPZ1jvi_sqeis4XiocJr0mLGIVP%2Fview%3Fusp%3Dsharing%26fbclid%3DIwZXh0bgNhZW0CMTAAYnJpZBExVDJYRXZSNzA5QkhycnI1eXNydGMGYXBwX2lkEDIyMjAzOTE3ODgyMDA4OTIAAR4KpWcD3N7d5V3LKoRwFccqYD8-wA4EJF3r8i-fZ9cudIiotoR6ko2x9ifl3w_aem_y5x8W48YKPTohHPJ_pBfXQ&h=AT6Y4lJVpOLPBV7b6m32S9WAGy-7IxU7krRZQ4Cr3F6esF9r9cyNUTsxa8iTI5D0gx1XagG6RrLyDEEYO1jK64y4XMBR5qU62deb77XPM1Avmkg5kL19lG7EzJtb6AqpZnmLNQ)
 
----
+[dto](https://l.facebook.com/l.php?u=https%3A%2F%2Fdrive.google.com%2Ffile%2Fd%2F1jHCR5SaKD71a0NJKBXE9Bmt-a_yOwDwb%2Fview%3Fusp%3Dsharing%26fbclid%3DIwZXh0bgNhZW0CMTAAYnJpZBExVDJYRXZSNzA5QkhycnI1eXNydGMGYXBwX2lkEDIyMjAzOTE3ODgyMDA4OTIAAR5HFZQLycUkiloyg14b1lAga8h3Jc65qbs6hVl3v0QanYiIlSFF0KmLeCQcVA_aem_jVQGf1q8WzRG175jxmF7Rw&h=AT6Y4lJVpOLPBV7b6m32S9WAGy-7IxU7krRZQ4Cr3F6esF9r9cyNUTsxa8iTI5D0gx1XagG6RrLyDEEYO1jK64y4XMBR5qU62deb77XPM1Avmkg5kL19lG7EzJtb6AqpZnmLNQ)
 
-## 🚀 Hướng dẫn Cài đặt & Chạy dự án
-
-### Yêu cầu cài đặt trước
-
-| Phần mềm | Phiên bản tối thiểu | Link tải |
-|:----------|:-------------------:|:---------|
-| JDK | 25+ | [Oracle JDK](https://www.oracle.com/java/technologies/downloads/) |
-| Maven | 3.9+ | [Apache Maven](https://maven.apache.org/download.cgi) |
-| MySQL | 8.0+ | [MySQL Community](https://dev.mysql.com/downloads/) |
-
-### Bước 1 — Clone dự án
-
-```bash
-git clone https://github.com/padungg/auction-system.git
-cd auction-system
-```
-
-### Bước 2 — Tạo cơ sở dữ liệu MySQL
-
-Mở **MySQL Workbench** hoặc terminal MySQL, chạy script tạo database:
-
-```sql
--- Tạo database
-CREATE DATABASE IF NOT EXISTS auction_db;
-USE auction_db;
-
--- (Chạy file script SQL đầy đủ nằm trong thư mục /sql/init.sql)
-```
-
-> ⚠️ **Lưu ý:** Cập nhật thông tin kết nối database (host, port, username, password) trong file cấu hình trước khi chạy.
-
-### Bước 3 — Cài đặt thư viện
-
-```bash
-mvn clean install
-```
-
-### Bước 4 — Khởi động Server ***(chạy trước)***
-
-```bash
-# Mở Terminal 1 — Bật Server lên trước
-mvn exec:java -Dexec.mainClass="com.auction.server.Main"
-```
-
-Khi thấy dòng sau tức là Server đã sẵn sàng:
-```
->>> [Hệ thống]: SERVER ĐANG CHẠY... ĐANG ĐỢI KẾT NỐI TẠI CỔNG 1234...
-```
-
-### Bước 5 — Khởi động Client ***(chạy sau)***
-
-```bash
-# Mở Terminal 2 — Bật Client
-mvn javafx:run
-```
-
-Cửa sổ giao diện đăng nhập sẽ hiện ra. Nhập tài khoản và mật khẩu để sử dụng hệ thống.
-
-### Tài khoản mẫu
-
-| Tài khoản | Mật khẩu | Vai trò |
-|:----------|:---------|:--------|
-| `admin` | `123` | Admin |
-
----
 
 ## 🎨 Design Patterns áp dụng
 
@@ -434,7 +305,3 @@ Cửa sổ giao diện đăng nhập sẽ hiện ra. Nhập tài khoản và m�
 ---
 
 <div align="center">
-
-📝 *Dự án được phát triển bởi nhóm sinh viên — Học kỳ II, 2025–2026*
-
-</div>

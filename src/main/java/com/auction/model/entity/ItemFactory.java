@@ -2,6 +2,10 @@ package com.auction.model.entity;
 
 public class ItemFactory {
 
+    public static final String TYPE_ELECTRONICS = "ELECTRONICS";
+    public static final String TYPE_ART = "ART";
+    public static final String TYPE_VEHICLE = "VEHICLE";
+
     public static Electronics createElectronics(String id, String name, String description, String condition,
             String sellerId, double startingPrice,
             String brand, int warrantyMonths) {

@@ -8,12 +8,13 @@ import java.sql.SQLException;
  * SINGLETON PATTERN — Đảm bảo toàn bộ Server chỉ dùng 1 kết nối DB duy nhất.
  *
  * Tại sao Singleton?
- *   - 20 ClientHandler cùng chạy → nếu mỗi handler tạo riêng 1 Connection → 20 kết nối → MySQL quá tải
- *   - Singleton đảm bảo: dù 100 handler, tất cả dùng chung 1 bộ quản lý kết nối
+ * - 20 ClientHandler cùng chạy → nếu mỗi handler tạo riêng 1 Connection → 20
+ * kết nối → MySQL quá tải
+ * - Singleton đảm bảo: dù 100 handler, tất cả dùng chung 1 bộ quản lý kết nối
  *
  * Cách dùng:
- *   Connection conn = DatabaseConnection.getInstance().getConnection();
- *   // KHÔNG BAO GIỜ gọi: new DatabaseConnection()
+ * Connection conn = DatabaseConnection.getInstance().getConnection();
+ * // KHÔNG BAO GIỜ gọi: new DatabaseConnection()
  */
 public class DatabaseConnection {
 
@@ -23,7 +24,7 @@ public class DatabaseConnection {
     // 2. Thông tin kết nối MySQL
     private static final String URL = "jdbc:mysql://localhost:3306/auction_db";
     private static final String USER = "root";
-    private static final String PASSWORD = "";
+    private static final String PASSWORD = "Nhatdogy2007";
 
     private Connection connection;
 
