@@ -12,6 +12,7 @@ import com.auction.server.observer.AuctionManager;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 
@@ -91,6 +92,8 @@ public class BidService {
                 LocalDateTime.now());
         bidTransactionDAO.save(transaction); // Lưu lịch sử bid
 
+        String bidTimeIso = transaction.getBidTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+
         // ── ANTI-SNIPING ──────────────────────────────────────────────────────
         // Nếu bid diễn ra trong 60 giây cuối → gia hạn thêm 120 giây
         // Mục đích: ngăn “sniper” đặt giá vào đúng giây chót để thắng mà không ai kịp phản đứng
@@ -102,7 +105,7 @@ public class BidService {
                     + " còn " + secondsLeft + "s → Gia hạn thêm 120 giây");
         }
         // ── OBSERVER: push realtime cho tất cả client đang xem phiên này ────
-        AuctionManager.getInstance().notifyBidUpdate(dto.getAuctionId(), bidAmount, bidderId);
+        AuctionManager.getInstance().notifyBidUpdate(dto.getAuctionId(), bidAmount, bidderId, bidTimeIso);
 
         System.out.println("[BidService] PLACE_BID: phiên=" + dto.getAuctionId()
                 + " | bidder=" + bidderId
@@ -129,6 +132,9 @@ public class BidService {
         }
         // Lấy danh sách lịch sử Bid
         List<BidTransaction> history = bidTransactionDAO.findByAuctionId(auctionId.trim());
+        // 3.2.5 Sắp xếp tăng dần theo thời gian (trục X) để phục vụ cho Line Chart
+        history.sort((a, b) -> a.getBidTime().compareTo(b.getBidTime()));
+        
         System.out.println("[BidService] GET_HISTORY: phiên=" + auctionId + " | " + history.size() + " bản ghi");
         return new Response(ResponseStatus.SUCCESS, "Lấy lịch sử bid thành công", history);
     }

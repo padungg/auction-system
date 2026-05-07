@@ -10,7 +10,9 @@ import com.auction.server.dao.AuctionDAO;
 import com.auction.server.dao.BidTransactionDAO;
 import com.auction.server.observer.AuctionManager;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -235,6 +237,17 @@ public class AutoBidService {
                 auction.setCurrentWinnerId(currentWinnerId);
                 auctionDAO.update(auction);
 
+                // ── ANTI-SNIPING trong auto-bid ───────────────────────────────────
+                // Nếu auto-bid xảy ra trong 60 giây cuối → gia hạn thêm 120 giây
+                // Đảm bảo quy tắc anti-sniping áp dụng cho MỌI bid (thủ công hay tự động)
+                long secondsLeft = Duration.between(LocalDateTime.now(), auction.getEndTime()).getSeconds();
+                if (secondsLeft > 0 && secondsLeft <= 60) {
+                    auction.setEndTime(auction.getEndTime().plusSeconds(120));
+                    auctionDAO.update(auction);
+                    System.out.println("[AutoBidService] ANTI-SNIPE: phiên=" + auctionId
+                            + " còn " + secondsLeft + "s → Gia hạn thêm 120 giây");
+                }
+
                 // Lưu lịch sử BidTransaction
                 BidTransaction tx = new BidTransaction(
                         UUID.randomUUID().toString(),
@@ -244,9 +257,11 @@ public class AutoBidService {
                         LocalDateTime.now()
                 );
                 bidTransactionDAO.save(tx);
+                
+                String bidTimeIso = tx.getBidTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
 
                 // Thông báo realtime cho tất cả client đang xem phiên
-                AuctionManager.getInstance().notifyBidUpdate(auctionId, currentPrice, currentWinnerId);
+                AuctionManager.getInstance().notifyBidUpdate(auctionId, currentPrice, currentWinnerId, bidTimeIso);
 
                 System.out.println("[AutoBidService] AUTO_BID: phiên=" + auctionId
                         + " | user=" + currentWinnerId

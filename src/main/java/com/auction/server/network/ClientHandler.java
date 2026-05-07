@@ -161,13 +161,14 @@ public class ClientHandler implements Runnable, AuctionObserver {
      * synchronized(out): đảm bảo chỉ 1 thread ghi socket tại 1 thời điểm.
      */
     @Override
-    public void onBidUpdated(String auctionId, double newPrice, String bidderId) {
+    public void onBidUpdated(String auctionId, double newPrice, String bidderId, String bidTime) {
         // Tạo push notification dạng JSON riêng (không phải Response thông thường)
         JsonObject push = new JsonObject();
         push.addProperty("event", "BID_UPDATE");
         push.addProperty("auctionId", auctionId);
         push.addProperty("newPrice", newPrice);
         push.addProperty("bidderId", bidderId);
+        push.addProperty("bidTime", bidTime);
         sendPush(push.toString());
     }
 

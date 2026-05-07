@@ -74,14 +74,14 @@ public class AuctionManager {
      * Không dùng polling — chỉ gọi khi có sự kiện xảy ra (event-based).
      * try-catch từng observer: 1 client lỗi không làm gãy việc thông báo các client khác.
      */
-    public void notifyBidUpdate(String auctionId, double newPrice, String bidderId) {
+    public void notifyBidUpdate(String auctionId, double newPrice, String bidderId, String bidTime) {
         List<AuctionObserver> observers = observerMap.get(auctionId);
         if (observers == null || observers.isEmpty()) return;
 
         int count = 0;
         for (AuctionObserver observer : observers) {
             try {
-                observer.onBidUpdated(auctionId, newPrice, bidderId);
+                observer.onBidUpdated(auctionId, newPrice, bidderId, bidTime);
                 count++;
             } catch (Exception e) {
                 System.out.println("[AuctionManager] NOTIFY_ERROR: " + e.getMessage());
