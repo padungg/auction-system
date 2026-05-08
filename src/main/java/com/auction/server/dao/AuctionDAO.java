@@ -34,11 +34,5 @@ public interface AuctionDAO {
      * @return true nếu cập nhật thành công
      */
     boolean update(Auction auction);
-
-    /**
-     * Xóa phiên đấu giá (thường dùng khi xóa sản phẩm chưa có người mua).
-     * @return true nếu xóa thành công
-     */
-    boolean delete(String id);
 }
 

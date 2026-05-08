@@ -4,6 +4,7 @@ import com.auction.server.dao.AuctionDAO;
 import com.auction.server.dao.AuctionDAOImpl;
 import com.auction.server.network.SocketServer;
 import com.auction.server.service.AuctionScheduler;
+import com.auction.server.database.DatabaseInitializer;
 
 /**
  * ĐIỂM KHỞI ĐỘNG SERVER.
@@ -22,6 +23,9 @@ public class ServerApp {
     private static final int MAX_CLIENTS = 20;
 
     public static void main(String[] args) {
+
+        // ── 0. Khởi tạo Database (tạo bảng nếu chưa có) ──────────
+        DatabaseInitializer.initialize();
 
         // ── 1. Khởi tạo DAO cho Scheduler ───────────────────────
         AuctionDAO auctionDAO = new AuctionDAOImpl();
