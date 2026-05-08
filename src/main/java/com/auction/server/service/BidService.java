@@ -57,12 +57,12 @@ public class BidService {
         if (auction == null){
             return new Response(ResponseStatus.NOT_FOUND, "Phiên đấu giá không tồn tại", null);
         }
-        if (auction.getStatus() != AuctionStatus.OPENING){
+        if (auction.getStatus() != AuctionStatus.RUNNING){
             return new Response(ResponseStatus.BAD_REQUEST, "Phiên đấu giá hiện đang " + auction.getStatus(), null);
         }
         if (LocalDateTime.now().isAfter(auction.getEndTime())) {
             // Cập nhật DB trước để đảm bảo nhất quán dữ liệu
-            auction.setStatus(AuctionStatus.CLOSED);
+            auction.setStatus(AuctionStatus.FINISHED);
             auctionDAO.update(auction);
             // Notify ngay lập tức — không chờ AuctionScheduler (có thể chậm tới 30 giây)
             // → Tất cả client đang xem phiên này sẽ nhận sự kiện "AUCTION_CLOSED" ngay

@@ -20,7 +20,7 @@ public class Auction extends Entity{
         this.currentPrice = currentPrice;
         this.startTime = startTime;
         this.endTime = endTime;
-        this.status = AuctionStatus.PENDING;
+        this.status = AuctionStatus.OPEN;
     }
 
     public String getItemId() {

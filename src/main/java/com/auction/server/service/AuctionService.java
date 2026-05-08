@@ -46,7 +46,7 @@ public class AuctionService {
      * Trả về dạng rút gọn (AuctionSummaryDTO) để tối ưu tốc độ mạng.
      */
     public Response getAllAuctions() {
-        List<Auction> auctions = auctionDAO.findAllByStatus(AuctionStatus.OPENING);
+        List<Auction> auctions = auctionDAO.findAllByStatus(AuctionStatus.RUNNING);
         List<AuctionSummaryDTO> summaryList = new ArrayList<>();
         for (Auction auction : auctions) {
             Item item = itemDAO.findById(auction.getItemId());
@@ -174,7 +174,7 @@ public class AuctionService {
                 now,
                 now.plusDays(dto.getDurationDays())
         );
-        auction.setStatus(AuctionStatus.OPENING); // Override PENDING → OPENING ngay
+        auction.setStatus(AuctionStatus.RUNNING); // Override OPEN → RUNNING ngay
 
         // 5. Lưu Auction
         auctionDAO.save(auction);
@@ -208,13 +208,13 @@ public class AuctionService {
         if (auction == null) {
             return new Response(ResponseStatus.NOT_FOUND, "Không tìm thấy phiên đấu giá", null);
         }
-        if (auction.getStatus() != AuctionStatus.OPENING) {
+        if (auction.getStatus() != AuctionStatus.RUNNING) {
             return new Response(ResponseStatus.BAD_REQUEST,
                     "Phiên đấu giá không thể đóng — trạng thái hiện tại: " + auction.getStatus(), null);
         }
 
         // Đóng phiên
-        auction.setStatus(AuctionStatus.CLOSED);
+        auction.setStatus(AuctionStatus.FINISHED);
         auctionDAO.update(auction);
 
         // Thông báo realtime cho tất cả client đang xem phiên này

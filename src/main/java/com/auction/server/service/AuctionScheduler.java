@@ -116,7 +116,7 @@ public class AuctionScheduler {
     private void checkExpiredAuctions() {
         try {
             LocalDateTime now = LocalDateTime.now();
-            List<Auction> openingAuctions = auctionDAO.findAllByStatus(AuctionStatus.OPENING);
+            List<Auction> openingAuctions = auctionDAO.findAllByStatus(AuctionStatus.RUNNING);
 
             int closedCount = 0;
             for (Auction auction : openingAuctions) {
@@ -144,7 +144,7 @@ public class AuctionScheduler {
     private void closeExpiredAuction(Auction auction, LocalDateTime now) {
         // Bước 1: Update DB TRƯỚC — đảm bảo dữ liệu nhất quán
         // Nếu sau bước này server crash → restart lại vẫn đọc được CLOSED từ DB
-        auction.setStatus(AuctionStatus.CLOSED);
+        auction.setStatus(AuctionStatus.FINISHED);
         auctionDAO.update(auction);
 
         // Bước 2: Notify sau khi DB đã an toàn

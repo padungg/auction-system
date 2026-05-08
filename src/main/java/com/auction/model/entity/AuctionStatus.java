@@ -1,8 +1,9 @@
 package com.auction.model.entity;
 
 public enum AuctionStatus {
-    PENDING, // Chờ đấu giá
-    OPENING, // Đang diễn ra
-    CLOSED, // Đã kết thúc
-    CANCELLED // Bị hủy
+    OPEN,      // Chờ đấu giá (tương đương PENDING)
+    RUNNING,   // Đang diễn ra (tương đương OPENING)
+    FINISHED,  // Đã kết thúc (tương đương CLOSED)
+    PAID,      // Đã thanh toán
+    CANCELED   // Bị hủy (tương đương CANCELLED)
 }

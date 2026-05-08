@@ -91,7 +91,7 @@ public class AutoBidService {
         if (auction == null) {
             return new Response(ResponseStatus.NOT_FOUND, "Phiên đấu giá không tồn tại", null);
         }
-        if (auction.getStatus() != AuctionStatus.OPENING) {
+        if (auction.getStatus() != AuctionStatus.RUNNING) {
             return new Response(ResponseStatus.BAD_REQUEST,
                     "Chỉ có thể đăng ký auto-bid cho phiên đang mở", null);
         }
@@ -225,7 +225,7 @@ public class AutoBidService {
 
                 // Persist vào DB
                 Auction auction = auctionDAO.findById(auctionId);
-                if (auction == null || auction.getStatus() != AuctionStatus.OPENING) {
+                if (auction == null || auction.getStatus() != AuctionStatus.RUNNING) {
                     break; // Phiên đã đóng giữa chừng → dừng
                 }
 
