@@ -8,6 +8,7 @@ import com.auction.model.protocol.Response;
 import com.auction.model.protocol.ResponseStatus;
 import com.auction.server.dao.AuctionDAO;
 import com.auction.server.dao.BidTransactionDAO;
+import com.auction.server.dao.AutoBidDAO;
 import com.auction.server.observer.AuctionManager;
 
 import java.time.Duration;
@@ -50,6 +51,7 @@ public class AutoBidService {
 
     private final AuctionDAO         auctionDAO;
     private final BidTransactionDAO  bidTransactionDAO;
+    private final AutoBidDAO         autoBidDAO;
 
     /**
      * Map: auctionId → PriorityQueue<AutoBidEntry> (FCFS — sắp xếp theo registeredAt)
@@ -57,9 +59,21 @@ public class AutoBidService {
      */
     private final Map<String, PriorityQueue<AutoBidEntry>> registry = new ConcurrentHashMap<>();
 
-    public AutoBidService(AuctionDAO auctionDAO, BidTransactionDAO bidTransactionDAO) {
+    public AutoBidService(AuctionDAO auctionDAO, BidTransactionDAO bidTransactionDAO, AutoBidDAO autoBidDAO) {
         this.auctionDAO        = auctionDAO;
         this.bidTransactionDAO = bidTransactionDAO;
+        this.autoBidDAO        = autoBidDAO;
+        loadFromDB();
+    }
+
+    private void loadFromDB() {
+        List<AutoBidEntry> entries = autoBidDAO.findAll();
+        for (AutoBidEntry entry : entries) {
+            PriorityQueue<AutoBidEntry> queue = registry.computeIfAbsent(
+                    entry.getAuctionId(), k -> new PriorityQueue<>());
+            queue.add(entry);
+        }
+        System.out.println("[AutoBidService] Đã load " + entries.size() + " auto-bids từ DB.");
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -109,7 +123,11 @@ public class AutoBidService {
         queue.removeIf(e -> e.getUserId().equals(userId));
 
         // Thêm entry mới
-        queue.add(new AutoBidEntry(userId, dto.getAuctionId(), dto.getMaxBid(), dto.getIncrement()));
+        AutoBidEntry newEntry = new AutoBidEntry(userId, dto.getAuctionId(), dto.getMaxBid(), dto.getIncrement());
+        queue.add(newEntry);
+        
+        // Lưu vào DB
+        autoBidDAO.save(newEntry);
 
         System.out.println("[AutoBidService] REGISTER: phiên=" + dto.getAuctionId()
                 + " | user=" + userId
@@ -131,6 +149,7 @@ public class AutoBidService {
         PriorityQueue<AutoBidEntry> queue = registry.get(auctionId);
         if (queue == null || queue.removeIf(e -> e.getUserId().equals(userId))) {
             if (queue != null && queue.isEmpty()) registry.remove(auctionId);
+            autoBidDAO.delete(auctionId, userId);
             System.out.println("[AutoBidService] CANCEL: phiên=" + auctionId + " | user=" + userId);
             return new Response(ResponseStatus.SUCCESS, "Đã hủy đăng ký auto-bid", null);
         }
@@ -143,6 +162,7 @@ public class AutoBidService {
      */
     public synchronized void clearAuction(String auctionId) {
         registry.remove(auctionId);
+        autoBidDAO.deleteByAuctionId(auctionId);
         System.out.println("[AutoBidService] CLEAR: đã xóa auto-bid của phiên=" + auctionId);
     }
 

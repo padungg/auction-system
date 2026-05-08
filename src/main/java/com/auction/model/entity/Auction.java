@@ -70,4 +70,17 @@ public class Auction extends Entity{
     public void setStatus(AuctionStatus status) {
         this.status = status;
     }
+
+    /**
+     * Áp dụng quy tắc Anti-Sniping: Nếu thời gian còn lại <= 60 giây, gia hạn thêm 120 giây.
+     * @return true nếu đã gia hạn, false nếu không
+     */
+    public boolean applyAntiSniping() {
+        long secondsLeft = java.time.Duration.between(LocalDateTime.now(), endTime).getSeconds();
+        if (secondsLeft > 0 && secondsLeft <= 60) {
+            this.endTime = this.endTime.plusSeconds(120);
+            return true;
+        }
+        return false;
+    }
 }

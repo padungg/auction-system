@@ -62,6 +62,17 @@ public class DatabaseInitializer {
                 "FOREIGN KEY (auction_id) REFERENCES auctions(id) ON DELETE CASCADE" +
                 ");";
 
+        String createAutoBidsTable = "CREATE TABLE IF NOT EXISTS auto_bids (" +
+                "user_id VARCHAR(50), " +
+                "auction_id VARCHAR(50), " +
+                "max_bid DOUBLE, " +
+                "increment DOUBLE, " +
+                "registered_at TIMESTAMP, " +
+                "PRIMARY KEY (user_id, auction_id), " +
+                "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE, " +
+                "FOREIGN KEY (auction_id) REFERENCES auctions(id) ON DELETE CASCADE" +
+                ");";
+
         try (Connection conn = DatabaseConnection.getConnection();
              Statement stmt = conn.createStatement()) {
              
@@ -69,6 +80,7 @@ public class DatabaseInitializer {
             stmt.execute(createItemsTable);
             stmt.execute(createAuctionsTable);
             stmt.execute(createBidTransactionsTable);
+            stmt.execute(createAutoBidsTable);
             System.out.println(">>> [DB] Kiểm tra và khởi tạo các bảng thành công!");
 
         } catch (SQLException e) {

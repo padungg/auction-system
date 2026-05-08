@@ -14,7 +14,7 @@ public class DatabaseConnection {
     // Thông tin kết nối MySQL
     private static final String URL = "jdbc:mysql://localhost:3306/auction?createDatabaseIfNotExist=true";
     private static final String USER = "root";
-    private static final String PASSWORD = "Nhatdogy2007";
+    private static final String PASSWORD = "Dung2007@";
 
     static {
         try {

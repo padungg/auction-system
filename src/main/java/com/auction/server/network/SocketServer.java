@@ -9,6 +9,8 @@ import com.auction.server.dao.ItemDAO;
 import com.auction.server.dao.ItemDAOImpl;
 import com.auction.server.dao.UserDAO;
 import com.auction.server.dao.UserDAOImpl;
+import com.auction.server.dao.AutoBidDAO;
+import com.auction.server.dao.AutoBidDAOImpl;
 import com.auction.server.service.AuctionService;
 import com.auction.server.service.AutoBidService;
 import com.auction.server.service.BidService;
@@ -141,13 +143,14 @@ public class SocketServer {
         AuctionDAO        auctionDAO        = new AuctionDAOImpl();
         ItemDAO           itemDAO           = new ItemDAOImpl();
         BidTransactionDAO bidTransactionDAO = new BidTransactionDAOImpl();
+        AutoBidDAO        autoBidDAO        = new AutoBidDAOImpl();
 
         // ── Tầng Service ─────────────────────────────────────────
         UserService    userService    = new UserService(userDAO);
         AuctionService auctionService = new AuctionService(auctionDAO, itemDAO, userDAO);
 
         // AutoBidService cần AuctionDAO + BidTransactionDAO để persist auto-bid
-        AutoBidService autoBidService = new AutoBidService(auctionDAO, bidTransactionDAO);
+        AutoBidService autoBidService = new AutoBidService(auctionDAO, bidTransactionDAO, autoBidDAO);
 
         // BidService nhận AutoBidService để trigger sau mỗi bid thủ công
         BidService bidService = new BidService(auctionDAO, bidTransactionDAO, autoBidService);
