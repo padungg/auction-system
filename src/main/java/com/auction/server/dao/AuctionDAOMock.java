@@ -44,4 +44,9 @@ public class AuctionDAOMock implements AuctionDAO {
         // nên không cần làm gì thêm. Trong DAO thật sẽ UPDATE vào MySQL.
         return true;
     }
+
+    @Override
+    public boolean delete(String id) {
+        return auctions.removeIf(a -> a.getId().equals(id));
+    }
 }

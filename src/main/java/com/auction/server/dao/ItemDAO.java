@@ -19,5 +19,17 @@ public interface ItemDAO {
      * @return true nếu lưu thành công
      */
     boolean save(Item item);
+
+    /**
+     * Cập nhật thông tin item.
+     * @return true nếu cập nhật thành công
+     */
+    boolean update(Item item);
+
+    /**
+     * Xóa item theo ID.
+     * @return true nếu xóa thành công
+     */
+    boolean delete(String id);
 }
 

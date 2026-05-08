@@ -3,6 +3,7 @@ package com.auction.server.service;
 import com.auction.model.dto.AuctionDetailDTO;
 import com.auction.model.dto.AuctionSummaryDTO;
 import com.auction.model.dto.CreateAuctionDTO;
+import com.auction.model.dto.UpdateAuctionDTO;
 import com.auction.model.entity.Auction;
 import com.auction.model.entity.AuctionStatus;
 import com.auction.model.entity.Item;
@@ -233,6 +234,70 @@ public class AuctionService {
                 + " | winner=" + winnerName
                 + " | giá cuối=" + String.format("%,.0f", auction.getCurrentPrice()) + " VNĐ");
         return new Response(ResponseStatus.SUCCESS, resultMsg, auction.getCurrentPrice());
+    }
+    /**
+     * Cập nhật thông tin sản phẩm của phiên đấu giá.
+     * Chỉ cho phép sửa khi chưa có ai đặt giá.
+     */
+    public Response updateAuctionItem(UpdateAuctionDTO dto, String sellerId) {
+        if (dto == null || dto.getAuctionId() == null || dto.getAuctionId().trim().isEmpty()) {
+            return new Response(ResponseStatus.BAD_REQUEST, "Thiếu mã phiên đấu giá", null);
+        }
+        Auction auction = auctionDAO.findById(dto.getAuctionId().trim());
+        if (auction == null) {
+            return new Response(ResponseStatus.NOT_FOUND, "Không tìm thấy phiên đấu giá", null);
+        }
+        Item item = itemDAO.findById(auction.getItemId());
+        if (item == null || !item.getSellerId().equals(sellerId)) {
+            return new Response(ResponseStatus.UNAUTHORIZED, "Bạn không có quyền sửa sản phẩm này", null);
+        }
+        if (auction.getCurrentWinnerId() != null) {
+            return new Response(ResponseStatus.BAD_REQUEST, "Không thể sửa sản phẩm đã có người đặt giá", null);
+        }
+
+        // Cập nhật Item
+        if (dto.getName() != null && !dto.getName().trim().isEmpty()) item.setName(dto.getName());
+        if (dto.getDescription() != null) item.setDescription(dto.getDescription());
+        if (dto.getCondition() != null) item.setCondition(dto.getCondition());
+        if (dto.getStartingPrice() > 0) {
+            item.setStartingPrice(dto.getStartingPrice());
+            auction.setCurrentPrice(dto.getStartingPrice());
+        }
+        
+        // (Tùy chọn) Có thể cập nhật thêm các trường chi tiết theo từng loại (Electronics, Art, Vehicle) nếu cần
+
+        itemDAO.update(item);
+        auctionDAO.update(auction);
+
+        System.out.println("[AuctionService] UPDATE: auctionId=" + auction.getId() + " by seller=" + sellerId);
+        return new Response(ResponseStatus.SUCCESS, "Cập nhật sản phẩm thành công!", null);
+    }
+
+    /**
+     * Xóa sản phẩm và phiên đấu giá tương ứng.
+     * Chỉ cho phép xóa khi chưa có ai đặt giá.
+     */
+    public Response deleteAuctionItem(String auctionId, String sellerId) {
+        if (auctionId == null || auctionId.trim().isEmpty()) {
+            return new Response(ResponseStatus.BAD_REQUEST, "Thiếu mã phiên đấu giá", null);
+        }
+        Auction auction = auctionDAO.findById(auctionId.trim());
+        if (auction == null) {
+            return new Response(ResponseStatus.NOT_FOUND, "Không tìm thấy phiên đấu giá", null);
+        }
+        Item item = itemDAO.findById(auction.getItemId());
+        if (item == null || !item.getSellerId().equals(sellerId)) {
+            return new Response(ResponseStatus.UNAUTHORIZED, "Bạn không có quyền xóa sản phẩm này", null);
+        }
+        if (auction.getCurrentWinnerId() != null) {
+            return new Response(ResponseStatus.BAD_REQUEST, "Không thể xóa sản phẩm đã có người đặt giá", null);
+        }
+
+        auctionDAO.delete(auction.getId());
+        itemDAO.delete(item.getId());
+
+        System.out.println("[AuctionService] DELETE: auctionId=" + auction.getId() + " by seller=" + sellerId);
+        return new Response(ResponseStatus.SUCCESS, "Xóa sản phẩm thành công!", null);
     }
 }
 
