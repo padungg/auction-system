@@ -26,10 +26,10 @@ import java.util.UUID;
  * Service xử lý nghiệp vụ liên quan đến Phiên Đấu Giá.
  *
  * Chức năng:
- *   - getAllAuctions()    : Lấy danh sách phiên đang mở (trang chủ)
- *   - getAuctionDetail() : Xem chi tiết 1 phiên
- *   - createAuction()    : Tạo phiên mới — dùng FACTORY PATTERN để tạo Item
- *   - closeAuction()     : Đóng phiên thủ công
+ * - getAllAuctions() : Lấy danh sách phiên đang mở (trang chủ)
+ * - getAuctionDetail() : Xem chi tiết 1 phiên
+ * - createAuction() : Tạo phiên mới — dùng FACTORY PATTERN để tạo Item
+ * - closeAuction() : Đóng phiên thủ công
  */
 public class AuctionService {
     private final AuctionDAO auctionDAO;
@@ -56,8 +56,7 @@ public class AuctionService {
                     auction.getId(),
                     itemName,
                     auction.getCurrentPrice(),
-                    auction.getStatus().name()
-            );
+                    auction.getStatus().name());
             summaryList.add(summary);
         }
         System.out.println("[AuctionService] GET_ALL: " + summaryList.size() + " phiên đang mở");
@@ -81,13 +80,15 @@ public class AuctionService {
         String sellerName = "Không rõ";
         if (item != null && item.getSellerId() != null) {
             User seller = userDAO.findById(item.getSellerId());
-            if (seller != null) sellerName = seller.getFullName();
+            if (seller != null)
+                sellerName = seller.getFullName();
         }
 
         String winnerName = "Chưa có";
         if (auction.getCurrentWinnerId() != null) {
             User winner = userDAO.findById(auction.getCurrentWinnerId());
-            if (winner != null) winnerName = winner.getFullName();
+            if (winner != null)
+                winnerName = winner.getFullName();
         }
 
         AuctionDetailDTO detail = new AuctionDetailDTO();
@@ -109,15 +110,15 @@ public class AuctionService {
      * Tạo phiên đấu giá mới.
      *
      * FACTORY PATTERN: Dùng ItemFactory để tạo đúng loại Item
-     *   theo itemType (ELECTRONICS / ART / VEHICLE).
+     * theo itemType (ELECTRONICS / ART / VEHICLE).
      *
      * Luồng:
-     *   1. Validate input
-     *   2. ItemFactory.createXxx() → tạo Item đúng loại
-     *   3. itemDAO.save(item)
-     *   4. Tạo Auction: status=OPENING, endTime=now+durationDays
-     *   5. auctionDAO.save(auction)
-     *   6. Trả về AuctionSummaryDTO
+     * 1. Validate input
+     * 2. ItemFactory.createXxx() → tạo Item đúng loại
+     * 3. itemDAO.save(item)
+     * 4. Tạo Auction: status=OPENING, endTime=now+durationDays
+     * 5. auctionDAO.save(auction)
+     * 6. Trả về AuctionSummaryDTO
      */
     public Response createAuction(CreateAuctionDTO dto, String sellerId) {
         // 1. Validate
@@ -169,8 +170,7 @@ public class AuctionService {
                 itemId,
                 dto.getStartingPrice(),
                 now,
-                now.plusDays(dto.getDurationDays())
-        );
+                now.plusDays(dto.getDurationDays()));
         auction.setStatus(AuctionStatus.RUNNING); // Override OPEN → RUNNING ngay
 
         // 5. Lưu Auction
@@ -179,8 +179,7 @@ public class AuctionService {
         // 6. Trả về thông tin tóm tắt
         AuctionSummaryDTO result = new AuctionSummaryDTO(
                 auction.getId(), item.getName(),
-                auction.getCurrentPrice(), auction.getStatus().name()
-        );
+                auction.getCurrentPrice(), auction.getStatus().name());
         System.out.println("[AuctionService] CREATE: item=" + item.getName()
                 + " | loại=" + dto.getItemType()
                 + " | giá khởi=" + String.format("%,.0f", dto.getStartingPrice()) + " VNĐ"
@@ -192,10 +191,10 @@ public class AuctionService {
      * Đóng phiên đấu giá thủ công.
      *
      * Luồng:
-     *   1. Tìm phiên + kiểm tra đang OPENING
-     *   2. Cập nhật status → CLOSED
-     *   3. Thông báo cho tất cả observer (push notification "phiên đã đóng")
-     *   4. Trả về kết quả: winner + giá cuối
+     * 1. Tìm phiên + kiểm tra đang OPENING
+     * 2. Cập nhật status → CLOSED
+     * 3. Thông báo cho tất cả observer (push notification "phiên đã đóng")
+     * 4. Trả về kết quả: winner + giá cuối
      */
     public Response closeAuction(String auctionId) {
         if (auctionId == null || auctionId.trim().isEmpty()) {
@@ -222,7 +221,8 @@ public class AuctionService {
         String winnerName = "Không có người đặt giá";
         if (auction.getCurrentWinnerId() != null) {
             User winner = userDAO.findById(auction.getCurrentWinnerId());
-            if (winner != null) winnerName = winner.getFullName();
+            if (winner != null)
+                winnerName = winner.getFullName();
         }
 
         String resultMsg = "Phiên đã đóng! Winner: " + winnerName
@@ -232,6 +232,7 @@ public class AuctionService {
                 + " | giá cuối=" + String.format("%,.0f", auction.getCurrentPrice()) + " VNĐ");
         return new Response(ResponseStatus.SUCCESS, resultMsg, auction.getCurrentPrice());
     }
+
     /**
      * Cập nhật thông tin sản phẩm của phiên đấu giá.
      * Chỉ cho phép sửa khi chưa có ai đặt giá.
@@ -253,15 +254,19 @@ public class AuctionService {
         }
 
         // Cập nhật Item
-        if (dto.getName() != null && !dto.getName().trim().isEmpty()) item.setName(dto.getName());
-        if (dto.getDescription() != null) item.setDescription(dto.getDescription());
-        if (dto.getCondition() != null) item.setCondition(dto.getCondition());
+        if (dto.getName() != null && !dto.getName().trim().isEmpty())
+            item.setName(dto.getName());
+        if (dto.getDescription() != null)
+            item.setDescription(dto.getDescription());
+        if (dto.getCondition() != null)
+            item.setCondition(dto.getCondition());
         if (dto.getStartingPrice() > 0) {
             item.setStartingPrice(dto.getStartingPrice());
             auction.setCurrentPrice(dto.getStartingPrice());
         }
-        
-        // (Tùy chọn) Có thể cập nhật thêm các trường chi tiết theo từng loại (Electronics, Art, Vehicle) nếu cần
+
+        // (Tùy chọn) Có thể cập nhật thêm các trường chi tiết theo từng loại
+        // (Electronics, Art, Vehicle) nếu cần
 
         itemDAO.update(item);
         auctionDAO.update(auction);
@@ -297,4 +302,3 @@ public class AuctionService {
         return new Response(ResponseStatus.SUCCESS, "Xóa sản phẩm thành công!", null);
     }
 }
-

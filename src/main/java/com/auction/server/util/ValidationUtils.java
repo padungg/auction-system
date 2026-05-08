@@ -6,4 +6,10 @@ public class ValidationUtils {
             throw new ValidationException(fieldName + " không được để trống");
         }
     }
+
+    public static void requireValidEmail(String email) {
+        if (email != null && !email.matches("^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$")) {
+            throw new ValidationException("Email không hợp lệ");
+        }
+    }
 }
