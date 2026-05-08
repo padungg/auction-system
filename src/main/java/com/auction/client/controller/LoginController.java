@@ -1,5 +1,5 @@
 package com.auction.client.controller;
-
+import javafx.application.Platform;
 import com.auction.client.network.ClientSocketManager;
 import com.auction.client.util.SessionManager;
 import com.auction.model.dto.LoginDTO;
@@ -49,21 +49,39 @@ public class LoginController {
         String username = txtUsername.getText();
         String password = txtPassword.getText();
 
-        // 1. Gọi sang lớp Network để kiểm tra (dùng server protocol)
-        UserResponseDTO user = checkLoginFromNetwork(username, password);
-
-        // 2. Xử lý kết quả trả về
-        if (user != null) {
-            lblError.setVisible(false);
-            // Lưu thông tin user vào session
-            SessionManager.getInstance().setCurrentUser(user);
-            // Phân quyền bằng UserRole enum từ server
-            String role = (user.getRole() == UserRole.ADMIN) ? "ADMIN" : "USER";
-            navigateToDashboard(role);
-        } else {
-            // Sai tài khoản hoặc mật khẩu
+        if (username.isEmpty() || password.isEmpty()) {
+            lblError.setText("⚠️ Vui lòng nhập đầy đủ thông tin!");
             lblError.setVisible(true);
+            return;
         }
+
+        // Hiện thông báo đang xử lý để UX tốt hơn
+        lblError.setText("⏳ Đang kết nối đến server...");
+        lblError.setStyle("-fx-text-fill: #2563eb;"); // Đổi màu xanh
+        lblError.setVisible(true);
+
+        // ĐẨY TÁC VỤ GỌI MẠNG SANG LUỒNG NGẦM (BACKGROUND THREAD)
+        new Thread(() -> {
+            // 1. Gọi sang lớp Network để kiểm tra (Chạy ngầm không làm đơ UI)
+            UserResponseDTO user = checkLoginFromNetwork(username, password);
+
+            // 2. Dùng Platform.runLater để cập nhật lại Giao diện (Luồng UI)
+            Platform.runLater(() -> {
+                if (user != null) {
+                    lblError.setVisible(false);
+                    // Lưu thông tin user vào session
+                    SessionManager.getInstance().setCurrentUser(user);
+                    // Phân quyền bằng UserRole enum từ server
+                    String role = (user.getRole() == UserRole.ADMIN) ? "ADMIN" : "USER";
+                    navigateToDashboard(role);
+                } else {
+                    // Sai tài khoản hoặc mật khẩu
+                    lblError.setText("⚠️ Tài khoản hoặc mật khẩu không chính xác!");
+                    lblError.setStyle("-fx-text-fill: #ef4444;"); // Trả lại màu đỏ
+                    lblError.setVisible(true);
+                }
+            });
+        }).start();
     }
 
     /**
@@ -102,7 +120,12 @@ public class LoginController {
 
         } catch (IOException e) {
             System.err.println("[Login] Lỗi kết nối: " + e.getMessage());
-            lblError.setText("LỖI: SERVER CHƯA BẬT!");
+            // BUG FIX: phải dùng Platform.runLater khi cập nhật UI từ background thread
+            Platform.runLater(() -> {
+                lblError.setText("❌ Không thể kết nối đến server! Vui lòng kiểm tra lại.");
+                lblError.setStyle("-fx-text-fill: #ef4444;");
+                lblError.setVisible(true);
+            });
             return null;
         }
     }
@@ -126,7 +149,16 @@ public class LoginController {
     }
 
     private void handleRegister() {
-        System.out.println("Chuyển sang màn hình đăng ký...");
-        // Tương tự: switchScene("/register.fxml");
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/register.fxml"));
+            Parent root = loader.load();
+            Stage stage = (Stage) txtUsername.getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.centerOnScreen();
+            stage.show();
+        } catch (IOException e) {
+            System.err.println("Lỗi load register.fxml: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }
