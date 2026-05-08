@@ -17,7 +17,7 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public User findByUsername(String username) {
         String sql = "SELECT * FROM users WHERE username = ?";
-        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+        try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, username);
@@ -33,7 +33,7 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public User findById(String id) {
         String sql = "SELECT * FROM users WHERE id = ?";
-        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+        try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, id);
@@ -50,7 +50,7 @@ public class UserDAOImpl implements UserDAO {
     public boolean save(User user) {
         String sql = "INSERT INTO users (id, username, password, email, full_name, phone, address, " +
                      "is_active, role, balance, store_name, rating) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
-        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+        try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1,  user.getId());
@@ -76,7 +76,7 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public boolean existsByUsername(String username) {
         String sql = "SELECT 1 FROM users WHERE username = ? LIMIT 1";
-        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+        try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, username);

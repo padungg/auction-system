@@ -17,7 +17,7 @@ public class BidTransactionDAOImpl implements BidTransactionDAO {
     public boolean save(BidTransaction bid) {
         String sql = "INSERT INTO bid_transactions (id, bidder_id, auction_id, bid_amount, bid_time) " +
                      "VALUES (?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+        try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             stmt.setString(1, bid.getId());
@@ -39,7 +39,7 @@ public class BidTransactionDAOImpl implements BidTransactionDAO {
     public List<BidTransaction> findByAuctionId(String auctionId) {
         List<BidTransaction> transactions = new ArrayList<>();
         String sql = "SELECT * FROM bid_transactions WHERE auction_id = ? ORDER BY bid_time ASC";
-        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+        try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             stmt.setString(1, auctionId);

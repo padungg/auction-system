@@ -16,7 +16,7 @@ public class ItemDAOImpl implements ItemDAO {
     @Override
     public Item findById(String id) {
         String sql = "SELECT * FROM items WHERE id = ?";
-        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+        try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             stmt.setString(1, id);
@@ -60,7 +60,7 @@ public class ItemDAOImpl implements ItemDAO {
         String sql = "INSERT INTO items (id, name, description, condition_item, seller_id, starting_price, item_type, " +
                      "artist_name, material, creation_year, brand, model, year, km, warranty_months) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+        try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             stmt.setString(1, item.getId());
@@ -119,7 +119,7 @@ public class ItemDAOImpl implements ItemDAO {
         String sql = "UPDATE items SET name = ?, description = ?, condition_item = ?, starting_price = ?, " +
                      "artist_name = ?, material = ?, creation_year = ?, brand = ?, model = ?, year = ?, km = ?, warranty_months = ? " +
                      "WHERE id = ?";
-        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+        try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, item.getName());
@@ -168,7 +168,7 @@ public class ItemDAOImpl implements ItemDAO {
     @Override
     public boolean delete(String id) {
         String sql = "DELETE FROM items WHERE id = ?";
-        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+        try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, id);

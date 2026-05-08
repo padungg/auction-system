@@ -18,7 +18,7 @@ public class AuctionDAOImpl implements AuctionDAO {
     public List<Auction> findAllByStatus(AuctionStatus status) {
         List<Auction> auctions = new ArrayList<>();
         String sql = "SELECT * FROM auctions WHERE status = ?";
-        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+        try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, status.name());
@@ -36,7 +36,7 @@ public class AuctionDAOImpl implements AuctionDAO {
     @Override
     public Auction findById(String id) {
         String sql = "SELECT * FROM auctions WHERE id = ?";
-        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+        try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, id);
@@ -56,7 +56,7 @@ public class AuctionDAOImpl implements AuctionDAO {
         String sql = "INSERT INTO auctions (id, item_id, current_winner_id, current_price, start_time, end_time, status) "
                 +
                 "VALUES (?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+        try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, auction.getId());
@@ -79,7 +79,7 @@ public class AuctionDAOImpl implements AuctionDAO {
     @Override
     public boolean update(Auction auction) {
         String sql = "UPDATE auctions SET current_winner_id = ?, current_price = ?, status = ? WHERE id = ?";
-        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+        try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, auction.getCurrentWinnerId());
@@ -111,7 +111,7 @@ public class AuctionDAOImpl implements AuctionDAO {
     @Override
     public boolean delete(String id) {
         String sql = "DELETE FROM auctions WHERE id = ?";
-        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+        try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, id);

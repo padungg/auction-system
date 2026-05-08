@@ -62,7 +62,7 @@ public class DatabaseInitializer {
                 "FOREIGN KEY (auction_id) REFERENCES auctions(id) ON DELETE CASCADE" +
                 ");";
 
-        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+        try (Connection conn = DatabaseConnection.getConnection();
              Statement stmt = conn.createStatement()) {
              
             stmt.execute(createUsersTable);
