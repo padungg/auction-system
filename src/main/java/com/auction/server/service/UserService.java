@@ -8,6 +8,7 @@ import com.auction.model.entity.UserRole;
 import com.auction.model.protocol.Response;
 import com.auction.model.protocol.ResponseStatus;
 import com.auction.server.dao.UserDAO;
+import com.auction.server.util.ValidationUtils;
 
 import java.util.UUID;
 
@@ -78,15 +79,9 @@ public class UserService {
             return new Response(ResponseStatus.BAD_REQUEST, "Thiếu thông tin đăng ký", null);
         }
         // 2. Validate empty
-        if (dto.getUsername() == null || dto.getUsername().trim().isEmpty()) {
-            return new Response(ResponseStatus.BAD_REQUEST, "Username không được để trống", null);
-        }
-        if (dto.getPassword() == null || dto.getPassword().trim().isEmpty()) {
-            return new Response(ResponseStatus.BAD_REQUEST, "Password không được để trống", null);
-        }
-        if (dto.getEmail() == null || dto.getEmail().trim().isEmpty()) {
-            return new Response(ResponseStatus.BAD_REQUEST, "Email không được để trống", null);
-        }
+        ValidationUtils.requireNonBlank(dto.getUsername(), "Username");
+        ValidationUtils.requireNonBlank(dto.getPassword(), "Password");
+        ValidationUtils.requireNonBlank(dto.getEmail(), "Email");
         // 3. Kiểm tra trùng username
         if (userDAO.existsByUsername(dto.getUsername().trim())) {
             return new Response(ResponseStatus.BAD_REQUEST, "Username đã tồn tại, vui lòng chọn tên khác", null);

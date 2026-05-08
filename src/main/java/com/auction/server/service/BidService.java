@@ -9,6 +9,7 @@ import com.auction.model.protocol.ResponseStatus;
 import com.auction.server.dao.AuctionDAO;
 import com.auction.server.dao.BidTransactionDAO;
 import com.auction.server.observer.AuctionManager;
+import com.auction.server.util.AuctionUtils;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -97,13 +98,7 @@ public class BidService {
         // ── ANTI-SNIPING ──────────────────────────────────────────────────────
         // Nếu bid diễn ra trong 60 giây cuối → gia hạn thêm 120 giây
         // Mục đích: ngăn “sniper” đặt giá vào đúng giây chót để thắng mà không ai kịp phản đứng
-        long secondsLeft = Duration.between(LocalDateTime.now(), auction.getEndTime()).getSeconds();
-        if (secondsLeft > 0 && secondsLeft <= 60) {
-            auction.setEndTime(auction.getEndTime().plusSeconds(120));
-            auctionDAO.update(auction);
-            System.out.println("[BidService] ANTI-SNIPE: Phiên " + dto.getAuctionId()
-                    + " còn " + secondsLeft + "s → Gia hạn thêm 120 giây");
-        }
+        AuctionUtils.applyAntiSnipe(auction, auctionDAO);
         // ── OBSERVER: push realtime cho tất cả client đang xem phiên này ────
         AuctionManager.getInstance().notifyBidUpdate(dto.getAuctionId(), bidAmount, bidderId, bidTimeIso);
 

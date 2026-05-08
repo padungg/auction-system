@@ -12,7 +12,9 @@ import com.auction.model.util.GsonProvider;
 import com.auction.server.service.AuctionService;
 import com.auction.server.service.AutoBidService;
 import com.auction.server.service.BidService;
+import com.auction.server.service.BidService;
 import com.auction.server.service.UserService;
+import com.auction.server.util.ValidationException;
 import com.google.gson.Gson;
 
 /**
@@ -109,6 +111,8 @@ public class RequestController {
                     return new Response(ResponseStatus.BAD_REQUEST,
                             "Loại request không được hỗ trợ: " + request.getType(), null);
             }
+        } catch (ValidationException e) {
+            return new Response(ResponseStatus.BAD_REQUEST, e.getMessage(), null);
         } catch (Exception e) {
             System.err.println("[RequestController] LỖI NGOẠI LỆ nội bộ: " + e.getMessage());
             e.printStackTrace();

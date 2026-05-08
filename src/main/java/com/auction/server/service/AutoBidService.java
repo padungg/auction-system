@@ -10,6 +10,7 @@ import com.auction.server.dao.AuctionDAO;
 import com.auction.server.dao.BidTransactionDAO;
 import com.auction.server.dao.AutoBidDAO;
 import com.auction.server.observer.AuctionManager;
+import com.auction.server.util.AuctionUtils;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -260,13 +261,7 @@ public class AutoBidService {
                 // ── ANTI-SNIPING trong auto-bid ───────────────────────────────────
                 // Nếu auto-bid xảy ra trong 60 giây cuối → gia hạn thêm 120 giây
                 // Đảm bảo quy tắc anti-sniping áp dụng cho MỌI bid (thủ công hay tự động)
-                long secondsLeft = Duration.between(LocalDateTime.now(), auction.getEndTime()).getSeconds();
-                if (secondsLeft > 0 && secondsLeft <= 60) {
-                    auction.setEndTime(auction.getEndTime().plusSeconds(120));
-                    auctionDAO.update(auction);
-                    System.out.println("[AutoBidService] ANTI-SNIPE: phiên=" + auctionId
-                            + " còn " + secondsLeft + "s → Gia hạn thêm 120 giây");
-                }
+                AuctionUtils.applyAntiSnipe(auction, auctionDAO);
 
                 // Lưu lịch sử BidTransaction
                 BidTransaction tx = new BidTransaction(

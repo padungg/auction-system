@@ -15,6 +15,7 @@ import com.auction.server.dao.AuctionDAO;
 import com.auction.server.dao.ItemDAO;
 import com.auction.server.dao.UserDAO;
 import com.auction.server.observer.AuctionManager;
+import com.auction.server.util.ValidationUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -123,14 +124,10 @@ public class AuctionService {
         if (dto == null) {
             return new Response(ResponseStatus.BAD_REQUEST, "Thiếu thông tin tạo phiên", null);
         }
-        if (dto.getName() == null || dto.getName().trim().isEmpty()) {
-            return new Response(ResponseStatus.BAD_REQUEST, "Tên sản phẩm không được để trống", null);
-        }
+        ValidationUtils.requireNonBlank(dto.getName(), "Tên sản phẩm");
+        ValidationUtils.requireNonBlank(dto.getItemType(), "Loại sản phẩm");
         if (dto.getStartingPrice() <= 0) {
             return new Response(ResponseStatus.BAD_REQUEST, "Giá khởi điểm phải lớn hơn 0", null);
-        }
-        if (dto.getItemType() == null || dto.getItemType().trim().isEmpty()) {
-            return new Response(ResponseStatus.BAD_REQUEST, "Loại sản phẩm không được để trống", null);
         }
         if (dto.getDurationDays() <= 0) {
             return new Response(ResponseStatus.BAD_REQUEST, "Thời gian đấu giá phải lớn hơn 0 ngày", null);
