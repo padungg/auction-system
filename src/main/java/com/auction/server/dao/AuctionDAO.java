@@ -34,5 +34,11 @@ public interface AuctionDAO {
      * @return true nếu cập nhật thành công
      */
     boolean update(Auction auction);
+
+    /**
+     * Xóa phiên đấu giá theo ID.
+     * @return true nếu xóa thành công
+     */
+    boolean delete(String id);
 }
 

@@ -107,4 +107,20 @@ public class AuctionDAOImpl implements AuctionDAO {
         auction.setStatus(AuctionStatus.valueOf(rs.getString("status")));
         return auction;
     }
+
+    @Override
+    public boolean delete(String id) {
+        String sql = "DELETE FROM auctions WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, id);
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
+
+        } catch (SQLException e) {
+            System.err.println(">>> [AuctionDAO] Lỗi delete: " + e.getMessage());
+        }
+        return false;
+    }
 }
