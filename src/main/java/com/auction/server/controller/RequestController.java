@@ -12,7 +12,6 @@ import com.auction.model.util.GsonProvider;
 import com.auction.server.service.AuctionService;
 import com.auction.server.service.AutoBidService;
 import com.auction.server.service.BidService;
-import com.auction.server.service.BidService;
 import com.auction.server.service.UserService;
 import com.auction.server.util.ValidationException;
 import com.google.gson.Gson;
@@ -20,33 +19,36 @@ import com.google.gson.Gson;
 /**
  * CONTROLLER — Router trung tâm của server.
  *
- * Nhận Request từ ClientHandler → deserialize payload → gọi đúng Service → trả Response.
+ * Nhận Request từ ClientHandler → deserialize payload → gọi đúng Service → trả
+ * Response.
  *
  * Tại sao tách riêng khỏi ClientHandler?
- *   - ClientHandler lo việc I/O (đọc/ghi socket).
- *   - RequestController lo việc điều hướng logic (router).
- *   - Tách biệt → dễ viết Unit Test cho từng Service độc lập.
+ * - ClientHandler lo việc I/O (đọc/ghi socket).
+ * - RequestController lo việc điều hướng logic (router).
+ * - Tách biệt → dễ viết Unit Test cho từng Service độc lập.
  *
  * Thread-safety:
- *   - Mỗi ClientHandler giữ 1 instance RequestController riêng → không share state.
- *   - Các Service bên trong là stateless (chỉ chứa DAO) → an toàn khi gọi từ nhiều thread.
+ * - Mỗi ClientHandler giữ 1 instance RequestController riêng → không share
+ * state.
+ * - Các Service bên trong là stateless (chỉ chứa DAO) → an toàn khi gọi từ
+ * nhiều thread.
  */
 public class RequestController {
 
     private static final Gson GSON = GsonProvider.getInstance();
 
-    private final UserService    userService;
+    private final UserService userService;
     private final AuctionService auctionService;
-    private final BidService     bidService;
+    private final BidService bidService;
     private final AutoBidService autoBidService;
 
     public RequestController(UserService userService,
-                             AuctionService auctionService,
-                             BidService bidService,
-                             AutoBidService autoBidService) {
-        this.userService    = userService;
+            AuctionService auctionService,
+            BidService bidService,
+            AutoBidService autoBidService) {
+        this.userService = userService;
         this.auctionService = auctionService;
-        this.bidService     = bidService;
+        this.bidService = bidService;
         this.autoBidService = autoBidService;
     }
 
@@ -57,8 +59,8 @@ public class RequestController {
     /**
      * Điều hướng Request đến đúng Service.
      *
-     * @param request  Request đã parse từ JSON
-     * @param loggedInUserId  userId đang đăng nhập (null nếu chưa login)
+     * @param request        Request đã parse từ JSON
+     * @param loggedInUserId userId đang đăng nhập (null nếu chưa login)
      * @return Response trả về cho client
      */
     public Response handle(Request request, String loggedInUserId) {
