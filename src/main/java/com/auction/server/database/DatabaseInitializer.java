@@ -79,6 +79,15 @@ public class DatabaseInitializer {
         String insertMember = "INSERT IGNORE INTO users (id, username, password, email, full_name, phone, address, is_active, role, balance, store_name, rating) " +
                 "VALUES ('USR-MEM-001', 'member', '123', 'member@auction.com', 'Member 1', '0987654321', 'HCM', true, 'MEMBER', 5000000.0, NULL, 5.0);";
 
+        String insertArt = "INSERT IGNORE INTO items (id, name, description, condition_item, seller_id, starting_price, item_type, artist_name, material, creation_year, brand, model, year, km, warranty_months) " +
+                "VALUES ('ITEM-ART-001', 'Tranh Đông Hồ', 'Tranh dân gian Đông Hồ chính gốc', 'Mới', 'USR-ADMIN-001', 500000.0, 'ART', 'Nghệ nhân Đông Hồ', 'Giấy điệp', 2023, NULL, NULL, NULL, NULL, NULL);";
+
+        String insertElectronic = "INSERT IGNORE INTO items (id, name, description, condition_item, seller_id, starting_price, item_type, artist_name, material, creation_year, brand, model, year, km, warranty_months) " +
+                "VALUES ('ITEM-ELE-001', 'Tủ lạnh', 'Tủ lạnh Samsung Inverter', 'Mới', 'USR-ADMIN-001', 4000000.0, 'ELECTRONICS', NULL, NULL, NULL, 'Samsung', NULL, NULL, NULL, 24);";
+
+        String insertVehicle = "INSERT IGNORE INTO items (id, name, description, condition_item, seller_id, starting_price, item_type, artist_name, material, creation_year, brand, model, year, km, warranty_months) " +
+                "VALUES ('ITEM-VEH-001', 'VF3', 'Xe ô tô điện VinFast VF3 siêu tiết kiệm', 'Mới', 'USR-ADMIN-001', 240000000.0, 'VEHICLE', NULL, NULL, NULL, 'VinFast', 'VF3', 2024, 0, NULL);";
+
         try (Connection conn = DatabaseConnection.getConnection();
              Statement stmt = conn.createStatement()) {
              
@@ -91,6 +100,11 @@ public class DatabaseInitializer {
             // Chèn dữ liệu mẫu
             stmt.execute(insertAdmin);
             stmt.execute(insertMember);
+            
+            // Chèn dữ liệu sản phẩm mẫu
+            stmt.execute(insertArt);
+            stmt.execute(insertElectronic);
+            stmt.execute(insertVehicle);
             
             System.out.println(">>> [DB] Kiểm tra và khởi tạo các bảng thành công!");
 
