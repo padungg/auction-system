@@ -73,6 +73,12 @@ public class DatabaseInitializer {
                 "FOREIGN KEY (auction_id) REFERENCES auctions(id) ON DELETE CASCADE" +
                 ");";
 
+        String insertAdmin = "INSERT IGNORE INTO users (id, username, password, email, full_name, phone, address, is_active, role, balance, store_name, rating) " +
+                "VALUES ('USR-ADMIN-001', 'admin', '123', 'admin@auction.com', 'Administrator', '0123456789', 'Hanoi', true, 'ADMIN', 10000000.0, 'Admin Store', 5.0);";
+
+        String insertMember = "INSERT IGNORE INTO users (id, username, password, email, full_name, phone, address, is_active, role, balance, store_name, rating) " +
+                "VALUES ('USR-MEM-001', 'member', '123', 'member@auction.com', 'Member 1', '0987654321', 'HCM', true, 'MEMBER', 5000000.0, NULL, 5.0);";
+
         try (Connection conn = DatabaseConnection.getConnection();
              Statement stmt = conn.createStatement()) {
              
@@ -81,6 +87,11 @@ public class DatabaseInitializer {
             stmt.execute(createAuctionsTable);
             stmt.execute(createBidTransactionsTable);
             stmt.execute(createAutoBidsTable);
+            
+            // Chèn dữ liệu mẫu
+            stmt.execute(insertAdmin);
+            stmt.execute(insertMember);
+            
             System.out.println(">>> [DB] Kiểm tra và khởi tạo các bảng thành công!");
 
         } catch (SQLException e) {
