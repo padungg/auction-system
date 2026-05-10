@@ -3,8 +3,7 @@ package com.auction.client.network;
 import com.auction.model.protocol.Response;
 import com.google.gson.Gson;
 
-import java.io.DataInputStream;
-import java.io.EOFException;
+import java.io.BufferedReader;
 import java.io.IOException;
 
 /**
@@ -14,11 +13,11 @@ import java.io.IOException;
  * 1. Response cho request đã gửi (LOGIN, GET_ALL_AUCTIONS, ...) -> chuyển vào callback
  * 2. Server push notification (real-time updates) -> gọi callback lên UI
  *
- * Protocol: DataInputStream.readUTF().
+ * Protocol: BufferedReader.readLine() — khớp với Server dùng PrintWriter.println().
  */
 public class ServerListener implements Runnable {
 
-    private final DataInputStream in;
+    private final BufferedReader in;
     private final Gson gson;
     private final MessageHandler messageHandler;
     private volatile boolean running = true;
@@ -31,7 +30,7 @@ public class ServerListener implements Runnable {
         void onMessage(Response response);
     }
 
-    public ServerListener(DataInputStream in, Gson gson, MessageHandler messageHandler) {
+    public ServerListener(BufferedReader in, Gson gson, MessageHandler messageHandler) {
         this.in = in;
         this.gson = gson;
         this.messageHandler = messageHandler;
@@ -41,8 +40,8 @@ public class ServerListener implements Runnable {
     public void run() {
         try {
             while (running) {
-                // Đọc JSON string từ Server qua readUTF
-                String json = in.readUTF();
+                // Đọc JSON string từ Server qua readLine (line-delimited protocol)
+                String json = in.readLine();
                 if (json == null) break;
 
                 // Deserialize JSON -> Response (model.protocol.Response)
@@ -51,8 +50,6 @@ public class ServerListener implements Runnable {
                 // Chuyển cho handler xử lý
                 messageHandler.onMessage(response);
             }
-        } catch (EOFException e) {
-            System.out.println("[ServerListener] Server đã ngắt kết nối (EOF).");
         } catch (IOException e) {
             if (running) {
                 System.err.println("[ServerListener] Lỗi kết nối: " + e.getMessage());

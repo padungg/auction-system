@@ -279,9 +279,9 @@
                                 <Separator prefWidth="200.0" />
                                 <HBox alignment="CENTER_RIGHT" spacing="15.0">
                                     <children>
-                                        <Button mnemonicParsing="false" prefWidth="100.0" style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;" text="XÓA" />
-                                        <Button mnemonicParsing="false" prefWidth="100.0" style="-fx-background-color: #f59e0b; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;" text="SỬA" />
-                                        <Button mnemonicParsing="false" prefWidth="150.0" style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;" text="THÊM MỚI" />
+                                        <Button mnemonicParsing="false" onAction="#handleDelete" prefWidth="100.0" style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;" text="XÓA" />
+                                        <Button mnemonicParsing="false" onAction="#handleUpdate" prefWidth="100.0" style="-fx-background-color: #f59e0b; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;" text="SỬA" />
+                                        <Button mnemonicParsing="false" onAction="#handleAdd" prefWidth="150.0" style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;" text="THÊM MỚI" />
                                     </children>
                                 </HBox>
                             </children>

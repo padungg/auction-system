@@ -25,6 +25,9 @@ public class RegisterController {
     private TextField txtFullName;
 
     @FXML
+    private TextField txtEmail;
+
+    @FXML
     private TextField txtUsername;
 
     @FXML
@@ -45,13 +48,21 @@ public class RegisterController {
     @FXML
     private void handleRegister() {
         String fullName = txtFullName.getText().trim();
+        String email = txtEmail.getText().trim();
         String username = txtUsername.getText().trim();
         String password = txtPassword.getText();
         String confirmPassword = txtConfirmPassword.getText();
 
         // Validate: kiểm tra trường rỗng
-        if (fullName.isEmpty() || username.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
+        if (fullName.isEmpty() || email.isEmpty() || username.isEmpty()
+                || password.isEmpty() || confirmPassword.isEmpty()) {
             showError("⚠️ Vui lòng điền đầy đủ tất cả các trường!");
+            return;
+        }
+
+        // Validate: kiểm tra email hợp lệ (khớp regex của server)
+        if (!email.matches("^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$")) {
+            showError("⚠️ Email không hợp lệ! Vui lòng nhập đúng định dạng.");
             return;
         }
 
@@ -74,7 +85,7 @@ public class RegisterController {
 
         // Gửi request trên background thread để không đơ UI
         new Thread(() -> {
-            boolean success = sendRegisterRequest(fullName, username, password);
+            boolean success = sendRegisterRequest(fullName, email, username, password);
 
             Platform.runLater(() -> {
                 if (success) {
@@ -98,8 +109,10 @@ public class RegisterController {
 
     /**
      * Gửi RegisterDTO lên server, trả về true nếu thành công.
+     * RegisterDTO cần đầy đủ: username, password, email, fullName, phone, address
+     * Server yêu cầu email bắt buộc và hợp lệ (ValidationUtils).
      */
-    private boolean sendRegisterRequest(String fullName, String username, String password) {
+    private boolean sendRegisterRequest(String fullName, String email, String username, String password) {
         try {
             ClientSocketManager manager = ClientSocketManager.getInstance();
 
@@ -107,8 +120,8 @@ public class RegisterController {
                 manager.connect("localhost", 8080);
             }
 
-            // email, phone, address để trống — server có thể cho phép null
-            RegisterDTO dto = new RegisterDTO(username, password, "", fullName, "", "");
+            // Gửi đầy đủ RegisterDTO theo format server yêu cầu
+            RegisterDTO dto = new RegisterDTO(username, password, email, fullName, "", "");
             Request request = new Request(RequestType.REGISTER, dto);
             Response response = manager.sendRequest(request);
 
@@ -117,7 +130,7 @@ public class RegisterController {
             } else {
                 String msg = response.getMessage() != null
                         ? response.getMessage()
-                        : "Tên đăng nhập đã tồn tại!";
+                        : "Đăng ký thất bại!";
                 Platform.runLater(() -> showError("⚠️ " + msg));
                 return false;
             }
@@ -132,14 +145,14 @@ public class RegisterController {
     @FXML
     private void switchToLogin() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/Login.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/login.fxml"));
             Parent root = loader.load();
             Stage stage = (Stage) txtUsername.getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.centerOnScreen();
             stage.show();
         } catch (IOException e) {
-            System.err.println("Lỗi load Login.fxml: " + e.getMessage());
+            System.err.println("Lỗi load login.fxml: " + e.getMessage());
             e.printStackTrace();
         }
     }

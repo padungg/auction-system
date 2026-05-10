@@ -4,34 +4,40 @@ import com.auction.model.protocol.Request;
 import com.auction.model.protocol.Response;
 import com.auction.model.util.GsonProvider;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
  * Quản lý kết nối Socket TCP từ Client đến Server.
  *
- * Sử dụng Singleton pattern — toàn bộ app dùng chung 1 kết nối.
- * Giao tiếp bằng JSON theo protocol của Server:
- *   - Gửi: com.auction.model.protocol.Request (chứa RequestType + DTO payload)
- *   - Nhận: com.auction.model.protocol.Response (chứa ResponseStatus + message + payload)
- *
- * Protocol: DataOutputStream.writeUTF / DataInputStream.readUTF.
+ * Sử dụng Singleton pattern.
  */
 public class ClientSocketManager {
 
     private static ClientSocketManager instance;
 
     private Socket socket;
-    private DataOutputStream out;
-    private DataInputStream in;
+    private PrintWriter out;
+    private BufferedReader in;
     private final Gson gson;
 
     private String host;
     private int port;
 
+    // Hàng đợi để nhận Response cho Request đồng bộ (chỉ 1 request tại 1 thời điểm)
+    private final BlockingQueue<Response> responseQueue = new ArrayBlockingQueue<>(1);
+
+    // Callback cho các push notification (real-time)
+    private Consumer<JsonObject> notificationListener;
+    private Thread listenerThread;
+
     private ClientSocketManager() {
-        // GsonFactory.getInstance() — dùng instance duy nhất, không tạo mới mỗi lần
         this.gson = GsonProvider.getInstance();
     }
 
@@ -42,92 +48,96 @@ public class ClientSocketManager {
         return instance;
     }
 
-    /**
-     * Mở kết nối TCP đến Server.
-     *
-     * @param host Địa chỉ server (vd: "localhost")
-     * @param port Cổng server (vd: 8080)
-     */
+    public void setNotificationListener(Consumer<JsonObject> listener) {
+        this.notificationListener = listener;
+    }
+
     public void connect(String host, int port) throws IOException {
+        if (isConnected()) return;
+
         this.host = host;
         this.port = port;
 
         socket = new Socket(host, port);
-        out = new DataOutputStream(socket.getOutputStream());
-        in = new DataInputStream(socket.getInputStream());
+        out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"), true);
+        in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
 
         System.out.println("[ClientSocketManager] Đã kết nối đến " + host + ":" + port);
+
+        // Khởi động luồng đọc liên tục
+        startListenerThread();
     }
 
-    /**
-     * Gửi Request lên Server và đợi nhận Response.
-     *
-     * Luồng:
-     * 1. Serialize Request (model.protocol.Request) → JSON string
-     * 2. Gửi JSON qua DataOutputStream.writeUTF()
-     * 3. Đọc phản hồi qua DataInputStream.readUTF()
-     * 4. Deserialize JSON → Response (model.protocol.Response)
-     * 5. Trả Response cho Controller
-     *
-     * @param request Request đã đóng gói (type + DTO payload)
-     * @return Response từ Server
-     */
-    public Response sendRequest(Request request) throws IOException {
+    private void startListenerThread() {
+        listenerThread = new Thread(() -> {
+            try {
+                String line;
+                while ((line = in.readLine()) != null) {
+                    System.out.println("[ClientSocketManager] <<< Nhận: " + line);
+                    if (line.contains("\"event\"")) {
+                        // Đây là Push Notification từ Server
+                        JsonObject push = gson.fromJson(line, JsonObject.class);
+                        if (notificationListener != null) {
+                            notificationListener.accept(push);
+                        }
+                    } else {
+                        // Đây là Response cho 1 Request
+                        Response response = gson.fromJson(line, Response.class);
+                        responseQueue.offer(response);
+                    }
+                }
+            } catch (IOException e) {
+                if (isConnected()) {
+                    System.err.println("[ClientSocketManager] Lỗi đọc dữ liệu: " + e.getMessage());
+                }
+            }
+            System.out.println("[ClientSocketManager] Luồng đọc đã dừng.");
+        });
+        listenerThread.setDaemon(true);
+        listenerThread.start();
+    }
+
+    public synchronized Response sendRequest(Request request) throws IOException {
         if (!isConnected()) {
             throw new IOException("Chưa kết nối đến Server!");
         }
 
-        // 1. Serialize Request → JSON
+        responseQueue.clear(); // Xóa response cũ nếu có
+
         String jsonRequest = gson.toJson(request);
         System.out.println("[ClientSocketManager] >>> Gửi: " + jsonRequest);
+        out.println(jsonRequest);
 
-        // 2. Gửi JSON (writeUTF)
-        out.writeUTF(jsonRequest);
-        out.flush();
-
-        // 3. Đọc phản hồi (readUTF)
-        String jsonResponse = in.readUTF();
-        if (jsonResponse == null) {
-            throw new IOException("Server đã đóng kết nối!");
+        try {
+            // Đợi response tối đa 10 giây
+            Response response = responseQueue.poll(10, TimeUnit.SECONDS);
+            if (response == null) {
+                throw new IOException("Timeout: Server không phản hồi");
+            }
+            return response;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Bị gián đoạn khi đợi server", e);
         }
-        System.out.println("[ClientSocketManager] <<< Nhận: " + jsonResponse);
-
-        // 4. Deserialize JSON → Response
-        return gson.fromJson(jsonResponse, Response.class);
     }
 
-    /**
-     * Đóng kết nối.
-     */
     public void disconnect() {
         try {
             if (out != null) out.close();
             if (in != null) in.close();
             if (socket != null && !socket.isClosed()) socket.close();
+            if (listenerThread != null) listenerThread.interrupt();
             System.out.println("[ClientSocketManager] Đã ngắt kết nối.");
         } catch (IOException e) {
             System.err.println("[ClientSocketManager] Lỗi khi đóng kết nối: " + e.getMessage());
         }
     }
 
-    /**
-     * Kiểm tra kết nối còn sống không.
-     */
     public boolean isConnected() {
         return socket != null && socket.isConnected() && !socket.isClosed();
     }
 
-    /**
-     * Lấy Gson instance (dùng chung để cast payload trong Controller).
-     */
     public Gson getGson() {
         return gson;
-    }
-
-    /**
-     * Lấy DataInputStream (cho ServerListener dùng khi cần lắng nghe push notification).
-     */
-    public DataInputStream getDataInputStream() {
-        return in;
     }
 }

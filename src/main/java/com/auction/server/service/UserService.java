@@ -105,7 +105,10 @@ public class UserService {
                 null, // shopName (chỉ SELLER mới có)
                 0.0 // rating
         );
-        userDAO.save(newUser);
+        boolean saved = userDAO.save(newUser);
+        if (!saved) {
+            return new Response(ResponseStatus.ERROR, "Lỗi máy chủ: Không thể lưu tài khoản vào Database (Vui lòng kiểm tra MySQL)", null);
+        }
 
         // 5. Trả về DTO (KHÔNG trả password về client)
         UserResponseDTO responseDTO = new UserResponseDTO(

@@ -1,10 +1,18 @@
 package com.auction.client.controller;
 
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
+import javafx.stage.Stage;
+import javafx.event.ActionEvent;
+
 import com.auction.model.dto.AuctionSummaryDTO;
+import java.io.IOException;
 
 public class ProductcardController {
 
@@ -29,10 +37,10 @@ public class ProductcardController {
     @FXML
     private Button btnJoin;
 
-    /**
-     * Nhận dữ liệu từ AuctionSummaryDTO (DTO của server) và hiển thị lên card.
-     */
+    private AuctionSummaryDTO auctionData;
+
     public void setData(AuctionSummaryDTO auction) {
+        this.auctionData = auction;
         lblProductName.setText(auction.getItemName());
         lblStatus.setText(mapStatus(auction.getStatus()));
         lblStartPrice.setText("ID: " + auction.getAuctionId());
@@ -40,9 +48,6 @@ public class ProductcardController {
         lblTimeLeft.setText("Trạng thái: " + auction.getStatus());
     }
 
-    /**
-     * Chuyển đổi status code từ server sang hiển thị thân thiện.
-     */
     private String mapStatus(String status) {
         if (status == null) return "";
         switch (status) {
@@ -55,7 +60,23 @@ public class ProductcardController {
     }
 
     @FXML
-    private void handleJoin() {
-        System.out.println("Click vào: " + lblProductName.getText());
+    private void handleJoin(ActionEvent event) {
+        if (auctionData == null) return;
+
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/buy.fxml"));
+            Parent root = loader.load();
+
+            // Lấy controller của màn hình Payment và truyền dữ liệu
+            PaymentController controller = loader.getController();
+            controller.initData(auctionData);
+
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Chi tiết phiên đấu giá");
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
