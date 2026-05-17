@@ -3,22 +3,19 @@ package com.auction.model.dto;
 import java.time.LocalDateTime;
 
 /**
- * Gói tin DTO Sever trả về khi Client xem Chi Tiết một Phiên Đấu Giá.
+ * Gói tin DTO Sever trả về khi Client xem chi tiết một phiên đấu giá.
  * Chứa đầy đủ mọi thông tin để vẽ giao diện rõ ràng.
  */
 public class AuctionDetailDTO {
 
     private String auctionId;
     private String itemName;
-    private String itemDetails; // Kết quả của getDetailInfo() từ Entity Item
+    private String itemDetails;
     private String description;
-    
     private double startingPrice;
     private double currentPrice;
-    
     private String sellerName;
     private String currentWinnerName;
-    
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private String status;

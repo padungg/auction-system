@@ -19,13 +19,6 @@ public class BidRequestDTO {
         this.bidType = "NORMAL";
     }
 
-    public BidRequestDTO(String auctionId, double bidAmount, String bidType, double maxBidAmount) {
-        this.auctionId = auctionId;
-        this.bidAmount = bidAmount;
-        this.bidType = bidType;
-        this.maxBidAmount = maxBidAmount;
-    }
-
     public String getAuctionId() {
         return auctionId;
     }
@@ -58,4 +51,3 @@ public class BidRequestDTO {
         this.maxBidAmount = maxBidAmount;
     }
 }
-
