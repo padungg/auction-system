@@ -1,14 +1,16 @@
 package com.auction.model.entity;
-
 import java.time.LocalDateTime;
 
+/**
+ * Thực thể đại diện cho một phiên đấu giá.
+ * Một số trường (itemId, startTime) không có setter vì không bao giờ thay đổi sau khi tạo.
+ */
 public class Auction extends Entity{
     private String itemId, currentWinnerId;
     private double currentPrice;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private AuctionStatus status;
-
 
     public Auction() {
     }
@@ -25,10 +27,6 @@ public class Auction extends Entity{
 
     public String getItemId() {
         return itemId;
-    }
-
-    public void setItemId(String itemId) {
-        this.itemId = itemId;
     }
 
     public String getCurrentWinnerId() {
@@ -51,10 +49,6 @@ public class Auction extends Entity{
         return startTime;
     }
 
-    public void setStartTime(LocalDateTime startTime) {
-        this.startTime = startTime;
-    }
-
     public LocalDateTime getEndTime() {
         return endTime;
     }
@@ -72,15 +66,19 @@ public class Auction extends Entity{
     }
 
     /**
-     * Áp dụng quy tắc Anti-Sniping: Nếu thời gian còn lại <= 60 giây, gia hạn thêm 120 giây.
-     * @return true nếu đã gia hạn, false nếu không
+     * Trả về số giây còn lại của phiên đấu giá.
+     * Âm nếu phiên đã hết thời gian.
      */
-    public boolean applyAntiSniping() {
-        long secondsLeft = java.time.Duration.between(LocalDateTime.now(), endTime).getSeconds();
-        if (secondsLeft > 0 && secondsLeft <= 60) {
-            this.endTime = this.endTime.plusSeconds(120);
-            return true;
-        }
-        return false;
+    public long getSecondsRemaining() {
+        return java.time.Duration.between(LocalDateTime.now(), endTime).getSeconds();
+    }
+
+    /**
+     * Gia hạn thời gian kết thúc phiên thêm một số giây nhất định.
+     * @param seconds số giây gia hạn, phải > 0
+     */
+    public void extendEndTime(long seconds) {
+        if (seconds <= 0) throw new IllegalArgumentException("Thời gian gia hạn phải > 0");
+        this.endTime = this.endTime.plusSeconds(seconds);
     }
 }

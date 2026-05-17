@@ -1,5 +1,10 @@
 package com.auction.model.entity;
 
+/**
+ * Thực thể đại diện cho người dùng hệ thống.
+ * Chứa logic nạp/rút tiền (deposit/withdraw) thay vì sử dụng setter thô
+ * để đảm bảo an toàn dữ liệu và tuân thủ tính đóng gói.
+ */
 public class User extends Entity {
 
     private String username;
@@ -17,7 +22,8 @@ public class User extends Entity {
     public User() {
     }
 
-    public User(String id, String username, String password, String email, String fullName, String phone, String address, boolean isActive, UserRole role, double balance, String storeName, double rating) {
+    public User(String id, String username, String password, String email, String fullName, String phone,
+                String address, boolean isActive, UserRole role, double balance, String storeName, double rating) {
         super(id);
         this.username = username;
         this.password = password;
@@ -34,10 +40,6 @@ public class User extends Entity {
 
     public String getUsername() {
         return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
     }
 
     public String getPassword() {
@@ -101,7 +103,23 @@ public class User extends Entity {
     }
 
     public void setBalance(double balance) {
+        if (balance < 0)
+            throw new IllegalArgumentException("Số dư không thể âm: " + balance);
         this.balance = balance;
+    }
+
+    public void deposit(double amount) {
+        if (amount <= 0)
+            throw new IllegalArgumentException("Số tiền nạp phải > 0");
+        this.balance += amount;
+    }
+
+    public void withdraw(double amount) {
+        if (amount <= 0)
+            throw new IllegalArgumentException("Số tiền rút phải > 0");
+        if (amount > this.balance)
+            throw new IllegalStateException("Số dư không đủ: có " + this.balance + ", cần " + amount);
+        this.balance -= amount;
     }
 
     public String getStoreName() {
