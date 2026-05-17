@@ -1,9 +1,15 @@
 package com.auction.model.entity;
 
-public abstract class Item extends Entity{
+import com.auction.model.dto.UpdateAuctionDTO;
+
+/**
+ * Lớp trừu tượng đại diện cho một sản phẩm đấu giá.
+ * Áp dụng đa hình thông qua các phương thức abstract
+ * để các lớp con tự định nghĩa hành vi đặc thù mà không cần dùng instanceof.
+ */
+public abstract class Item extends Entity {
     private String name, description, condition, sellerId;
     private double startingPrice;
-
 
     public Item() {
     }
@@ -16,6 +22,18 @@ public abstract class Item extends Entity{
         this.sellerId = sellerId;
         this.startingPrice = startingPrice;
     }
+
+    /**
+     * Trả về loại item dưới dạng chuỗi (ART, ELECTRONICS, VEHICLE).
+     * Dùng để xác định itemType mà không cần instanceof.
+     */
+    public abstract String getItemType();
+
+    /**
+     * Áp dụng cập nhật các field đặc thù của từng loại item từ DTO.
+     * Mỗi subclass chỉ cập nhật các field riêng của mình.
+     */
+    public abstract void applyUpdate(UpdateAuctionDTO dto);
 
     public abstract String getDetailInfo();
 
@@ -40,6 +58,8 @@ public abstract class Item extends Entity{
     }
 
     public void setStartingPrice(double startingPrice) {
+        if (startingPrice <= 0)
+            throw new IllegalArgumentException("Giá khởi điểm phải > 0, nhận: " + startingPrice);
         this.startingPrice = startingPrice;
     }
 
@@ -53,9 +73,5 @@ public abstract class Item extends Entity{
 
     public String getSellerId() {
         return sellerId;
-    }
-
-    public void setSellerId(String sellerId) {
-        this.sellerId = sellerId;
     }
 }

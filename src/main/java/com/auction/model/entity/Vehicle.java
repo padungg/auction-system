@@ -1,5 +1,11 @@
 package com.auction.model.entity;
 
+import com.auction.model.dto.UpdateAuctionDTO;
+
+/**
+ * Thực thể đại diện cho phương tiện đi lại.
+ * Kế thừa lớp Item và tự triển khai (override) logic cập nhật/thông tin riêng của mình.
+ */
 public class Vehicle extends Item{
     private String brand, model;
     private int year, km;
@@ -14,6 +20,23 @@ public class Vehicle extends Item{
         this.model = model;
         this.year = year;
         this.km = km;
+    }
+
+    @Override
+    public String getItemType() {
+        return "VEHICLE";
+    }
+
+    @Override
+    public void applyUpdate(UpdateAuctionDTO dto) {
+        if (dto.getBrand() != null && !dto.getBrand().trim().isEmpty())
+            this.setBrand(dto.getBrand());
+        if (dto.getModel() != null && !dto.getModel().trim().isEmpty())
+            this.setModel(dto.getModel());
+        if (dto.getYear() > 0)
+            this.setYear(dto.getYear());
+        if (dto.getKm() > 0)
+            this.setKm(dto.getKm());
     }
 
     @Override
@@ -53,3 +76,4 @@ public class Vehicle extends Item{
         this.km = km;
     }
 }
+

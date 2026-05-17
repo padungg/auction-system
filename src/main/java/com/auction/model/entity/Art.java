@@ -1,4 +1,10 @@
 package com.auction.model.entity;
+import com.auction.model.dto.UpdateAuctionDTO;
+
+/**
+ * Thực thể đại diện cho sản phẩm nghệ thuật.
+ * Kế thừa lớp Item và tự triển khai (override) logic cập nhật/thông tin riêng của mình.
+ */
 
 public class Art extends Item{
     private String artistName, material;
@@ -13,6 +19,21 @@ public class Art extends Item{
         this.artistName = artistName;
         this.material = material;
         this.creationYear = creationYear;
+    }
+
+    @Override
+    public String getItemType() {
+        return "ART";
+    }
+
+    @Override
+    public void applyUpdate(UpdateAuctionDTO dto) {
+        if (dto.getArtistName() != null && !dto.getArtistName().trim().isEmpty())
+            this.setArtistName(dto.getArtistName());
+        if (dto.getMaterial() != null && !dto.getMaterial().trim().isEmpty())
+            this.setMaterial(dto.getMaterial());
+        if (dto.getCreationYear() > 0)
+            this.setCreationYear(dto.getCreationYear());
     }
 
     @Override
@@ -44,3 +65,4 @@ public class Art extends Item{
         this.creationYear = creationYear;
     }
 }
+

@@ -1,5 +1,11 @@
 package com.auction.model.entity;
 
+import com.auction.model.dto.UpdateAuctionDTO;
+
+/**
+ * Thực thể đại diện cho sản phẩm đồ điện tử.
+ * Kế thừa lớp Item và tự triển khai (override) logic cập nhật/thông tin riêng của mình.
+ */
 public class Electronics extends Item {
     private String brand;
     private int warrantyMonths;
@@ -9,10 +15,23 @@ public class Electronics extends Item {
     }
 
     public Electronics(String id, String name, String description, String condition, String sellerId,
-            double startingPrice, String brand, int warrantyMonths) {
+                       double startingPrice, String brand, int warrantyMonths) {
         super(id, name, description, condition, sellerId, startingPrice);
         this.brand = brand;
         this.warrantyMonths = warrantyMonths;
+    }
+
+    @Override
+    public String getItemType() {
+        return "ELECTRONICS";
+    }
+
+    @Override
+    public void applyUpdate(UpdateAuctionDTO dto) {
+        if (dto.getBrand() != null && !dto.getBrand().trim().isEmpty())
+            this.setBrand(dto.getBrand());
+        if (dto.getWarrantyMonths() > 0)
+            this.setWarrantyMonths(dto.getWarrantyMonths());
     }
 
     @Override
