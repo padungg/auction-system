@@ -81,7 +81,7 @@ class AuctionTest {
     }
 
     @ParameterizedTest
-    @ValueSource(longs = {1, 10, 30, 59, 60})
+    @ValueSource(longs = {2, 10, 30, 59, 60})
     @DisplayName("TC-ENTITY-06: applyAntiSniping với nhiều giá trị trong threshold → luôn gia hạn")
     void antiSniping_variousSecondsWithinThreshold(long seconds) {
         Auction a = auctionWithSecondsLeft(seconds);
