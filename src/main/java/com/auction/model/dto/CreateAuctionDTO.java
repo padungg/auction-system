@@ -13,16 +13,16 @@ public class CreateAuctionDTO {
     private double startingPrice;
     private int durationDays; // Phiên đấu giá diễn ra bao nhiêu ngày?
 
-    // --- CÁC TRƯỜNG CỦA ART ---
+    // ART
     private String artistName;
     private String material;
     private int creationYear;
 
-    // --- CÁC TRƯỜNG CỦA ELECTRONICS ---
+    // ELECTRONICS
     private String brand;
     private int warrantyMonths;
 
-    // --- CÁC TRƯỜNG CỦA VEHICLE ---
+    // VEHICLE
     private String model;
     private int year;
     private int km;
