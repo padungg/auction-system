@@ -17,7 +17,8 @@ public class User extends Entity {
     public User() {
     }
 
-    public User(String id, String username, String password, String email, String fullName, String phone, String address, boolean isActive, UserRole role, double balance, String storeName, double rating) {
+    public User(String id, String username, String password, String email, String fullName, String phone,
+            String address, boolean isActive, UserRole role, double balance, String storeName, double rating) {
         super(id);
         this.username = username;
         this.password = password;

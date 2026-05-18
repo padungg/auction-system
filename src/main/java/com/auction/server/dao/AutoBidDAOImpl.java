@@ -1,5 +1,8 @@
 package com.auction.server.dao;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.auction.server.database.DatabaseConnection;
 import com.auction.server.service.AutoBidEntry;
 
@@ -12,6 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AutoBidDAOImpl implements AutoBidDAO {
+    private static final Logger logger = LoggerFactory.getLogger(AutoBidDAOImpl.class);
+
 
     @Override
     public List<AutoBidEntry> findAll() {
@@ -31,7 +36,7 @@ public class AutoBidDAOImpl implements AutoBidDAO {
                 ));
             }
         } catch (SQLException e) {
-            System.err.println(">>> [AutoBidDAO] Lỗi findAll: " + e.getMessage());
+            logger.error(">>> [AutoBidDAO] Lỗi findAll: " + e.getMessage());
         }
         return list;
     }
@@ -52,7 +57,7 @@ public class AutoBidDAOImpl implements AutoBidDAO {
 
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println(">>> [AutoBidDAO] Lỗi save: " + e.getMessage());
+            logger.error(">>> [AutoBidDAO] Lỗi save: " + e.getMessage());
         }
         return false;
     }
@@ -68,7 +73,7 @@ public class AutoBidDAOImpl implements AutoBidDAO {
 
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println(">>> [AutoBidDAO] Lỗi delete: " + e.getMessage());
+            logger.error(">>> [AutoBidDAO] Lỗi delete: " + e.getMessage());
         }
         return false;
     }
@@ -83,7 +88,7 @@ public class AutoBidDAOImpl implements AutoBidDAO {
 
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println(">>> [AutoBidDAO] Lỗi deleteByAuctionId: " + e.getMessage());
+            logger.error(">>> [AutoBidDAO] Lỗi deleteByAuctionId: " + e.getMessage());
         }
         return false;
     }

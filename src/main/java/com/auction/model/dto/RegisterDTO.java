@@ -10,6 +10,7 @@ public class RegisterDTO {
     private String fullName;
     private String phone;
     private String address;
+    private String storeName;
 
     public RegisterDTO() {
     }
@@ -21,6 +22,11 @@ public class RegisterDTO {
         this.fullName = fullName;
         this.phone = phone;
         this.address = address;
+    }
+
+    public RegisterDTO(String username, String password, String email, String fullName, String phone, String address, String storeName) {
+        this(username, password, email, fullName, phone, address);
+        this.storeName = storeName;
     }
 
     public String getUsername() {
@@ -69,5 +75,13 @@ public class RegisterDTO {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public String getStoreName() {
+        return storeName;
+    }
+
+    public void setStoreName(String storeName) {
+        this.storeName = storeName;
     }
 }

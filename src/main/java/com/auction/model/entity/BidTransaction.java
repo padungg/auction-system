@@ -6,6 +6,7 @@ public class BidTransaction extends Entity{
     private String bidderId, auctionId;
     private double bidAmount;
     private LocalDateTime bidTime;
+    private boolean isAutoBid = false;
 
 
     public BidTransaction() {
@@ -17,6 +18,16 @@ public class BidTransaction extends Entity{
         this.auctionId = auctionId;
         this.bidAmount = bidAmount;
         this.bidTime = bidTime;
+        this.isAutoBid = false;
+    }
+
+    public BidTransaction(String id, String bidderId, String auctionId, double bidAmount, LocalDateTime bidTime, boolean isAutoBid) {
+        super(id);
+        this.bidderId = bidderId;
+        this.auctionId = auctionId;
+        this.bidAmount = bidAmount;
+        this.bidTime = bidTime;
+        this.isAutoBid = isAutoBid;
     }
 
     public String getBidderId() {
@@ -50,6 +61,15 @@ public class BidTransaction extends Entity{
     public void setBidTime(LocalDateTime bidTime) {
         this.bidTime = bidTime;
     }
+
+    public boolean isAutoBid() {
+        return isAutoBid;
+    }
+
+    public void setAutoBid(boolean autoBid) {
+        isAutoBid = autoBid;
+    }
+
     public String getInfo(){
         return "Id: " + this.getId() + " User: " + bidderId + " AuctionId: " + auctionId + " Amount: " + bidAmount + " Thời gian: " + bidTime;
     }

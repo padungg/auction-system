@@ -1,5 +1,8 @@
 package com.auction.server.dao;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.auction.model.entity.Art;
 import com.auction.model.entity.Electronics;
 import com.auction.model.entity.Item;
@@ -12,6 +15,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class ItemDAOImpl implements ItemDAO {
+    private static final Logger logger = LoggerFactory.getLogger(ItemDAOImpl.class);
+
 
     @Override
     public Item findById(String id) {
@@ -50,7 +55,7 @@ public class ItemDAOImpl implements ItemDAO {
                 }
             }
         } catch (SQLException e) {
-            System.err.println(">>> [ItemDAO] Lỗi findById: " + e.getMessage());
+            logger.error(">>> [ItemDAO] Lỗi findById: " + e.getMessage());
         }
         return null;
     }
@@ -109,7 +114,7 @@ public class ItemDAOImpl implements ItemDAO {
             return rowsAffected > 0;
             
         } catch (SQLException e) {
-            System.err.println(">>> [ItemDAO] Lỗi save: " + e.getMessage());
+            logger.error(">>> [ItemDAO] Lỗi save: " + e.getMessage());
         }
         return false;
     }
@@ -160,7 +165,7 @@ public class ItemDAOImpl implements ItemDAO {
             return rowsAffected > 0;
 
         } catch (SQLException e) {
-            System.err.println(">>> [ItemDAO] Lỗi update: " + e.getMessage());
+            logger.error(">>> [ItemDAO] Lỗi update: " + e.getMessage());
         }
         return false;
     }
@@ -176,7 +181,7 @@ public class ItemDAOImpl implements ItemDAO {
             return rowsAffected > 0;
 
         } catch (SQLException e) {
-            System.err.println(">>> [ItemDAO] Lỗi delete: " + e.getMessage());
+            logger.error(">>> [ItemDAO] Lỗi delete: " + e.getMessage());
         }
         return false;
     }

@@ -1,5 +1,8 @@
 package com.auction.server.dao;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.auction.model.entity.Auction;
 import com.auction.model.entity.AuctionStatus;
 import com.auction.server.database.DatabaseConnection;
@@ -13,6 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AuctionDAOImpl implements AuctionDAO {
+    private static final Logger logger = LoggerFactory.getLogger(AuctionDAOImpl.class);
+
 
     @Override
     public List<Auction> findAllByStatus(AuctionStatus status) {
@@ -28,7 +33,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                 }
             }
         } catch (SQLException e) {
-            System.err.println(">>> [AuctionDAO] Lỗi findAllByStatus: " + e.getMessage());
+            logger.error(">>> [AuctionDAO] Lỗi findAllByStatus: " + e.getMessage());
         }
         return auctions;
     }
@@ -46,7 +51,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                 }
             }
         } catch (SQLException e) {
-            System.err.println(">>> [AuctionDAO] Lỗi findById: " + e.getMessage());
+            logger.error(">>> [AuctionDAO] Lỗi findById: " + e.getMessage());
         }
         return null;
     }
@@ -71,7 +76,7 @@ public class AuctionDAOImpl implements AuctionDAO {
             return rowsAffected > 0;
 
         } catch (SQLException e) {
-            System.err.println(">>> [AuctionDAO] Lỗi save: " + e.getMessage());
+            logger.error(">>> [AuctionDAO] Lỗi save: " + e.getMessage());
         }
         return false;
     }
@@ -92,7 +97,7 @@ public class AuctionDAOImpl implements AuctionDAO {
             return rowsAffected > 0;
 
         } catch (SQLException e) {
-            System.err.println(">>> [AuctionDAO] Lỗi update: " + e.getMessage());
+            logger.error(">>> [AuctionDAO] Lỗi update: " + e.getMessage());
         }
         return false;
     }
@@ -110,7 +115,7 @@ public class AuctionDAOImpl implements AuctionDAO {
         try {
             auction.setStatus(AuctionStatus.valueOf(statusStr));
         } catch (IllegalArgumentException e) {
-            System.err.println(">>> [AuctionDAO] Cảnh báo: Trạng thái không hợp lệ trong DB: " + statusStr + ". Đã đổi thành CANCELED.");
+            logger.error(">>> [AuctionDAO] Cảnh báo: Trạng thái không hợp lệ trong DB: " + statusStr + ". Đã đổi thành CANCELED.");
             auction.setStatus(AuctionStatus.CANCELED);
         }
         
@@ -128,7 +133,7 @@ public class AuctionDAOImpl implements AuctionDAO {
             return rowsAffected > 0;
 
         } catch (SQLException e) {
-            System.err.println(">>> [AuctionDAO] Lỗi delete: " + e.getMessage());
+            logger.error(">>> [AuctionDAO] Lỗi delete: " + e.getMessage());
         }
         return false;
     }
@@ -145,7 +150,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                 auctions.add(mapResultSetToAuction(rs));
             }
         } catch (SQLException e) {
-            System.err.println(">>> [AuctionDAO] Lỗi findAll: " + e.getMessage());
+            logger.error(">>> [AuctionDAO] Lỗi findAll: " + e.getMessage());
         }
         return auctions;
     }
@@ -164,7 +169,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                 }
             }
         } catch (SQLException e) {
-            System.err.println(">>> [AuctionDAO] Lỗi findByCurrentWinnerId: " + e.getMessage());
+            logger.error(">>> [AuctionDAO] Lỗi findByCurrentWinnerId: " + e.getMessage());
         }
         return auctions;
     }

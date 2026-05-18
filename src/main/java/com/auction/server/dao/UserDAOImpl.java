@@ -1,5 +1,8 @@
 package com.auction.server.dao;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.auction.model.entity.User;
 import com.auction.model.entity.UserRole;
 import com.auction.server.database.DatabaseConnection;
@@ -15,6 +18,8 @@ import java.util.List;
  * Triển khai UserDAO kết nối MySQL thực tế.
  */
 public class UserDAOImpl implements UserDAO {
+    private static final Logger logger = LoggerFactory.getLogger(UserDAOImpl.class);
+
 
     @Override
     public User findByUsername(String username) {
@@ -27,7 +32,7 @@ public class UserDAOImpl implements UserDAO {
                 if (rs.next()) return mapRow(rs);
             }
         } catch (SQLException e) {
-            System.err.println(">>> [UserDAO] Lỗi findByUsername: " + e.getMessage());
+            logger.error(">>> [UserDAO] Lỗi findByUsername: " + e.getMessage());
         }
         return null;
     }
@@ -43,7 +48,7 @@ public class UserDAOImpl implements UserDAO {
                 if (rs.next()) return mapRow(rs);
             }
         } catch (SQLException e) {
-            System.err.println(">>> [UserDAO] Lỗi findById: " + e.getMessage());
+            logger.error(">>> [UserDAO] Lỗi findById: " + e.getMessage());
         }
         return null;
     }
@@ -70,7 +75,7 @@ public class UserDAOImpl implements UserDAO {
 
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println(">>> [UserDAO] Lỗi save: " + e.getMessage());
+            logger.error(">>> [UserDAO] Lỗi save: " + e.getMessage());
         }
         return false;
     }
@@ -86,7 +91,7 @@ public class UserDAOImpl implements UserDAO {
                 return rs.next();
             }
         } catch (SQLException e) {
-            System.err.println(">>> [UserDAO] Lỗi existsByUsername: " + e.getMessage());
+            logger.error(">>> [UserDAO] Lỗi existsByUsername: " + e.getMessage());
         }
         return false;
     }
@@ -103,7 +108,7 @@ public class UserDAOImpl implements UserDAO {
                 users.add(mapRow(rs));
             }
         } catch (SQLException e) {
-            System.err.println(">>> [UserDAO] Lỗi findAll: " + e.getMessage());
+            logger.error(">>> [UserDAO] Lỗi findAll: " + e.getMessage());
         }
         return users;
     }
@@ -128,7 +133,7 @@ public class UserDAOImpl implements UserDAO {
 
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println(">>> [UserDAO] Lỗi update: " + e.getMessage());
+            logger.error(">>> [UserDAO] Lỗi update: " + e.getMessage());
         }
         return false;
     }
@@ -143,7 +148,7 @@ public class UserDAOImpl implements UserDAO {
                 if (rs.next()) return mapRow(rs);
             }
         } catch (SQLException e) {
-            System.err.println(">>> [UserDAO] Lỗi findFirstByRole: " + e.getMessage());
+            logger.error(">>> [UserDAO] Lỗi findFirstByRole: " + e.getMessage());
         }
         return null;
     }

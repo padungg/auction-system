@@ -12,5 +12,28 @@ public enum RequestType {
     UNSUBSCRIBE_AUCTION,    // Hủy đăng ký realtime
     CLOSE_AUCTION,          // Đóng phiên thủ công
     REGISTER_AUTO_BID,      // Đăng ký đặt giá tự động (maxBid + increment)
-    CANCEL_AUTO_BID         // Hủy đăng ký auto-bid
+    CANCEL_AUTO_BID,        // Hủy đăng ký auto-bid
+
+    // ── ADMIN ────────────────────────────────────────────────
+    GET_ALL_USERS,          // Lấy danh sách tất cả user (Admin)
+    LOCK_USER,              // Khóa tài khoản user (Admin)
+    UNLOCK_USER,            // Mở khóa tài khoản user (Admin)
+    ADMIN_CANCEL_AUCTION,   // Hủy phiên đấu giá (Admin)
+    ADMIN_MARK_PAID,        // Đánh dấu thanh toán (Admin)
+
+    // ── ACCOUNT ──────────────────────────────────────────────────────
+    GET_MY_PROFILE,         // Lấy thông tin tài khoản hiện tại (refresh từ DB)
+    GET_MY_BID_HISTORY,     // Lấy lịch sử bid của user đang đăng nhập
+    DEPOSIT,                // Nạp tiền vào tài khoản
+    WITHDRAW,               // Rút tiền khỏi tài khoản
+    UPDATE_PROFILE,         // Cập nhật hồ sơ cá nhân
+
+    // ── PAYMENT ──────────────────────────────────────────────
+    GET_PENDING_PAYMENTS,   // Lấy danh sách phiên chờ thanh toán
+    GET_PAYMENT_HISTORY,    // Lấy lịch sử thanh toán
+    PAY_AUCTION,            // Thanh toán phiên đấu giá đã thắng
+
+    // ── SELLER ───────────────────────────────────────────────
+    DELETE_AUCTION,         // Xóa phiên đấu giá (Seller)
+    UPDATE_AUCTION          // Cập nhật thông tin phiên (Seller)
 }

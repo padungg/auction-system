@@ -1,5 +1,8 @@
 package com.auction.server.database;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -10,6 +13,8 @@ import java.sql.SQLException;
  * và tương thích với cú pháp try-with-resources trong các lớp DAO.
  */
 public class DatabaseConnection {
+    private static final Logger logger = LoggerFactory.getLogger(DatabaseConnection.class);
+
 
     // Thông tin kết nối MySQL
     private static final String URL = "jdbc:mysql://localhost:3306/auction_system?createDatabaseIfNotExist=true";
@@ -20,7 +25,7 @@ public class DatabaseConnection {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
         } catch (ClassNotFoundException e) {
-            System.err.println(">>> [DB] LỖI: Không tìm thấy MySQL Driver!");
+            logger.error(">>> [DB] LỖI: Không tìm thấy MySQL Driver!");
         }
     }
 

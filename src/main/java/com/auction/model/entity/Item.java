@@ -1,9 +1,8 @@
 package com.auction.model.entity;
 
-public abstract class Item extends Entity{
+public abstract class Item extends Entity {
     private String name, description, condition, sellerId;
     private double startingPrice;
-
 
     public Item() {
     }
