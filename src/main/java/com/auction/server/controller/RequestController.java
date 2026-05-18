@@ -43,9 +43,9 @@ public class RequestController {
     private final AutoBidService autoBidService;
 
     public RequestController(UserService userService,
-            AuctionService auctionService,
-            BidService bidService,
-            AutoBidService autoBidService) {
+                             AuctionService auctionService,
+                             BidService bidService,
+                             AutoBidService autoBidService) {
         this.userService = userService;
         this.auctionService = auctionService;
         this.bidService = bidService;
