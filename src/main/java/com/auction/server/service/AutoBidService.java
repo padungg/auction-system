@@ -11,8 +11,6 @@ import com.auction.server.dao.BidTransactionDAO;
 import com.auction.server.dao.AutoBidDAO;
 import com.auction.server.observer.AuctionManager;
 import com.auction.server.util.AuctionUtils;
-
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -22,47 +20,22 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 /**
- * AUTO-BID SERVICE — Đặt giá tự động thay người dùng khi có bid mới từ đối thủ.
- *
- * Cơ chế:
- * 1. User gửi REGISTER_AUTO_BID {auctionId, maxBid, increment}
- * → AutoBidEntry được lưu vào PriorityQueue của phiên đó.
- * 2. Sau mỗi lần PLACE_BID thành công, BidService gọi triggerAutoBids()
- * → AutoBidService duyệt queue, tự động phản giá cho các user đã đăng ký.
- * 3. Vòng lặp tiếp tục cho đến khi không còn ai có thể phản giá.
- *
- * Ưu tiên FCFS (First Come First Served):
- * - PriorityQueue<AutoBidEntry> sắp xếp theo registeredAt (sớm nhất = ưu tiên
- * cao).
- * - Khi nhiều người cùng có thể phản giá, người đăng ký trước được xét trước.
- *
- * Thread-safety:
- * - Tất cả public method đều synchronized.
- * - triggerAutoBids() được gọi từ BidService.placeBid() đã synchronized
- * → không có deadlock (lock order luôn là BidService → AutoBidService).
- *
- * Giới hạn vòng lặp:
- * - MAX_ROUNDS = 50 để ngăn vòng lặp vô hạn trong trường hợp cực đoan.
+ * Xử lý Auto-Bid (Đặt giá tự động)
+ * - Thread-safe: Các method public được synchronized. Lock order: BidService -> AutoBidService.
+ * - Anti-loop: Giới hạn MAX_ROUNDS = 50 lần tự động phản giá liên tiếp.
  */
 public class AutoBidService {
+    private static final Logger LOGGER = Logger.getLogger(AutoBidService.class.getName());
 
-    /**
-     * Giới hạn số vòng tự động phản giá liên tiếp — phòng trường hợp nhiều người
-     * auto-bid
-     */
     private static final int MAX_ROUNDS = 50;
 
     private final AuctionDAO auctionDAO;
     private final BidTransactionDAO bidTransactionDAO;
     private final AutoBidDAO autoBidDAO;
 
-    /**
-     * Map: auctionId → PriorityQueue<AutoBidEntry> (FCFS — sắp xếp theo
-     * registeredAt)
-     * ConcurrentHashMap cho phép đọc đồng thời an toàn; write vẫn cần synchronized.
-     */
     private final Map<String, PriorityQueue<AutoBidEntry>> registry = new ConcurrentHashMap<>();
 
     public AutoBidService(AuctionDAO auctionDAO, BidTransactionDAO bidTransactionDAO, AutoBidDAO autoBidDAO) {
@@ -79,12 +52,10 @@ public class AutoBidService {
                     entry.getAuctionId(), k -> new PriorityQueue<>());
             queue.add(entry);
         }
-        System.out.println("[AutoBidService] Đã load " + entries.size() + " auto-bids từ DB.");
+        LOGGER.info("Đã load " + entries.size() + " auto-bids từ DB.");
     }
 
-    // ════════════════════════════════════════════════════════════════
     // ĐĂNG KÝ / HỦY AUTO-BID
-    // ════════════════════════════════════════════════════════════════
 
     /**
      * Đăng ký Auto-Bid cho 1 phiên.
@@ -136,14 +107,18 @@ public class AutoBidService {
         // Lưu vào DB
         autoBidDAO.save(newEntry);
 
-        System.out.println("[AutoBidService] REGISTER: phiên=" + dto.getAuctionId()
+        LOGGER.info("REGISTER: phiên=" + dto.getAuctionId()
                 + " | user=" + userId
                 + " | maxBid=" + String.format("%,.0f", dto.getMaxBid())
                 + " | increment=" + String.format("%,.0f", dto.getIncrement())
                 + " | tổng auto-bidder=" + queue.size());
 
+        // Kích hoạt ngay lập tức: nếu maxBid > currentPrice + increment
+        // đặt giá ngay mà không cần chờ người khác bid trước
+        triggerAutoBids(dto.getAuctionId(), auction.getCurrentPrice(), auction.getCurrentWinnerId());
+
         return new Response(ResponseStatus.SUCCESS,
-                "Đăng ký auto-bid thành công! Hệ thống sẽ tự động phản giá cho bạn.", null);
+                "Đăng ký auto-bid thành công! Hệ thống đã bắt đầu tự động đặt giá cho bạn.", null);
     }
 
     /**
@@ -158,7 +133,7 @@ public class AutoBidService {
             if (queue != null && queue.isEmpty())
                 registry.remove(auctionId);
             autoBidDAO.delete(auctionId, userId);
-            System.out.println("[AutoBidService] CANCEL: phiên=" + auctionId + " | user=" + userId);
+            LOGGER.info("CANCEL: phiên=" + auctionId + " | user=" + userId);
             return new Response(ResponseStatus.SUCCESS, "Đã hủy đăng ký auto-bid", null);
         }
         return new Response(ResponseStatus.NOT_FOUND, "Bạn chưa đăng ký auto-bid cho phiên này", null);
@@ -171,34 +146,18 @@ public class AutoBidService {
     public synchronized void clearAuction(String auctionId) {
         registry.remove(auctionId);
         autoBidDAO.deleteByAuctionId(auctionId);
-        System.out.println("[AutoBidService] CLEAR: đã xóa auto-bid của phiên=" + auctionId);
+        LOGGER.info("CLEAR: đã xóa auto-bid của phiên=" + auctionId);
     }
 
-    // ════════════════════════════════════════════════════════════════
     // KÍCH HOẠT AUTO-BID (gọi sau mỗi bid thành công)
-    // ════════════════════════════════════════════════════════════════
 
     /**
      * Kích hoạt vòng tự động phản giá sau khi có bid mới.
-     *
      * Được gọi bởi BidService.placeBid() — đã nằm trong synchronized context.
-     *
-     * Thuật toán (FCFS):
-     * 1. Lấy toàn bộ AutoBidEntry của phiên, sắp xếp theo registeredAt.
-     * 2. Xóa các entry đã hết ngân sách (maxBid < currentPrice + increment).
-     * 3. Tìm entry đầu tiên (đăng ký sớm nhất) KHÔNG phải current winner
-     * và có maxBid >= currentPrice + increment.
-     * 4. Tự động đặt giá: newPrice = currentPrice + increment.
-     * 5. Persist DB + notify Observer + lưu BidTransaction.
-     * 6. Lặp lại từ bước 2 cho đến khi không còn ai phản giá được.
-     *
-     * @param auctionId     ID phiên đấu giá
-     * @param startPrice    Giá hiện tại (sau bid vừa xảy ra)
-     * @param startWinnerId Winner hiện tại (người vừa bid)
      */
     public synchronized void triggerAutoBids(String auctionId,
-            double startPrice,
-            String startWinnerId) {
+                                             double startPrice,
+                                             String startWinnerId) {
         PriorityQueue<AutoBidEntry> queue = registry.get(auctionId);
         if (queue == null || queue.isEmpty())
             return;
@@ -211,11 +170,11 @@ public class AutoBidService {
         do {
             progress = false;
 
-            // ── Bước 1: Lấy snapshot + sắp xếp FCFS ────────────────
+            // Lấy snapshot + sắp xếp FCFS
             List<AutoBidEntry> sorted = new ArrayList<>(queue);
-            Collections.sort(sorted); // AutoBidEntry.compareTo → registeredAt tăng dần
+            Collections.sort(sorted);
 
-            // ── Bước 2: Xác định entry bị loại (hết ngân sách) ────
+            // Xác định entry bị loại (hết ngân sách)
             List<AutoBidEntry> exhausted = new ArrayList<>();
             AutoBidEntry winner = null;
 
@@ -223,17 +182,17 @@ public class AutoBidService {
                 double nextBid = currentPrice + entry.getIncrement();
 
                 if (nextBid > entry.getMaxBid()) {
-                    // Hết ngân sách → đánh dấu xóa
+                    // Hết ngân sách , đánh dấu xóa
                     exhausted.add(entry);
                     continue;
                 }
 
                 if (entry.getUserId().equals(currentWinnerId)) {
-                    // Đang thắng rồi → bỏ qua (không cần bid thêm)
+                    // Đang thắng rồi , bỏ qua (không cần bid thêm)
                     continue;
                 }
 
-                // ← Người đầu tiên (FCFS) hợp lệ, có thể phản giá
+                //  Người đầu tiên hợp lệ, có thể phản giá
                 winner = entry;
                 break;
             }
@@ -242,13 +201,13 @@ public class AutoBidService {
             queue.removeAll(exhausted);
             if (!exhausted.isEmpty()) {
                 for (AutoBidEntry e : exhausted) {
-                    System.out.println("[AutoBidService] EXHAUSTED: user=" + e.getUserId()
+                    LOGGER.info("EXHAUSTED: user=" + e.getUserId()
                             + " | maxBid=" + String.format("%,.0f", e.getMaxBid())
                             + " vượt ngưỡng — loại khỏi queue");
                 }
             }
 
-            // ── Bước 3: Thực hiện auto-bid nếu tìm được winner ─────
+            // Thực hiện auto-bid nếu tìm được winner
             if (winner != null) {
                 double autoBidAmount = currentPrice + winner.getIncrement();
 
@@ -266,18 +225,19 @@ public class AutoBidService {
                 auction.setCurrentWinnerId(currentWinnerId);
                 auctionDAO.update(auction);
 
-                // ── ANTI-SNIPING trong auto-bid ───────────────────────────────────
+                // ANTI-SNIPING trong auto-bid
                 // Nếu auto-bid xảy ra trong 60 giây cuối → gia hạn thêm 120 giây
                 // Đảm bảo quy tắc anti-sniping áp dụng cho MỌI bid (thủ công hay tự động)
                 AuctionUtils.applyAntiSnipe(auction, auctionDAO);
 
-                // Lưu lịch sử BidTransaction
+                // Lưu lịch sử BidTransaction — đánh dấu isAutoBid = true
                 BidTransaction tx = new BidTransaction(
                         UUID.randomUUID().toString(),
                         currentWinnerId,
                         auctionId,
                         currentPrice,
-                        LocalDateTime.now());
+                        LocalDateTime.now(),
+                        true); // isAutoBid = true
                 bidTransactionDAO.save(tx);
 
                 String bidTimeIso = tx.getBidTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
@@ -285,19 +245,19 @@ public class AutoBidService {
                 // Thông báo realtime cho tất cả client đang xem phiên
                 AuctionManager.getInstance().notifyBidUpdate(auctionId, currentPrice, currentWinnerId, bidTimeIso);
 
-                System.out.println("[AutoBidService] AUTO_BID: phiên=" + auctionId
+                LOGGER.info("AUTO_BID: phiên=" + auctionId
                         + " | user=" + currentWinnerId
                         + " | " + String.format("%,.0f", oldPrice)
                         + " → " + String.format("%,.0f", currentPrice) + " VNĐ");
 
-                progress = true; // Có bid xảy ra → kiểm tra lại từ đầu
+                progress = true;
             }
 
             rounds++;
         } while (progress && rounds < MAX_ROUNDS);
 
         if (rounds >= MAX_ROUNDS) {
-            System.out.println("[AutoBidService] MAX_ROUNDS reached tại phiên=" + auctionId
+            LOGGER.warning("MAX_ROUNDS reached tại phiên=" + auctionId
                     + " — dừng để tránh vòng lặp vô hạn");
         }
     }
