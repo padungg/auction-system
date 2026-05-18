@@ -8,6 +8,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Triển khai UserDAO kết nối MySQL thực tế.
@@ -87,6 +89,63 @@ public class UserDAOImpl implements UserDAO {
             System.err.println(">>> [UserDAO] Lỗi existsByUsername: " + e.getMessage());
         }
         return false;
+    }
+
+    @Override
+    public List<User> findAll() {
+        List<User> users = new ArrayList<>();
+        String sql = "SELECT * FROM users";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                users.add(mapRow(rs));
+            }
+        } catch (SQLException e) {
+            System.err.println(">>> [UserDAO] Lỗi findAll: " + e.getMessage());
+        }
+        return users;
+    }
+
+    @Override
+    public boolean update(User user) {
+        String sql = "UPDATE users SET email = ?, full_name = ?, phone = ?, address = ?, " +
+                     "is_active = ?, role = ?, balance = ?, store_name = ?, rating = ? WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1,  user.getEmail());
+            stmt.setString(2,  user.getFullName());
+            stmt.setString(3,  user.getPhone());
+            stmt.setString(4,  user.getAddress());
+            stmt.setBoolean(5, user.isActive());
+            stmt.setString(6,  user.getRole().name());
+            stmt.setDouble(7,  user.getBalance());
+            stmt.setString(8,  user.getStoreName());
+            stmt.setDouble(9,  user.getRating());
+            stmt.setString(10, user.getId());
+
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println(">>> [UserDAO] Lỗi update: " + e.getMessage());
+        }
+        return false;
+    }
+
+    @Override
+    public User findFirstByRole(com.auction.model.entity.UserRole role) {
+        String sql = "SELECT * FROM users WHERE role = ? AND is_active = TRUE LIMIT 1";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, role.name());
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) return mapRow(rs);
+            }
+        } catch (SQLException e) {
+            System.err.println(">>> [UserDAO] Lỗi findFirstByRole: " + e.getMessage());
+        }
+        return null;
     }
 
     private User mapRow(ResultSet rs) throws SQLException {

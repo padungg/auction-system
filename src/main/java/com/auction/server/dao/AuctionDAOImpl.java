@@ -78,14 +78,15 @@ public class AuctionDAOImpl implements AuctionDAO {
 
     @Override
     public boolean update(Auction auction) {
-        String sql = "UPDATE auctions SET current_winner_id = ?, current_price = ?, status = ? WHERE id = ?";
+        String sql = "UPDATE auctions SET current_winner_id = ?, current_price = ?, status = ?, end_time = ? WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, auction.getCurrentWinnerId());
             stmt.setDouble(2, auction.getCurrentPrice());
             stmt.setString(3, auction.getStatus().name());
-            stmt.setString(4, auction.getId());
+            stmt.setTimestamp(4, Timestamp.valueOf(auction.getEndTime()));
+            stmt.setString(5, auction.getId());
 
             int rowsAffected = stmt.executeUpdate();
             return rowsAffected > 0;
@@ -104,7 +105,15 @@ public class AuctionDAOImpl implements AuctionDAO {
         auction.setCurrentPrice(rs.getDouble("current_price"));
         auction.setStartTime(rs.getTimestamp("start_time").toLocalDateTime());
         auction.setEndTime(rs.getTimestamp("end_time").toLocalDateTime());
-        auction.setStatus(AuctionStatus.valueOf(rs.getString("status")));
+        
+        String statusStr = rs.getString("status");
+        try {
+            auction.setStatus(AuctionStatus.valueOf(statusStr));
+        } catch (IllegalArgumentException e) {
+            System.err.println(">>> [AuctionDAO] Cảnh báo: Trạng thái không hợp lệ trong DB: " + statusStr + ". Đã đổi thành CANCELED.");
+            auction.setStatus(AuctionStatus.CANCELED);
+        }
+        
         return auction;
     }
 
@@ -122,5 +131,41 @@ public class AuctionDAOImpl implements AuctionDAO {
             System.err.println(">>> [AuctionDAO] Lỗi delete: " + e.getMessage());
         }
         return false;
+    }
+
+    @Override
+    public List<Auction> findAll() {
+        List<Auction> auctions = new ArrayList<>();
+        String sql = "SELECT * FROM auctions";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                auctions.add(mapResultSetToAuction(rs));
+            }
+        } catch (SQLException e) {
+            System.err.println(">>> [AuctionDAO] Lỗi findAll: " + e.getMessage());
+        }
+        return auctions;
+    }
+
+    @Override
+    public List<Auction> findByCurrentWinnerId(String winnerId) {
+        List<Auction> auctions = new ArrayList<>();
+        String sql = "SELECT * FROM auctions WHERE current_winner_id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, winnerId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    auctions.add(mapResultSetToAuction(rs));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println(">>> [AuctionDAO] Lỗi findByCurrentWinnerId: " + e.getMessage());
+        }
+        return auctions;
     }
 }

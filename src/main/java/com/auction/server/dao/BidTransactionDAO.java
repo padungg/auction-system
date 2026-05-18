@@ -20,4 +20,10 @@ public interface BidTransactionDAO {
      * Dùng để hiển thị lịch sử đặt giá trong trang chi tiết.
      */
     List<BidTransaction> findByAuctionId(String auctionId);
+
+    /**
+     * Lấy tất cả lịch sử bid của một người dùng.
+     * Dùng cho trang Tài khoản (GET_MY_BID_HISTORY).
+     */
+    List<BidTransaction> findByBidderId(String bidderId);
 }
