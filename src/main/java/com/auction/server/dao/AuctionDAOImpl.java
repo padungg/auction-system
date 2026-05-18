@@ -98,14 +98,15 @@ public class AuctionDAOImpl implements AuctionDAO {
     }
 
     private Auction mapResultSetToAuction(ResultSet rs) throws SQLException {
-        Auction auction = new Auction();
-        auction.setId(rs.getString("id"));
-        auction.setItemId(rs.getString("item_id"));
+        Auction auction = new Auction(
+                rs.getString("id"),
+                rs.getString("item_id"),
+                rs.getDouble("current_price"),
+                rs.getTimestamp("start_time").toLocalDateTime(),
+                rs.getTimestamp("end_time").toLocalDateTime()
+        );
         auction.setCurrentWinnerId(rs.getString("current_winner_id"));
-        auction.setCurrentPrice(rs.getDouble("current_price"));
-        auction.setStartTime(rs.getTimestamp("start_time").toLocalDateTime());
-        auction.setEndTime(rs.getTimestamp("end_time").toLocalDateTime());
-        
+
         String statusStr = rs.getString("status");
         try {
             auction.setStatus(AuctionStatus.valueOf(statusStr));
@@ -113,7 +114,7 @@ public class AuctionDAOImpl implements AuctionDAO {
             System.err.println(">>> [AuctionDAO] Cảnh báo: Trạng thái không hợp lệ trong DB: " + statusStr + ". Đã đổi thành CANCELED.");
             auction.setStatus(AuctionStatus.CANCELED);
         }
-        
+
         return auction;
     }
 

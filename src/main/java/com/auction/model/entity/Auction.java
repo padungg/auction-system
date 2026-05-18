@@ -1,4 +1,5 @@
 package com.auction.model.entity;
+
 import java.time.LocalDateTime;
 
 /**
@@ -11,6 +12,7 @@ public class Auction extends Entity{
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private AuctionStatus status;
+
 
     public Auction() {
     }
