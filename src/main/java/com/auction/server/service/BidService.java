@@ -1,50 +1,49 @@
 package com.auction.server.service;
 
 import com.auction.model.dto.BidRequestDTO;
+import com.auction.model.dto.MyBidHistoryDTO;
 import com.auction.model.entity.Auction;
 import com.auction.model.entity.AuctionStatus;
 import com.auction.model.entity.BidTransaction;
+import com.auction.model.entity.Item;
 import com.auction.model.protocol.Response;
 import com.auction.model.protocol.ResponseStatus;
 import com.auction.server.dao.AuctionDAO;
 import com.auction.server.dao.BidTransactionDAO;
+import com.auction.server.dao.ItemDAO;
 import com.auction.server.observer.AuctionManager;
 import com.auction.server.util.AuctionUtils;
-
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 /**
- * Service xử lý nghiệp vụ Đặt Giá (Bid).
- * - SYNCHRONIZED: Khóa method → tránh race condition khi nhiều người bid cùng
- * lúc
- * - OBSERVER: Sau khi bid thành công → thông báo cho tất cả client đang xem
- * phiên đó
- * - AUTO-BID: Sau mỗi bid, kích hoạt AutoBidService để xử lý các lượt tự động
- * phản giá
- * - Lịch sử bid: Trả về danh sách BidTransaction của 1 phiên
+ * Dịch vụ xử lý Đặt Giá (Bid).
+ * - Thread-safe (Synchronized): Ngăn chặn race condition khi đặt giá.
+ * - Realtime (Observer): Thông báo lập tức cho các client đang xem.
+ * - Tích hợp AutoBid và lưu trữ lịch sử giao dịch.
  */
 public class BidService {
+    private static final Logger LOGGER = Logger.getLogger(BidService.class.getName());
     private final AuctionDAO auctionDAO;
     private final BidTransactionDAO bidTransactionDAO;
-    private final AutoBidService autoBidService; // xử lý auto-bid sau mỗi bid
+    private final AutoBidService autoBidService;
+    private final ItemDAO itemDAO;
 
     public BidService(AuctionDAO auctionDAO, BidTransactionDAO bidTransactionDAO,
-            AutoBidService autoBidService) {
+                      AutoBidService autoBidService, ItemDAO itemDAO) {
         this.auctionDAO = auctionDAO;
         this.bidTransactionDAO = bidTransactionDAO;
         this.autoBidService = autoBidService;
+        this.itemDAO = itemDAO;
     }
 
     /**
-     * Xử lý đặt giá — SYNCHRONIZED để tránh race condition.
-     * 2. Tìm auction + kiểm tra trạng thái/thời gian
-     * 3. Cập nhật giá + winner
-     * 4. Lưu lịch sử BidTransaction
-     * 5. OBSERVER: Thông báo cho tất cả client đang xem
+     * Xử lý đặt giá (Synchronized).
+     * Kiểm tra trạng thái, cập nhật giá, thông báo Observer và kích hoạt AutoBid.
      */
     public synchronized Response placeBid(BidRequestDTO dto, String bidderId) {
         // Validation cơ bản (null check, kiểm tra login)
@@ -70,7 +69,7 @@ public class BidService {
             auction.setStatus(AuctionStatus.FINISHED);
             auctionDAO.update(auction);
             // Notify ngay lập tức — không chờ AuctionScheduler (có thể chậm tới 30 giây)
-            // → Tất cả client đang xem phiên này sẽ nhận sự kiện "AUCTION_CLOSED" ngay
+            // Tất cả client đang xem phiên này sẽ nhận sự kiện "AUCTION_CLOSED" ngay
             AuctionManager.getInstance().notifyAuctionClosed(
                     auction.getId(), auction.getCurrentPrice(), auction.getCurrentWinnerId());
             return new Response(ResponseStatus.BAD_REQUEST, "Phiên đấu giá đã kết thúc thời gian", null);
@@ -101,21 +100,17 @@ public class BidService {
 
         String bidTimeIso = transaction.getBidTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
 
-        // ── ANTI-SNIPING ──────────────────────────────────────────────────────
+        // ANTI-SNIPING
         // Nếu bid diễn ra trong 60 giây cuối → gia hạn thêm 120 giây
-        // Mục đích: ngăn “sniper” đặt giá vào đúng giây chót để thắng mà không ai kịp
-        // phản đứng
         AuctionUtils.applyAntiSnipe(auction, auctionDAO);
-        // ── OBSERVER: push realtime cho tất cả client đang xem phiên này ────
+        // OBSERVER
         AuctionManager.getInstance().notifyBidUpdate(dto.getAuctionId(), bidAmount, bidderId, bidTimeIso);
 
-        System.out.println("[BidService] PLACE_BID: phiên=" + dto.getAuctionId()
+        LOGGER.info("PLACE_BID: phiên=" + dto.getAuctionId()
                 + " | bidder=" + bidderId
                 + " | " + String.format("%,.0f", oldPrice) + " → " + String.format("%,.0f", bidAmount) + " VNĐ");
 
-        // ── AUTO-BID: kích hoạt các lượt tự động phản giá đã đăng ký ────────────────
-        // Gọi SAU khi bid của bidder đã được lưu vào DB và notify xong
-        // AutoBidService sẽ tự loop cho đến khi không còn ai phản giá được
+        // AUTO-BID
         autoBidService.triggerAutoBids(dto.getAuctionId(), bidAmount, bidderId);
 
         return new Response(ResponseStatus.SUCCESS,
@@ -135,10 +130,50 @@ public class BidService {
         }
         // Lấy danh sách lịch sử Bid
         List<BidTransaction> history = bidTransactionDAO.findByAuctionId(auctionId.trim());
-        // 3.2.5 Sắp xếp tăng dần theo thời gian (trục X) để phục vụ cho Line Chart
+        // Sắp xếp tăng dần theo thời gian (trục X) để phục vụ cho Line Chart
         history.sort((a, b) -> a.getBidTime().compareTo(b.getBidTime()));
 
-        System.out.println("[BidService] GET_HISTORY: phiên=" + auctionId + " | " + history.size() + " bản ghi");
+        LOGGER.info("GET_HISTORY: phiên=" + auctionId + " | " + history.size() + " bản ghi");
         return new Response(ResponseStatus.SUCCESS, "Lấy lịch sử bid thành công", history);
+    }
+
+    /**
+     * Lấy lịch sử bid cá nhân của user (tất cả các phiên đã tham gia).
+     * Trả về MyBidHistoryDTO có itemName và result (Thắng/Thất bại/Đang đấu).
+     */
+    public Response getMyBidHistory(String bidderId) {
+        if (bidderId == null) {
+            return new Response(ResponseStatus.UNAUTHORIZED, "Bạn chưa đăng nhập", null);
+        }
+        List<BidTransaction> txList = bidTransactionDAO.findByBidderId(bidderId);
+        List<MyBidHistoryDTO> result = new ArrayList<>();
+
+        for (BidTransaction tx : txList) {
+            Auction auction = auctionDAO.findById(tx.getAuctionId());
+            String itemName = tx.getAuctionId(); // fallback
+            if (auction != null) {
+                Item item = itemDAO.findById(auction.getItemId());
+                if (item != null) itemName = item.getName();
+            }
+
+            String status;
+            if (auction == null) {
+                status = "Không rõ";
+            } else if (auction.getStatus() == AuctionStatus.RUNNING ||
+                    auction.getStatus() == AuctionStatus.OPEN) {
+                status = "Đang đấu";
+            } else if (bidderId.equals(auction.getCurrentWinnerId())) {
+                status = "Thắng";
+            } else {
+                status = "Thất bại";
+            }
+
+            result.add(new MyBidHistoryDTO(
+                    tx.getAuctionId(), itemName, tx.getBidAmount(), tx.getBidTime(), status
+            ));
+        }
+
+        LOGGER.info("GET_MY_HISTORY: user=" + bidderId + " | " + result.size() + " bản ghi");
+        return new Response(ResponseStatus.SUCCESS, "Lấy lịch sử bid cá nhân thành công", result);
     }
 }

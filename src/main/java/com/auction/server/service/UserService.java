@@ -10,20 +10,19 @@ import com.auction.model.protocol.ResponseStatus;
 import com.auction.server.dao.UserDAO;
 import com.auction.server.util.ValidationUtils;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
- * Service xử lý nghiệp vụ liên quan đến User.
- *
- * Chức năng:
- * - Login: xác thực tài khoản + mật khẩu
- * - Register: đăng ký tài khoản mới, kiểm tra trùng username
- *
- * Pattern: Service layer — chỉ chứa logic nghiệp vụ, không biết gì về
- * mạng/socket.
+ * Dịch vụ xử lý nghiệp vụ Tài khoản (User).
+ * Hỗ trợ Đăng nhập, Đăng ký, Quản lý và Giao dịch Nạp/Rút tiền.
  */
 
 public class UserService {
+    private static final Logger LOGGER = Logger.getLogger(UserService.class.getName());
     private final UserDAO userDAO;
 
     public UserService(UserDAO userDAO) {
@@ -32,12 +31,7 @@ public class UserService {
 
     /**
      * Xử lý đăng nhập.
-     *
-     * Luồng:
-     * 1. Tìm user theo username
-     * 2. So sánh password
-     * 3. Kiểm tra tài khoản có bị khóa không
-     * 4. Trả về UserResponseDTO (KHÔNG chứa password) nếu thành công
+     * Trả về UserResponseDTO ĐẦY ĐỦ (bao gồm fullName, phone, address, ...)
      */
     public Response login(LoginDTO dto) {
         if (dto == null || dto.getUsername() == null || dto.getPassword() == null) {
@@ -56,66 +50,221 @@ public class UserService {
         if (!user.isActive()) {
             return new Response(ResponseStatus.UNAUTHORIZED, "Tài khoản đã bị khóa", null);
         }
-        UserResponseDTO userResponseDTO = new UserResponseDTO(
-                user.getId(),
-                user.getUsername(),
-                user.getEmail(),
-                user.getRole(),
-                user.getBalance());
-        System.out.println("[UserService] LOGIN: " + user.getUsername() + " | role=" + user.getRole() + " -> SUCCESS");
+
+        UserResponseDTO userResponseDTO = toFullDTO(user);
+        LOGGER.info("LOGIN: " + user.getUsername() + " | role=" + user.getRole() + " -> SUCCESS");
         return new Response(ResponseStatus.SUCCESS, "Đăng nhập thành công!", userResponseDTO);
     }
 
     /**
      * Xử lý đăng ký tài khoản mới.
-     *
-     * Luồng:
-     * 1. Validate: null, empty
-     * 2. Kiểm tra username chưa tồn tại
-     * 3. Tạo User mới với UUID + role MEMBER
-     * 4. Lưu vào DAO
-     * 5. Trả về UserResponseDTO (KHÔNG chứa password)
      */
     public Response register(RegisterDTO dto) {
-        // 1. Validate null
+        // Validate
         if (dto == null) {
             return new Response(ResponseStatus.BAD_REQUEST, "Thiếu thông tin đăng ký", null);
         }
-        // 2. Validate empty
         ValidationUtils.requireNonBlank(dto.getUsername(), "Username");
         ValidationUtils.requireNonBlank(dto.getPassword(), "Password");
         ValidationUtils.requireNonBlank(dto.getEmail(), "Email");
         ValidationUtils.requireValidEmail(dto.getEmail());
-        // 3. Kiểm tra trùng username
         if (userDAO.existsByUsername(dto.getUsername().trim())) {
             return new Response(ResponseStatus.BAD_REQUEST, "Username đã tồn tại, vui lòng chọn tên khác", null);
         }
-        // 4. Tạo User mới
+        // Tạo User mới
         User newUser = new User(
-                UUID.randomUUID().toString(), // id duy nhất
+                UUID.randomUUID().toString(),
                 dto.getUsername().trim(),
                 dto.getPassword(),
                 dto.getEmail().trim(),
                 dto.getFullName() != null ? dto.getFullName().trim() : "",
                 dto.getPhone() != null ? dto.getPhone() : "",
                 dto.getAddress() != null ? dto.getAddress() : "",
-                true, // isActive = true
-                UserRole.MEMBER, // role mặc định
-                0.0, // balance ban đầu = 0
-                null, // shopName (chỉ SELLER mới có)
-                0.0 // rating
+                true,
+                UserRole.MEMBER,
+                0.0,
+                dto.getStoreName() != null ? dto.getStoreName() : null,
+                0.0
         );
         boolean saved = userDAO.save(newUser);
         if (!saved) {
             return new Response(ResponseStatus.ERROR, "Lỗi máy chủ: Không thể lưu tài khoản vào Database (Vui lòng kiểm tra MySQL)", null);
         }
 
-        // 5. Trả về DTO (KHÔNG trả password về client)
-        UserResponseDTO responseDTO = new UserResponseDTO(
-                newUser.getId(), newUser.getUsername(),
-                newUser.getEmail(), newUser.getRole(), newUser.getBalance());
-        System.out.println(
+        UserResponseDTO responseDTO = toFullDTO(newUser);
+        LOGGER.info(
                 "[UserService] REGISTER: " + newUser.getUsername() + " | id=" + newUser.getId() + " -> SUCCESS");
         return new Response(ResponseStatus.SUCCESS, "Đăng ký thành công!", responseDTO);
+    }
+
+    // ADMIN OPERATIONS
+
+    /**
+     * Lấy danh sách tất cả user
+     */
+    public Response getAllUsers() {
+        List<User> users = userDAO.findAll();
+        List<UserResponseDTO> dtos = new ArrayList<>();
+        for (User u : users) {
+            dtos.add(toFullDTO(u));
+        }
+        LOGGER.info("GET_ALL_USERS: " + dtos.size() + " users");
+        return new Response(ResponseStatus.SUCCESS, "Lấy danh sách người dùng thành công", dtos);
+    }
+
+    /**
+     * Khóa tài khoản user
+     */
+    public Response lockUser(String userId) {
+        if (userId == null || userId.trim().isEmpty()) {
+            return new Response(ResponseStatus.BAD_REQUEST, "Thiếu userId", null);
+        }
+        User user = userDAO.findById(userId.trim());
+        if (user == null) {
+            return new Response(ResponseStatus.NOT_FOUND, "Không tìm thấy người dùng", null);
+        }
+        user.setActive(false);
+        userDAO.update(user);
+        LOGGER.info("LOCK_USER: " + user.getUsername());
+        return new Response(ResponseStatus.SUCCESS, "Đã khóa tài khoản: " + user.getUsername(), null);
+    }
+
+    /**
+     * Mở khóa tài khoản user
+     */
+    public Response unlockUser(String userId) {
+        if (userId == null || userId.trim().isEmpty()) {
+            return new Response(ResponseStatus.BAD_REQUEST, "Thiếu userId", null);
+        }
+        User user = userDAO.findById(userId.trim());
+        if (user == null) {
+            return new Response(ResponseStatus.NOT_FOUND, "Không tìm thấy người dùng", null);
+        }
+        user.setActive(true);
+        userDAO.update(user);
+        LOGGER.info("UNLOCK_USER: " + user.getUsername());
+        return new Response(ResponseStatus.SUCCESS, "Đã mở khóa tài khoản: " + user.getUsername(), null);
+    }
+
+    // ACCOUNT OPERATIONS (NẠP/RÚT TIỀN)
+
+    /**
+     * Nạp tiền vào tài khoản.
+     */
+    public Response deposit(String userId, double amount) {
+        if (userId == null) {
+            return new Response(ResponseStatus.UNAUTHORIZED, "Bạn chưa đăng nhập", null);
+        }
+        if (amount <= 0) {
+            return new Response(ResponseStatus.BAD_REQUEST, "Số tiền phải lớn hơn 0", null);
+        }
+        User user = userDAO.findById(userId);
+        if (user == null) {
+            return new Response(ResponseStatus.NOT_FOUND, "Không tìm thấy tài khoản", null);
+        }
+        user.deposit(amount);
+        userDAO.update(user);
+        LOGGER.info("DEPOSIT: user=" + user.getUsername()
+                + " | +" + String.format("%,.0f", amount) + " VNĐ"
+                + " | balance=" + String.format("%,.0f", user.getBalance()) + " VNĐ");
+        return new Response(ResponseStatus.SUCCESS,
+                "Nạp tiền thành công! Số dư: " + String.format("%,.0f", user.getBalance()) + " VNĐ",
+                user.getBalance());
+    }
+
+    /**
+     * Rút tiền khỏi tài khoản.
+     */
+    public Response withdraw(String userId, double amount) {
+        if (userId == null) {
+            return new Response(ResponseStatus.UNAUTHORIZED, "Bạn chưa đăng nhập", null);
+        }
+        if (amount <= 0) {
+            return new Response(ResponseStatus.BAD_REQUEST, "Số tiền phải lớn hơn 0", null);
+        }
+        User user = userDAO.findById(userId);
+        if (user == null) {
+            return new Response(ResponseStatus.NOT_FOUND, "Không tìm thấy tài khoản", null);
+        }
+        if (user.getBalance() < amount) {
+            return new Response(ResponseStatus.BAD_REQUEST,
+                    "Số dư không đủ! Hiện có: " + String.format("%,.0f", user.getBalance()) + " VNĐ", null);
+        }
+        user.withdraw(amount);
+        userDAO.update(user);
+        LOGGER.info("WITHDRAW: user=" + user.getUsername()
+                + " | -" + String.format("%,.0f", amount) + " VNĐ"
+                + " | balance=" + String.format("%,.0f", user.getBalance()) + " VNĐ");
+        return new Response(ResponseStatus.SUCCESS,
+                "Rút tiền thành công! Số dư: " + String.format("%,.0f", user.getBalance()) + " VNĐ",
+                user.getBalance());
+    }
+
+    // GET MY PROFILE — Refresh bảng tài khoản từ DB
+
+    public Response getMyProfile(String userId) {
+        if (userId == null) {
+            return new Response(ResponseStatus.UNAUTHORIZED, "Chưa đăng nhập", null);
+        }
+        User user = userDAO.findById(userId);
+        if (user == null) {
+            return new Response(ResponseStatus.NOT_FOUND, "Không tìm thấy tài khoản", null);
+        }
+        return new Response(ResponseStatus.SUCCESS, "OK", toFullDTO(user));
+    }
+
+    // UPDATE PROFILE — Cập nhật hồ sơ cá nhân
+
+    public Response updateProfile(String userId, java.util.Map<String, String> payload) {
+        if (userId == null) {
+            return new Response(ResponseStatus.UNAUTHORIZED, "Chưa đăng nhập", null);
+        }
+        User user = userDAO.findById(userId);
+        if (user == null) {
+            return new Response(ResponseStatus.NOT_FOUND, "Không tìm thấy tài khoản", null);
+        }
+
+        String fullName  = payload.getOrDefault("fullName", "").trim();
+        String phone     = payload.getOrDefault("phone", "").trim();
+        String address   = payload.getOrDefault("address", "").trim();
+        String storeName = payload.getOrDefault("storeName", "").trim();
+        String password  = payload.getOrDefault("password", "").trim();
+
+        if (fullName.isEmpty()) {
+            return new Response(ResponseStatus.BAD_REQUEST, "Họ và tên không được để trống", null);
+        }
+
+        user.setFullName(fullName);
+        user.setPhone(phone);
+        user.setAddress(address);
+        user.setStoreName(storeName);
+        if (!password.isEmpty()) {
+            user.setPassword(password);
+        }
+
+        userDAO.update(user);
+        LOGGER.info("UPDATE_PROFILE: user=" + user.getUsername() + " | fullName=" + fullName);
+        return new Response(ResponseStatus.SUCCESS, "Cập nhật hồ sơ thành công!", toFullDTO(user));
+    }
+
+    // HELPER
+
+    /**
+     * Chuyển User entity → UserResponseDTO đầy đủ (KHÔNG chứa password).
+     */
+    private UserResponseDTO toFullDTO(User user) {
+        return new UserResponseDTO(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getRole(),
+                user.getBalance(),
+                user.getFullName(),
+                user.getPhone(),
+                user.getAddress(),
+                user.getStoreName(),
+                user.getRating(),
+                user.isActive()
+        );
     }
 }
