@@ -12,7 +12,7 @@ import java.sql.SQLException;
 public class DatabaseConnection {
 
     // Thông tin kết nối MySQL
-    private static final String URL = "jdbc:mysql://localhost:3306/auction?createDatabaseIfNotExist=true";
+    private static final String URL = "jdbc:mysql://localhost:3306/auction_system?createDatabaseIfNotExist=true";
     private static final String USER = "root";
     private static final String PASSWORD = "Nhatdogy2007";
 

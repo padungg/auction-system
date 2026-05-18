@@ -1,6 +1,7 @@
 package com.auction.server.dao;
 
 import com.auction.model.entity.User;
+import java.util.List;
 
 /**
  * Interface DAO cho User — "Hợp đồng" giữa Server và tầng Database.
@@ -33,5 +34,22 @@ public interface UserDAO {
      * @return true nếu username đã có người dùng
      */
     boolean existsByUsername(String username);
-}
 
+    /**
+     * Lấy danh sách tất cả user (dùng cho Admin quản lý).
+     * @return danh sách User
+     */
+    List<User> findAll();
+
+    /**
+     * Cập nhật thông tin user (lock/unlock, balance, ...).
+     * @return true nếu cập nhật thành công
+     */
+    boolean update(User user);
+
+    /**
+     * Tìm user theo vai trò (dùng để lấy tài khoản Admin).
+     * @return User đầu tiên có role tương ứng, null nếu không tìm thấy
+     */
+    User findFirstByRole(com.auction.model.entity.UserRole role);
+}

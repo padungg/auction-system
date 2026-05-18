@@ -40,5 +40,15 @@ public interface AuctionDAO {
      * @return true nếu xóa thành công
      */
     boolean delete(String id);
+
+    /**
+     * Lấy tất cả phiên đấu giá (không filter status — dùng cho Admin).
+     */
+    List<Auction> findAll();
+
+    /**
+     * Lấy danh sách phiên mà user là người thắng (dùng cho Payment).
+     */
+    List<Auction> findByCurrentWinnerId(String winnerId);
 }
 
