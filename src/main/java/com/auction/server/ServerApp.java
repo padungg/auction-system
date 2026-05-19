@@ -5,51 +5,45 @@ import com.auction.server.dao.AuctionDAOImpl;
 import com.auction.server.network.SocketServer;
 import com.auction.server.service.AuctionScheduler;
 import com.auction.server.database.DatabaseInitializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * ĐIỂM KHỞI ĐỘNG SERVER.
- *
- * Thứ tự khởi động:
- * 1. AuctionScheduler.start() — đóng các phiên đã hết hạn từ trước lần restart
- * 2. SocketServer.start() — bắt đầu nhận kết nối từ client (blocking)
- *
- * Shutdown Hook (Ctrl+C hoặc kill):
- * - Đảm bảo AuctionScheduler dừng sạch (không cắt giữa lúc đang update DB)
- * - Đảm bảo SocketServer dừng sạch (không cắt giữa lúc đang xử lý bid)
+ * Điểm khởi động Server: Nạp DB, chạy Scheduler và mở SocketServer.
  */
 public class ServerApp {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ServerApp.class);
     private static final int PORT = 8080;
     private static final int MAX_CLIENTS = 20;
 
     public static void main(String[] args) {
-
-        // ── 0. Khởi tạo Database (tạo bảng nếu chưa có) ──────────
+        // Khởi tạo Database (tạo bảng nếu chưa có)
         DatabaseInitializer.initialize();
 
-        // ── 1. Khởi tạo DAO cho Scheduler ───────────────────────
+        // Khởi tạo Scheduler (dùng để đóng các phiên hết hạn)
         AuctionDAO auctionDAO = new AuctionDAOImpl();
         AuctionScheduler scheduler = new AuctionScheduler(auctionDAO);
 
-        // ── 2. Khởi tạo SocketServer ─────────────────────────────
+        // Khởi tạo SocketServer
         SocketServer socketServer = new SocketServer(PORT, MAX_CLIENTS);
 
-        // ── 3. Shutdown Hook — chạy khi JVM nhận tín hiệu tắt ───
+        // Shutdown Hook: Đảm bảo dừng an toàn Scheduler và SocketServer khi tắt
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.println("\n[ServerApp] SHUTDOWN: đang dừng server...");
-            scheduler.stop(); // dừng Scheduler trước (không block lâu)
-            socketServer.stop(); // dừng SocketServer sau (chờ client xử lý xong)
-            System.out.println("[ServerApp] SHUTDOWN: hoàn tất — goodbye!");
+            LOGGER.info("SHUTDOWN: đang dừng server...");
+            scheduler.stop();
+            socketServer.stop();
+            LOGGER.info("SHUTDOWN: hoàn tất - goodbye!");
         }, "ShutdownHook-Thread"));
 
-        // ── 4. Start Scheduler (non-blocking, chạy ngầm) ─────────
+        // Chạy Scheduler ngầm
         scheduler.start();
 
-        // ── 5. Start SocketServer (blocking — giữ main thread sống) ─
+        // Chạy SocketServer
         try {
-            socketServer.start(); // vòng lặp accept() — block tại đây
+            socketServer.start();
         } catch (Exception e) {
-            System.out.println("[ServerApp] FATAL: " + e.getMessage());
+            LOGGER.error("FATAL: {}", e.getMessage(), e);
             System.exit(1);
         }
     }
