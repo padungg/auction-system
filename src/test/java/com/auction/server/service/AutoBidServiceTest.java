@@ -41,8 +41,8 @@ class AutoBidServiceTest {
         @Override public boolean save(Auction auction) { auctions.put(auction.getId(), auction); return true; }
         @Override public boolean update(Auction auction) { auctions.put(auction.getId(), auction); updateCount++; return true; }
         @Override public boolean delete(String id) { return auctions.remove(id) != null; }
-        public List<Auction> findAll() { return new ArrayList<>(auctions.values()); }
-        public List<Auction> findByCurrentWinnerId(String winnerId) { 
+        @Override public List<Auction> findAll() { return new ArrayList<>(auctions.values()); }
+        @Override public List<Auction> findByCurrentWinnerId(String winnerId) { 
             return auctions.values().stream().filter(a -> winnerId.equals(a.getCurrentWinnerId())).collect(java.util.stream.Collectors.toList()); 
         }
     }
@@ -51,7 +51,7 @@ class AutoBidServiceTest {
         public int saveCount = 0;
         @Override public boolean save(BidTransaction bid) { saveCount++; return true; }
         @Override public List<BidTransaction> findByAuctionId(String auctionId) { return new ArrayList<>(); }
-        public List<BidTransaction> findByBidderId(String bidderId) { return new ArrayList<>(); }
+        @Override public List<BidTransaction> findByBidderId(String bidderId) { return new ArrayList<>(); }
     }
 
     static class AutoBidDAOStub implements AutoBidDAO {

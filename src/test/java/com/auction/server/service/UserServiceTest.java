@@ -54,7 +54,7 @@ class UserServiceTest {
         public boolean update(User user) { addUser(user); return true; }
         public List<User> findAll() { return new ArrayList<>(byUsername.values()); }
         public boolean delete(String id) { User u = byId.remove(id); if(u!=null) byUsername.remove(u.getUsername()); return u!=null; }
-        public User findFirstByRole(com.auction.model.entity.UserRole role) { return byUsername.values().stream().filter(u -> u.getRole() == role).findFirst().orElse(null); }
+        @Override public User findFirstByRole(com.auction.model.entity.UserRole role) { return byUsername.values().stream().filter(u -> u.getRole() == role).findFirst().orElse(null); }
     }
 
     private UserDAOStub userDAO;

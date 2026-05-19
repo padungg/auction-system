@@ -48,8 +48,8 @@ class AuctionServiceTest {
         @Override public boolean save(Auction auction) { auctions.put(auction.getId(), auction); saveCount++; return true; }
         @Override public boolean update(Auction auction) { auctions.put(auction.getId(), auction); updateCount++; return true; }
         @Override public boolean delete(String id) { boolean rem = auctions.remove(id) != null; if(rem) deleteCount++; return rem; }
-        public List<Auction> findAll() { return new ArrayList<>(auctions.values()); }
-        public List<Auction> findByCurrentWinnerId(String winnerId) { 
+        @Override public List<Auction> findAll() { return new ArrayList<>(auctions.values()); }
+        @Override public List<Auction> findByCurrentWinnerId(String winnerId) { 
             return auctions.values().stream().filter(a -> winnerId.equals(a.getCurrentWinnerId())).collect(Collectors.toList()); 
         }
     }
@@ -80,13 +80,13 @@ class AuctionServiceTest {
         public boolean update(User user) { users.put(user.getId(), user); updateCount++; return true; }
         public List<User> findAll() { return new ArrayList<>(users.values()); }
         public boolean delete(String id) { return true; }
-        public User findFirstByRole(com.auction.model.entity.UserRole role) { return users.values().stream().filter(u -> u.getRole() == role).findFirst().orElse(null); }
+        @Override public User findFirstByRole(com.auction.model.entity.UserRole role) { return users.values().stream().filter(u -> u.getRole() == role).findFirst().orElse(null); }
     }
 
     static class BidTransactionDAOStub implements com.auction.server.dao.BidTransactionDAO {
         @Override public boolean save(com.auction.model.entity.BidTransaction bid) { return true; }
         @Override public List<com.auction.model.entity.BidTransaction> findByAuctionId(String auctionId) { return new ArrayList<>(); }
-        public List<com.auction.model.entity.BidTransaction> findByBidderId(String bidderId) { return new ArrayList<>(); }
+        @Override public List<com.auction.model.entity.BidTransaction> findByBidderId(String bidderId) { return new ArrayList<>(); }
     }
 
     private AuctionDAOStub auctionDAO;
@@ -108,7 +108,7 @@ class AuctionServiceTest {
         userDAO = new UserDAOStub();
         bidTransactionDAO = new BidTransactionDAOStub();
 
-        auctionService = new AuctionService(auctionDAO, itemDAO, userDAO);
+        auctionService = new AuctionService(auctionDAO, itemDAO, userDAO, bidTransactionDAO);
 
         seller = new User("seller-001", "seller1", "pass", "s@mail.com",
                 "Seller One", "0900000000", "HN", true, UserRole.MEMBER, 0.0, "MyShop", 4.5);

@@ -35,8 +35,8 @@ class AuctionUtilsTest {
             return true;
         }
         @Override public boolean delete(String id) { return true; }
-        public List<Auction> findAll() { return new java.util.ArrayList<>(); }
-        public List<Auction> findByCurrentWinnerId(String winnerId) { return new java.util.ArrayList<>(); }
+        @Override public List<Auction> findAll() { return new java.util.ArrayList<>(); }
+        @Override public List<Auction> findByCurrentWinnerId(String winnerId) { return new java.util.ArrayList<>(); }
     }
 
     private Auction buildAuction(long secondsUntilEnd) {
