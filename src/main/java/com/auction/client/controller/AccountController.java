@@ -22,12 +22,12 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
-import java.util.logging.Level;
 
 /**
  * Controller chịu trách nhiệm quản lý phân hệ Hồ sơ cá nhân (Account Profile).
@@ -37,11 +37,11 @@ import java.util.logging.Level;
 public class AccountController {
 
     /**
-     * Khởi tạo bộ ghi log tập trung phục vụ giám sát luồng thực thi ứng dụng.
+     * Khởi tạo bộ ghi log tập trung phục vụ giám sát luồng thực thi ứng dụng thông qua cấu trúc SLF4J.
      * Cung cấp khả năng phân tách mức độ nghiêm trọng của lỗi phần mềm (như lỗi kết nối Socket),
      * hỗ trợ kết xuất tệp tin nhật ký độc lập giúp tăng tốc độ tìm kiếm nguyên nhân sự cố trong môi trường Production.
      */
-    private static final Logger logger = Logger.getLogger(AccountController.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(AccountController.class);
 
     // =========================================================================
     // THÀNH PHẦN GIAO DIỆN FXML - THÔNG TIN CÁ NHÂN (PROFILE LABELS)
@@ -254,8 +254,8 @@ public class AccountController {
                     });
                 }
             } catch (Exception e) {
-                // Thay thế câu lệnh in Console thô sơ bằng hệ thống ghi nhật ký cảnh báo SEVERE kèm cấu trúc vết ngoại lệ
-                logger.log(Level.SEVERE, "Lỗi xảy ra trong tiến trình tải danh sách lịch sử đặt giá từ Server: ", e);
+                // Sử dụng hệ thống ghi nhật ký lỗi thông qua cấu trúc placeholders chuyên nghiệp của SLF4J
+                LOGGER.error("Lỗi xảy ra trong tiến trình tải danh sách lịch sử đặt giá từ Server", e);
             }
         }).start();
     }
@@ -403,8 +403,8 @@ public class AccountController {
                                 UserResponseDTO updatedUser = gson.fromJson(gson.toJson(res.getPayload()), UserResponseDTO.class);
                                 SessionManager.getInstance().setCurrentUser(updatedUser);
                             } catch (Exception ex) {
-                                // Ghi nhận vết sự cố cục bộ khi cố gán cấu trúc thực thể người dùng vào Session bộ nhớ đệm
-                                logger.log(Level.SEVERE, "Không thể cập nhật thông tin thực thể vào Session bộ nhớ đệm: ", ex);
+                                // Ghi nhận vết sự cố cục bộ khi cố gán cấu trúc thực thể người dùng vào Session bộ nhớ đệm thông qua SLF4J
+                                LOGGER.error("Không thể cập nhật thông tin thực thể vào Session bộ nhớ đệm", ex);
                             }
 
                             showAlert(Alert.AlertType.INFORMATION, "Thành công", "Cập nhật hồ sơ thành công!");
@@ -416,7 +416,7 @@ public class AccountController {
                         }
                     });
                 } catch (Exception ex) {
-                    logger.log(Level.SEVERE, "Gặp sự cố ngắt kết nối mạng khi đang gửi yêu cầu UPDATE_PROFILE: ", ex);
+                    LOGGER.error("Gặp sự cố ngắt kết nối mạng khi đang gửi yêu cầu UPDATE_PROFILE", ex);
                     Platform.runLater(() -> showAlert(Alert.AlertType.ERROR, "Lỗi kết nối", ex.getMessage()));
                 }
             }).start();
@@ -424,7 +424,7 @@ public class AccountController {
     }
 
     // =========================================================================
-    // NGHIỆP VỤ XỬ LÝ GIAO DỊCH TÀI CHÍNH (DEPOSIT / WITHDRAWAL)
+    // NGHIỆP VỤ XỬ LÝ GIAO DIỆN GIAO DỊCH TÀI CHÍNH (DEPOSIT / WITHDRAWAL)
     // =========================================================================
 
     @FXML void handleDeposit(ActionEvent event) { processTransaction(RequestType.DEPOSIT, "Nạp tiền"); }
@@ -466,8 +466,8 @@ public class AccountController {
                         }
                     });
                 } catch (Exception e) {
-                    // Đăng ký ngoại lệ xử lý kết nối lỗi giao dịch tài chính vào bộ Logger tập tin hệ thống
-                    logger.log(Level.SEVERE, "Gặp sự cố lỗi kết nối mạng trong quá trình truyền phát chỉ thị giao dịch tài chính: ", e);
+                    // Đăng ký ngoại lệ xử lý kết nối lỗi giao dịch tài chính vào bộ Logger tập tin hệ thống thông qua SLF4J
+                    LOGGER.error("Gặp sự cố lỗi kết nối mạng trong quá trình truyền phát chỉ thị giao dịch tài chính: {}", actionName, e);
                     Platform.runLater(() -> showAlert(Alert.AlertType.ERROR, "Lỗi kết nối", e.getMessage()));
                 }
             }).start();

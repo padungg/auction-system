@@ -15,8 +15,8 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import java.util.logging.Logger;
-import java.util.logging.Level;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Controller điều phối phân hệ quản trị hệ thống (Admin Dashboard).
@@ -29,7 +29,7 @@ public class AdminController {
      * Hệ thống ghi log này giúp theo dõi dòng chảy dữ liệu, phân loại mức độ cảnh báo (INFO, SEVERE)
      * và hỗ trợ lưu vết lịch sử vận hành vào tệp tin để phục vụ công tác bảo trì hệ thống từ xa.
      */
-    private static final Logger logger = Logger.getLogger(AdminController.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(AdminController.class);
 
     // =========================================================================
     // THÀNH PHẦN GIAO DIỆN FXML - QUẢN LÝ NGƯỜI DÙNG (USERS MANAGEMENT)
@@ -422,8 +422,8 @@ public class AdminController {
                     });
                 }
             } catch (Exception e) {
-                // Đăng ký thông tin lỗi ngoại lệ I/O kết nối vào Logger hệ thống với mức độ cảnh báo SEVERE
-                logger.log(Level.SEVERE, "Gặp sự cố lỗi mạng khi thực thi yêu cầu GET_ALL_USERS: ", e);
+                // Đăng ký thông tin lỗi ngoại lệ I/O kết nối vào Logger hệ thống thông qua cấu trúc SLF4J
+                LOGGER.error("Gặp sự cố lỗi mạng khi thực thi yêu cầu GET_ALL_USERS", e);
             }
         }).start();
     }
@@ -527,8 +527,8 @@ public class AdminController {
                     });
                 }
             } catch (Exception e) {
-                // Đăng ký thông tin ngoại lệ hệ thống mạng kết nối vào Logger hệ thống với mức độ cảnh báo SEVERE
-                logger.log(Level.SEVERE, "Gặp sự cố lỗi mạng khi thực thi yêu cầu GET_ALL_AUCTIONS: ", e);
+                // Đăng ký thông tin ngoại lệ hệ thống mạng kết nối vào Logger hệ thống thông qua cấu trúc SLF4J
+                LOGGER.error("Gặp sự cố lỗi mạng khi thực thi yêu cầu GET_ALL_AUCTIONS", e);
             }
         }).start();
     }
@@ -633,8 +633,8 @@ public class AdminController {
                     loadUsers();
                 });
             } catch (Exception e) {
-                // Đăng ký chi tiết ngoại lệ I/O truyền tải mạng vào tập tin Log giám sát hệ thống
-                logger.log(Level.SEVERE, "Gặp lỗi kết nối khi truyền chỉ thị khóa tài khoản người dùng: ", e);
+                // Đăng ký chi tiết ngoại lệ I/O truyền tải mạng thông qua cấu trúc SLF4J chuyên nghiệp
+                LOGGER.error("Gặp lỗi kết nối khi truyền chỉ thị khóa tài khoản người dùng", e);
                 Platform.runLater(() -> showAlert("Lỗi kết nối", e.getMessage()));
             }
         }).start();
@@ -663,8 +663,8 @@ public class AdminController {
                     loadUsers();
                 });
             } catch (Exception e) {
-                // Đăng ký chi tiết ngoại lệ I/O truyền tải mạng vào tập tin Log giám sát hệ thống
-                logger.log(Level.SEVERE, "Gặp lỗi kết nối khi truyền chỉ thị mở khóa tài khoản người dùng: ", e);
+                // Đăng ký chi tiết ngoại lệ I/O truyền tải mạng thông qua cấu trúc SLF4J chuyên nghiệp
+                LOGGER.error("Gặp lỗi kết nối khi truyền chỉ thị mở khóa tài khoản người dùng", e);
                 Platform.runLater(() -> showAlert("Lỗi kết nối", e.getMessage()));
             }
         }).start();
@@ -725,8 +725,8 @@ public class AdminController {
                     }
                 });
             } catch (Exception e) {
-                // Lưu vết sự cố I/O mạng nghiêm trọng phục vụ công tác rà soát lỗi crash hệ thống mạng từ xa
-                logger.log(Level.SEVERE, "Gặp sự cố lỗi kết nối mạng khi cưỡng chế đóng phiên đấu giá: ", e);
+                // Lưu vết sự cố bằng cấu trúc SLF4J placeholders thay vì toán tử cộng nối chuỗi
+                LOGGER.error("Gặp sự cố lỗi kết nối mạng khi cưỡng chế đóng phiên đấu giá: {}", auctionId, e);
                 Platform.runLater(() -> showAlert("Lỗi kết nối", e.getMessage()));
             }
         }).start();
@@ -750,8 +750,8 @@ public class AdminController {
                     }
                 });
             } catch (Exception e) {
-                // Đăng ký ngoại lệ xử lý lỗi I/O Socket mạng vào bộ ghi log tệp tin tập trung
-                logger.log(Level.SEVERE, "Gặp sự cố lỗi kết nối mạng khi admin yêu cầu hủy phiên đấu giá: ", e);
+                // Đăng ký ngoại lệ xử lý lỗi vào bộ ghi log thông qua cấu trúc placeholders chuyên nghiệp
+                LOGGER.error("Gặp sự cố lỗi kết nối mạng khi admin yêu cầu hủy phiên đấu giá: {}", auctionId, e);
                 Platform.runLater(() -> showAlert("Lỗi kết nối", e.getMessage()));
             }
         }).start();
@@ -775,8 +775,8 @@ public class AdminController {
                     }
                 });
             } catch (Exception e) {
-                // Đăng ký ngoại lệ xử lý lỗi tất toán thông tin mạng vào bộ ghi log tệp tin tập trung
-                logger.log(Level.SEVERE, "Gặp sự cố lỗi kết nối mạng khi admin yêu cầu đánh dấu tất toán phiên: ", e);
+                // Đăng ký ngoại lệ xử lý lỗi vào bộ ghi log thông qua cấu trúc placeholders chuyên nghiệp
+                LOGGER.error("Gặp sự cố lỗi kết nối mạng khi admin yêu cầu đánh dấu tất toán phiên: {}", auctionId, e);
                 Platform.runLater(() -> showAlert("Lỗi kết nối", e.getMessage()));
             }
         }).start();

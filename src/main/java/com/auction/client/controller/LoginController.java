@@ -20,15 +20,14 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
-import java.util.logging.Logger;
-import java.util.logging.Level;
 
 /**
  * Controller chịu trách nhiệm kiểm soát luồng xác thực hệ thống, bao gồm Đăng nhập (Login) và Đăng ký (Register).
@@ -37,11 +36,11 @@ import java.util.logging.Level;
 public class LoginController implements Initializable {
 
     /**
-     * Khởi tạo thành phần Logger hệ thống.
+     * Khởi tạo thành phần Logger hệ thống thông qua cấu trúc SLF4J.
      * Thư viện này cung cấp cơ chế giám sát tập trung, hỗ trợ ghi vết chi tiết cấu trúc lỗi (Stack trace)
      * và phân loại mức độ nghiêm trọng giúp việc rà soát lỗi mạng trở nên hiệu quả hơn khi ứng dụng vận hành.
      */
-    private static final Logger logger = Logger.getLogger(LoginController.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(LoginController.class);
 
     private final Gson GSON = GsonProvider.getInstance();
 
@@ -157,8 +156,8 @@ public class LoginController implements Initializable {
                     }
                 });
             } catch (IOException e) {
-                // Đăng ký vết lỗi ngoại lệ I/O Socket mạng vào bộ giám sát Logger chuyên dụng với mức độ nghiêm trọng SEVERE
-                logger.log(Level.SEVERE, "Xảy ra ngoại lệ ngắt kết nối mạng khi đang thực thi tiến trình Đăng nhập: ", e);
+                // Đăng ký vết lỗi ngoại lệ I/O Socket mạng vào bộ giám sát Logger chuyên dụng bằng cấu trúc chuyên nghiệp của SLF4J
+                LOGGER.error("Xảy ra ngoại lệ ngắt kết nối mạng khi đang thực thi tiến trình Đăng nhập", e);
                 Platform.runLater(() -> loginMessage.setText("Lỗi kết nối server!"));
             }
         }).start();
@@ -211,8 +210,8 @@ public class LoginController implements Initializable {
                     }
                 });
             } catch (IOException e) {
-                // Đồng bộ hóa cấu trúc lưu vết sự cố kết nối Socket thông qua Logger hệ thống
-                logger.log(Level.SEVERE, "Xảy ra ngoại lệ ngắt kết nối mạng khi đang thực thi tiến trình Đăng ký: ", e);
+                // Đồng bộ hóa cấu trúc lưu vết sự cố kết nối Socket thông qua Logger hệ thống SLF4J
+                LOGGER.error("Xảy ra ngoại lệ ngắt kết nối mạng khi đang thực thi tiến trình Đăng ký", e);
                 Platform.runLater(() -> regMessage.setText("Lỗi kết nối server!"));
             }
         }).start();
@@ -230,7 +229,7 @@ public class LoginController implements Initializable {
             stage.centerOnScreen();
         } catch (IOException e) {
             // Đăng ký thông báo lỗi nghiêm trọng khi cấu trúc cây tài nguyên tệp tin fxml không thể khởi tạo thành công
-            logger.log(Level.SEVERE, "Hệ thống gặp lỗi nghiêm trọng trong tiến trình nạp tài nguyên tệp tin giao diện /main.fxml: ", e);
+            LOGGER.error("Hệ thống gặp lỗi nghiêm trọng trong tiến trình nạp tài nguyên tệp tin giao diện /main.fxml", e);
         }
     }
 }
