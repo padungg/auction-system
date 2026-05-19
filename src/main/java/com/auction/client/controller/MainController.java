@@ -28,6 +28,11 @@ import javafx.util.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Bộ điều khiển chính (Main Controller) của giao diện ứng dụng.
+ * Chịu trách nhiệm quản lý layout tổng thể, thanh điều hướng (Sidebar),
+ * đồng bộ thông tin phiên làm việc, đồng hồ hệ thống và trung tâm thông báo thời gian thực.
+ */
 public class MainController implements Initializable {
 
     /**
@@ -64,6 +69,10 @@ public class MainController implements Initializable {
 
     private static MainController instance;
 
+    /**
+     * Lấy thực thể (instance) duy nhất của MainController để các bộ điều khiển con có thể gọi và chuyển trang.
+     * Áp dụng theo dạng cấu trúc Singleton tạm thời cho tầng UI.
+     */
     public static MainController getInstance() {
         return instance;
     }
@@ -77,6 +86,9 @@ public class MainController implements Initializable {
         showPageList(null);
     }
 
+    /**
+     * Kích hoạt luồng chạy tuyến tính (Timeline) để cập nhật hiển thị thời gian thực cho đồng hồ hệ thống.
+     */
     private void startClock() {
         if (lblClock == null) return;
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss - dd/MM/yyyy");
@@ -89,6 +101,10 @@ public class MainController implements Initializable {
 
     private int unreadCount = 0;
 
+    /**
+     * Thiết lập cấu hình ban đầu cho danh sách và đăng ký bộ lắng nghe sự kiện (Listener)
+     * để đón nhận các gói tin thông báo thời gian thực đẩy về từ Socket Server.
+     */
     private void setupRealtimeNotifications() {
         if (notifList != null) {
             notifList.getChildren().clear();
@@ -103,6 +119,9 @@ public class MainController implements Initializable {
         });
     }
 
+    /**
+     * Phân tích gói tin Json thông báo nhận được từ Server và dựng các thẻ thông báo đồ họa lồng nhau lên giao diện Client.
+     */
     private void handlePushNotification(com.google.gson.JsonObject push) {
         if (notifList == null) return;
 
@@ -116,7 +135,7 @@ public class MainController implements Initializable {
             String text = "🔥 " + bidder + " vừa đặt giá mới " + String.format("%,.0f VNĐ", price) + " cho một sản phẩm!";
 
             VBox newNotif = createMockNotif(text, time, true);
-            notifList.getChildren().add(0, newNotif); // Add to top
+            notifList.getChildren().add(0, newNotif); // Thêm lên đầu danh sách
 
             unreadCount++;
             notifBadge.setText(String.valueOf(unreadCount));
@@ -134,6 +153,9 @@ public class MainController implements Initializable {
         }
     }
 
+    /**
+     * Tạo một container đồ họa VBox cho từng dòng thông báo, hỗ trợ gán style CSS dạng chưa đọc (unread).
+     */
     private VBox createMockNotif(String text, String time, boolean unread) {
         VBox box = new VBox(5);
         box.getStyleClass().add("notif-item");
@@ -143,7 +165,7 @@ public class MainController implements Initializable {
 
         Label msgLabel = new Label(text);
         msgLabel.setWrapText(true);
-        msgLabel.setStyle("-fx-font-weight: 500; -fx-text-fill: #334155;"); // Will be overridden by dark-mode CSS
+        msgLabel.setStyle("-fx-font-weight: 500; -fx-text-fill: #334155;");
 
         Label timeLabel = new Label("⏰ " + time);
         timeLabel.setStyle("-fx-text-fill: #ef4444; -fx-font-size: 12px;");
@@ -152,6 +174,10 @@ public class MainController implements Initializable {
         return box;
     }
 
+    /**
+     * Cập nhật thông tin người dùng từ Session Manager lên vùng Header (Tên hiển thị, Lời chào, Số dư, Avatar ký tự).
+     * Tự động ẩn/hiện thanh điều hướng của Quản trị viên (Admin Nav) dựa trên phân quyền tài khoản.
+     */
     public void updateUserInfo() {
         UserResponseDTO user = SessionManager.getInstance().getCurrentUser();
         if (user != null) {
@@ -160,13 +186,15 @@ public class MainController implements Initializable {
             headerBalance.setText("💰 " + String.format("%,.0f", user.getBalance()) + " VNĐ");
             headerAvatar.setText(user.getUsername().substring(0, 1).toUpperCase());
 
-            // Show/Hide admin section
             boolean isAdmin = user.getRole() == UserRole.ADMIN;
             adminNav.setVisible(isAdmin);
             adminNav.setManaged(isAdmin);
         }
     }
 
+    /**
+     * Làm mới số dư hiển thị trên thanh tiêu đề và đồng bộ ngược lại vào Session Cache bộ nhớ tạm Client.
+     */
     public void updateHeaderBalance(double balance) {
         headerBalance.setText("💰 " + String.format("%,.0f", balance) + " VNĐ");
         UserResponseDTO user = SessionManager.getInstance().getCurrentUser();
@@ -176,8 +204,8 @@ public class MainController implements Initializable {
     }
 
     /**
-     * Gọi Server lấy thông tin mới nhất từ DB, cập nhật SessionManager và header.
-     * Gọi sau mọi giao dịch tài chính (thanh toán, nạp, rút).
+     * Khởi chạy Worker Thread nền để gửi yêu cầu lấy thông tin hồ sơ mới nhất từ Database của máy chủ.
+     * Cập nhật trực tiếp vào SessionManager và render lại số dư thực tế lên Header nhằm tránh sai lệch dòng tiền.
      */
     public void refreshBalanceFromServer() {
         new Thread(() -> {
@@ -206,6 +234,9 @@ public class MainController implements Initializable {
         }).start();
     }
 
+    /**
+     * Hoàn tác trạng thái hoạt động (Active CSS Style) của tất cả các nút bấm điều hướng trên Sidebar về mặc định.
+     */
     private void resetNavButtons() {
         navList.getStyleClass().removeAll("nav-button-active");
         navList.getStyleClass().add("nav-button");
@@ -229,6 +260,9 @@ public class MainController implements Initializable {
         navAdminAuctions.getStyleClass().add("nav-button");
     }
 
+    /**
+     * Đánh dấu nút bấm đang được chọn trên Sidebar và cập nhật tiêu đề phân hệ tương ứng lên thanh điều phối chính.
+     */
     private void setActiveNav(Button btn, String title) {
         resetNavButtons();
         btn.getStyleClass().removeAll("nav-button");
@@ -236,6 +270,9 @@ public class MainController implements Initializable {
         headerTitle.setText(title);
     }
 
+    /**
+     * Nạp động nội dung tệp tin cấu hình giao diện FXML đích vào trong phân vùng hiển thị chính (contentStack).
+     */
     public void loadPage(String fxmlPath) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/" + fxmlPath));
@@ -255,9 +292,12 @@ public class MainController implements Initializable {
     @FXML
     public void showPageDetail(ActionEvent event) {
         setActiveNav(navDetail, "Chi tiết sản phẩm");
-        // Usually called from AuctionListController with a specific ID
     }
 
+    /**
+     * Chuyển hướng màn hình chính sang trang chi tiết của một phiên đấu giá cụ thể dựa trên ID sản phẩm,
+     * đồng thời khởi tạo dữ liệu cho trang đích.
+     */
     public void openAuctionDetail(String auctionId) {
         setActiveNav(navDetail, "Chi tiết sản phẩm");
         navDetail.setVisible(true);
@@ -304,6 +344,10 @@ public class MainController implements Initializable {
         loadPage("admin_auctions.fxml");
     }
 
+    /**
+     * Xử lý xóa bỏ phiên làm việc hiện tại, thu nhỏ cửa sổ tối đa (Maximize) để ngăn lỗi tràn khung
+     * và trả người dùng về màn hình Đăng nhập (login.fxml) với kích thước chuẩn cố định.
+     */
     @FXML
     public void handleLogout(ActionEvent event) {
         SessionManager.getInstance().clear();
@@ -311,12 +355,9 @@ public class MainController implements Initializable {
             Parent loginRoot = FXMLLoader.load(getClass().getResource("/login.fxml"));
             Stage stage = (Stage) contentStack.getScene().getWindow();
 
-            // Fix: Tắt maximize trước khi setResizable(false) để tránh lỗi vỡ UI hoặc mất thanh tiêu đề
             stage.setMaximized(false);
-
             stage.setScene(new Scene(loginRoot));
 
-            // Trả lại kích thước chuẩn của màn hình đăng nhập
             stage.setWidth(1000);
             stage.setHeight(650);
 
@@ -327,6 +368,9 @@ public class MainController implements Initializable {
         }
     }
 
+    /**
+     * Chuyển đổi qua lại giữa Chế độ sáng (Light Mode) và Chế độ tối (Dark Mode) bằng việc cập nhật lớp CSS Style tổng.
+     */
     @FXML
     public void toggleTheme(ActionEvent event) {
         isDarkMode = !isDarkMode;
@@ -339,6 +383,9 @@ public class MainController implements Initializable {
         }
     }
 
+    /**
+     * Ẩn hoặc hiện khung thả xuống (Dropdown) chứa danh sách các thông báo đẩy.
+     */
     @FXML
     public void toggleNotifications(ActionEvent event) {
         boolean isVisible = notifDropdown.isVisible();
@@ -346,6 +393,10 @@ public class MainController implements Initializable {
         notifDropdown.setManaged(!isVisible);
     }
 
+    /**
+     * Đánh dấu toàn bộ các thông báo hiện có trong danh sách thành trạng thái đã đọc,
+     * xóa bỏ cờ đánh dấu chưa đọc (unread CSS class) và reset bộ đếm Badge về 0.
+     */
     @FXML
     public void markAllNotifsRead(ActionEvent event) {
         unreadCount = 0;
