@@ -46,13 +46,17 @@ public class BidTransactionDAOImpl implements BidTransactionDAO {
             stmt.setString(1, auctionId);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    BidTransaction bid = new BidTransaction();
-                    bid.setId(rs.getString("id"));
-                    bid.setBidderId(rs.getString("bidder_id"));
-                    bid.setAuctionId(rs.getString("auction_id"));
-                    bid.setBidAmount(rs.getDouble("bid_amount"));
-                    bid.setBidTime(rs.getTimestamp("bid_time").toLocalDateTime());
-                    // bid.setAutoBid(rs.getBoolean("is_auto_bid"));
+                    java.time.LocalDateTime bidTime = null;
+                    if (rs.getTimestamp("bid_time") != null) {
+                        bidTime = rs.getTimestamp("bid_time").toLocalDateTime();
+                    }
+                    BidTransaction bid = new BidTransaction(
+                            rs.getString("id"),
+                            rs.getString("bidder_id"),
+                            rs.getString("auction_id"),
+                            rs.getDouble("bid_amount"),
+                            bidTime
+                    );
                     transactions.add(bid);
                 }
             }
@@ -72,13 +76,17 @@ public class BidTransactionDAOImpl implements BidTransactionDAO {
             stmt.setString(1, bidderId);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    BidTransaction bid = new BidTransaction();
-                    bid.setId(rs.getString("id"));
-                    bid.setBidderId(rs.getString("bidder_id"));
-                    bid.setAuctionId(rs.getString("auction_id"));
-                    bid.setBidAmount(rs.getDouble("bid_amount"));
-                    bid.setBidTime(rs.getTimestamp("bid_time").toLocalDateTime());
-                    // bid.setAutoBid(rs.getBoolean("is_auto_bid"));
+                    java.time.LocalDateTime bidTime = null;
+                    if (rs.getTimestamp("bid_time") != null) {
+                        bidTime = rs.getTimestamp("bid_time").toLocalDateTime();
+                    }
+                    BidTransaction bid = new BidTransaction(
+                            rs.getString("id"),
+                            rs.getString("bidder_id"),
+                            rs.getString("auction_id"),
+                            rs.getDouble("bid_amount"),
+                            bidTime
+                    );
                     transactions.add(bid);
                 }
             }
