@@ -178,6 +178,30 @@ class AuctionServiceTest {
             assertEquals(1, itemDAO.saveCount);
             assertEquals(1, auctionDAO.saveCount);
         }
+
+        @Test
+        @DisplayName("TC-AUC-CREATE-06: Giá khởi điểm bằng 0 → BAD_REQUEST")
+        void create_startingPriceZero() {
+            createDto.setStartingPrice(0.0);
+            assertEquals(ResponseStatus.BAD_REQUEST,
+                auctionService.createAuction(createDto, "seller-001").getStatus());
+        }
+
+        @Test
+        @DisplayName("TC-AUC-CREATE-07: Giá khởi điểm âm → BAD_REQUEST")
+        void create_startingPriceNegative() {
+            createDto.setStartingPrice(-1_000.0);
+            assertEquals(ResponseStatus.BAD_REQUEST,
+                auctionService.createAuction(createDto, "seller-001").getStatus());
+        }
+
+        @Test
+        @DisplayName("TC-AUC-CREATE-08: Loại sản phẩm không hợp lệ → BAD_REQUEST")
+        void create_unknownItemType() {
+            createDto.setItemType("UNKNOWN_TYPE");
+            assertEquals(ResponseStatus.BAD_REQUEST,
+                auctionService.createAuction(createDto, "seller-001").getStatus());
+        }
     }
 
     // ══════════════════════════════════════════════════════
@@ -314,6 +338,115 @@ class AuctionServiceTest {
             assertEquals(AuctionStatus.FINISHED, runningAuction.getStatus());
             assertEquals(ResponseStatus.SUCCESS, res.getStatus());
             assertTrue(res.getMessage().contains("Buyer"));
+        }
+
+        @Test
+        @DisplayName("TC-AUC-CLOSE-03: Đóng phiên đã FINISHED → BAD_REQUEST")
+        void close_alreadyFinished() {
+            runningAuction.setStatus(AuctionStatus.FINISHED);
+            Response res = auctionService.closeAuction("auc-running");
+            assertEquals(ResponseStatus.BAD_REQUEST, res.getStatus());
+        }
+    }
+    @Nested
+    @DisplayName("payAuction()")
+    class PayAuctionTests {
+
+        private User buyer;
+
+        @BeforeEach
+        void setUp() {
+            buyer = new User("buyer-001", "buyer1", "pass", "b@mail.com",
+                    "Buyer One", "090", "HCM", true, UserRole.MEMBER,
+                    50_000_000.0, null, 0.0);
+            userDAO.addUser(buyer);
+
+            runningAuction.setStatus(AuctionStatus.FINISHED);
+            runningAuction.setCurrentWinnerId("buyer-001");
+            runningAuction.setCurrentPrice(10_000_000.0);
+        }
+
+        @Test
+        @DisplayName("TC-AUC-PAY-01: userId null → UNAUTHORIZED")
+        void pay_nullUserId() {
+            assertEquals(ResponseStatus.UNAUTHORIZED,
+                auctionService.payAuction("auc-running", null).getStatus());
+        }
+
+        @Test
+        @DisplayName("TC-AUC-PAY-02: Phiên chưa kết thúc → BAD_REQUEST")
+        void pay_auctionStillRunning() {
+            Auction runAuc = new Auction("auc-active", "item-001", 5_000_000.0,
+                    LocalDateTime.now().minusHours(1), LocalDateTime.now().plusDays(1));
+            runAuc.setStatus(AuctionStatus.RUNNING);
+            runAuc.setCurrentWinnerId("buyer-001");
+            auctionDAO.addAuction(runAuc);
+            assertEquals(ResponseStatus.BAD_REQUEST,
+                auctionService.payAuction("auc-active", "buyer-001").getStatus());
+        }
+
+        @Test
+        @DisplayName("TC-AUC-PAY-03: Không phải người thắng → UNAUTHORIZED")
+        void pay_notWinner() {
+            assertEquals(ResponseStatus.UNAUTHORIZED,
+                auctionService.payAuction("auc-running", "seller-001").getStatus());
+        }
+
+        @Test
+        @DisplayName("TC-AUC-PAY-04: Số dư không đủ (< giá + 2% phí) → BAD_REQUEST")
+        void pay_insufficientBalance() {
+            User poorBuyer = new User("poor-buyer", "poor", "pass", "p@mail.com",
+                    "Poor Buyer", "", "", true, UserRole.MEMBER, 1_000.0, null, 0.0);
+            userDAO.addUser(poorBuyer);
+            runningAuction.setCurrentWinnerId("poor-buyer");
+            assertEquals(ResponseStatus.BAD_REQUEST,
+                auctionService.payAuction("auc-running", "poor-buyer").getStatus());
+        }
+
+        @Test
+        @DisplayName("TC-AUC-PAY-05: Thanh toán thành công → SUCCESS + status chuyển PAID + trừ tiền buyer")
+        void pay_success() {
+            Response res = auctionService.payAuction("auc-running", "buyer-001");
+            assertEquals(ResponseStatus.SUCCESS, res.getStatus());
+            assertEquals(AuctionStatus.PAID, runningAuction.getStatus());
+            // Tổng phải trả: 10_000_000 + 2% = 10_200_000
+            assertEquals(50_000_000.0 - 10_200_000.0, buyer.getBalance(), 1.0);
+        }
+    }
+
+    @Nested
+    @DisplayName("adminCancelAuction() và adminMarkPaid()")
+    class AdminOperationTests {
+
+        @Test
+        @DisplayName("TC-AUC-ADMIN-01: cancelAuction phiên không tồn tại → ValidationException")
+        void adminCancel_notFound() {
+            assertThrows(com.auction.server.util.ValidationException.class,
+                () -> auctionService.adminCancelAuction("ghost-id"));
+        }
+
+        @Test
+        @DisplayName("TC-AUC-ADMIN-02: cancelAuction thành công → SUCCESS + status CANCELED")
+        void adminCancel_success() {
+            Response res = auctionService.adminCancelAuction("auc-running");
+            assertEquals(ResponseStatus.SUCCESS, res.getStatus());
+            assertEquals(AuctionStatus.CANCELED, runningAuction.getStatus());
+        }
+
+        @Test
+        @DisplayName("TC-AUC-ADMIN-03: markPaid phiên chưa FINISHED → BAD_REQUEST")
+        void adminMarkPaid_notFinished() {
+            assertEquals(ResponseStatus.BAD_REQUEST,
+                auctionService.adminMarkPaid("auc-running").getStatus());
+        }
+
+        @Test
+        @DisplayName("TC-AUC-ADMIN-04: markPaid thành công → SUCCESS + status PAID")
+        void adminMarkPaid_success() {
+            runningAuction.setStatus(AuctionStatus.FINISHED);
+            Response res = auctionService.adminMarkPaid("auc-running");
+            assertEquals(ResponseStatus.SUCCESS, res.getStatus());
+            assertEquals(AuctionStatus.PAID, runningAuction.getStatus());
         }
     }
 }

@@ -36,7 +36,28 @@ class AuctionTest {
         assertEquals(AuctionStatus.OPEN, a.getStatus());
     }
 
+    @Test
+    @DisplayName("TC-ENTITY-02: Constructor → khởi tạo đúng ID, itemId, giá ban đầu")
+    void constructor_fieldsInitializedCorrectly() {
+        LocalDateTime start = LocalDateTime.now();
+        LocalDateTime end = start.plusDays(3);
+        Auction a = new Auction("auc-id", "item-id", 2_000_000.0, start, end);
 
+        assertEquals("auc-id", a.getId());
+        assertEquals("item-id", a.getItemId());
+        assertEquals(2_000_000.0, a.getCurrentPrice(), 0.001);
+        assertEquals(start, a.getStartTime());
+        assertEquals(end, a.getEndTime());
+        assertNull(a.getCurrentWinnerId());
+    }
+
+    @Test
+    @DisplayName("TC-ENTITY-03: currentWinnerId mặc định = null")
+    void constructor_winnerIdDefaultNull() {
+        Auction a = new Auction("id", "item", 1_000.0,
+                LocalDateTime.now(), LocalDateTime.now().plusDays(1));
+        assertNull(a.getCurrentWinnerId());
+    }
 
     @Test
     @DisplayName("TC-ENTITY-07: setStatus → getStatus trả đúng giá trị")
