@@ -32,6 +32,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
     private final RequestController controller;
     private BufferedReader in;
     private PrintWriter out;
+    private final Object outLock = new Object(); // khóa cố định cho I/O ghi socket
     private String loggedInUserId = null;
 
     public ClientHandler(Socket socket, RequestController controller) {
@@ -147,14 +148,14 @@ public class ClientHandler implements Runnable, AuctionObserver {
     }
 
     private void sendResponse(Response response) {
-        synchronized (out) {
-            out.println(GSON.toJson(response));
+        synchronized (outLock) {
+            if (out != null) out.println(GSON.toJson(response));
         }
     }
 
     private void sendPush(String json) {
-        synchronized (out) {
-            out.println(json);
+        synchronized (outLock) {
+            if (out != null) out.println(json);
         }
     }
 
