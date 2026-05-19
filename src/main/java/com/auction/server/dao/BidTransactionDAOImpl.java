@@ -1,5 +1,8 @@
 package com.auction.server.dao;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.auction.model.entity.BidTransaction;
 import com.auction.server.database.DatabaseConnection;
 
@@ -12,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BidTransactionDAOImpl implements BidTransactionDAO {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BidTransactionDAOImpl.class);
 
     @Override
     public boolean save(BidTransaction bid) {
@@ -31,7 +35,7 @@ public class BidTransactionDAOImpl implements BidTransactionDAO {
             return rowsAffected > 0;
             
         } catch (SQLException e) {
-            System.err.println(">>> [BidTransactionDAO] Lỗi save: " + e.getMessage());
+            LOGGER.error(">>> [BidTransactionDAO] Lỗi save: {}", e.getMessage(), e);
         }
         return false;
     }
@@ -61,7 +65,7 @@ public class BidTransactionDAOImpl implements BidTransactionDAO {
                 }
             }
         } catch (SQLException e) {
-            System.err.println(">>> [BidTransactionDAO] Lỗi findByAuctionId: " + e.getMessage());
+            LOGGER.error(">>> [BidTransactionDAO] Lỗi findByAuctionId: {}", e.getMessage(), e);
         }
         return transactions;
     }
@@ -91,7 +95,7 @@ public class BidTransactionDAOImpl implements BidTransactionDAO {
                 }
             }
         } catch (SQLException e) {
-            System.err.println(">>> [BidTransactionDAO] Lỗi findByBidderId: " + e.getMessage());
+            LOGGER.error(">>> [BidTransactionDAO] Lỗi findByBidderId: {}", e.getMessage(), e);
         }
         return transactions;
     }

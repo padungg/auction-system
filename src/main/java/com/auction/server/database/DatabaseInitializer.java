@@ -1,10 +1,14 @@
 package com.auction.server.database;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.SQLException;
 
 public class DatabaseInitializer {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseInitializer.class);
 
         public static void initialize() {
 
@@ -189,11 +193,10 @@ public class DatabaseInitializer {
                                         +
                                         "VALUES ('BID-002', 'USR-MEM-001', 'AUC-013', 25000000.0, DATE_SUB(NOW(), INTERVAL 6 DAY), FALSE);");
 
-                        System.out.println(
-                                        ">>> [DB] Khởi tạo thành công! Tổng 7 phiên đấu giá đã được seed vào auction_system.");
+                        LOGGER.info(">>> [DB] Khởi tạo thành công! Tổng 7 phiên đấu giá đã được seed vào auction_system.");
 
                 } catch (SQLException e) {
-                        System.err.println(">>> [DB] LỖI khởi tạo bảng: " + e.getMessage());
+                        LOGGER.error(">>> [DB] LỖI khởi tạo bảng: {}", e.getMessage(), e);
                 }
         }
 }
