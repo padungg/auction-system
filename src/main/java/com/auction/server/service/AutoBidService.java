@@ -61,7 +61,6 @@ public class AutoBidService {
 
     /**
      * Đăng ký Auto-Bid cho 1 phiên.
-     *
      * Nếu user đã đăng ký cho phiên này → ghi đè (cập nhật maxBid/increment).
      * Thứ tự ưu tiên giữ nguyên theo registeredAt BAN ĐẦU (không reset khi ghi đè).
      */

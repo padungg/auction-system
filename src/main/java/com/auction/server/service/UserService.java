@@ -115,23 +115,17 @@ public class UserService {
      * Khóa tài khoản user
      */
     public Response lockUser(String userId) {
-        if (userId == null || userId.trim().isEmpty()) {
-            return new Response(ResponseStatus.BAD_REQUEST, "Thiếu userId", null);
-        }
-        User user = userDAO.findById(userId.trim());
-        if (user == null) {
-            return new Response(ResponseStatus.NOT_FOUND, "Không tìm thấy người dùng", null);
-        }
-        user.setActive(false);
-        userDAO.update(user);
-        LOGGER.info("LOCK_USER: {}", user.getUsername());
-        return new Response(ResponseStatus.SUCCESS, "Đã khóa tài khoản: " + user.getUsername(), null);
+        return toggleUserStatus(userId, false, "LOCK_USER", "Đã khóa tài khoản: ");
     }
 
     /**
      * Mở khóa tài khoản user
      */
     public Response unlockUser(String userId) {
+        return toggleUserStatus(userId, true, "UNLOCK_USER", "Đã mở khóa tài khoản: ");
+    }
+
+    private Response toggleUserStatus(String userId, boolean status, String logAction, String successMsg) {
         if (userId == null || userId.trim().isEmpty()) {
             return new Response(ResponseStatus.BAD_REQUEST, "Thiếu userId", null);
         }
@@ -139,10 +133,10 @@ public class UserService {
         if (user == null) {
             return new Response(ResponseStatus.NOT_FOUND, "Không tìm thấy người dùng", null);
         }
-        user.setActive(true);
+        user.setActive(status);
         userDAO.update(user);
-        LOGGER.info("UNLOCK_USER: {}", user.getUsername());
-        return new Response(ResponseStatus.SUCCESS, "Đã mở khóa tài khoản: " + user.getUsername(), null);
+        LOGGER.info("{}: {}", logAction, user.getUsername());
+        return new Response(ResponseStatus.SUCCESS, successMsg + user.getUsername(), null);
     }
 
     // ACCOUNT OPERATIONS (NẠP/RÚT TIỀN)
@@ -151,31 +145,17 @@ public class UserService {
      * Nạp tiền vào tài khoản.
      */
     public Response deposit(String userId, double amount) {
-        if (userId == null) {
-            return new Response(ResponseStatus.UNAUTHORIZED, "Bạn chưa đăng nhập", null);
-        }
-        if (amount <= 0) {
-            return new Response(ResponseStatus.BAD_REQUEST, "Số tiền phải lớn hơn 0", null);
-        }
-        User user = userDAO.findById(userId);
-        if (user == null) {
-            return new Response(ResponseStatus.NOT_FOUND, "Không tìm thấy tài khoản", null);
-        }
-        user.deposit(amount);
-        userDAO.update(user);
-        LOGGER.info("DEPOSIT: user={} | +{} VNĐ | balance={} VNĐ",
-                user.getUsername(),
-                String.format("%,.0f", amount),
-                String.format("%,.0f", user.getBalance()));
-        return new Response(ResponseStatus.SUCCESS,
-                "Nạp tiền thành công! Số dư: " + String.format("%,.0f", user.getBalance()) + " VNĐ",
-                user.getBalance());
+        return processTransaction(userId, amount, true);
     }
 
     /**
      * Rút tiền khỏi tài khoản.
      */
     public Response withdraw(String userId, double amount) {
+        return processTransaction(userId, amount, false);
+    }
+
+    private Response processTransaction(String userId, double amount, boolean isDeposit) {
         if (userId == null) {
             return new Response(ResponseStatus.UNAUTHORIZED, "Bạn chưa đăng nhập", null);
         }
@@ -186,18 +166,31 @@ public class UserService {
         if (user == null) {
             return new Response(ResponseStatus.NOT_FOUND, "Không tìm thấy tài khoản", null);
         }
-        if (user.getBalance() < amount) {
-            return new Response(ResponseStatus.BAD_REQUEST,
-                    "Số dư không đủ! Hiện có: " + String.format("%,.0f", user.getBalance()) + " VNĐ", null);
+
+        if (isDeposit) {
+            user.deposit(amount);
+        } else {
+            if (user.getBalance() < amount) {
+                return new Response(ResponseStatus.BAD_REQUEST,
+                        "Số dư không đủ! Hiện có: " + String.format("%,.0f", user.getBalance()) + " VNĐ", null);
+            }
+            user.withdraw(amount);
         }
-        user.withdraw(amount);
         userDAO.update(user);
-        LOGGER.info("WITHDRAW: user={} | -{} VNĐ | balance={} VNĐ",
+
+        String action = isDeposit ? "DEPOSIT" : "WITHDRAW";
+        String sign = isDeposit ? "+" : "-";
+        String msg = isDeposit ? "Nạp tiền thành công! Số dư: " : "Rút tiền thành công! Số dư: ";
+
+        LOGGER.info("{}: user={} | {}{} VNĐ | balance={} VNĐ",
+                action,
                 user.getUsername(),
+                sign,
                 String.format("%,.0f", amount),
                 String.format("%,.0f", user.getBalance()));
+
         return new Response(ResponseStatus.SUCCESS,
-                "Rút tiền thành công! Số dư: " + String.format("%,.0f", user.getBalance()) + " VNĐ",
+                msg + String.format("%,.0f", user.getBalance()) + " VNĐ",
                 user.getBalance());
     }
 

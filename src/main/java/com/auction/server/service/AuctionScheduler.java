@@ -81,7 +81,7 @@ public class AuctionScheduler {
             int closedCount = 0;
             for (Auction auction : openingAuctions) {
                 if (now.isAfter(auction.getEndTime())) {
-                    closeExpiredAuction(auction, now);
+                    closeExpiredAuction(auction);
                     closedCount++;
                 }
             }
@@ -98,7 +98,7 @@ public class AuctionScheduler {
     /**
      * Đóng phiên đấu giá hết hạn và thông báo cho client.
      */
-    private void closeExpiredAuction(Auction auction, LocalDateTime now) {
+    private void closeExpiredAuction(Auction auction) {
         auction.setStatus(AuctionStatus.FINISHED);
         auctionDAO.update(auction);
 

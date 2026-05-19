@@ -106,7 +106,6 @@ public class AuctionService {
 
     /**
      * Tạo phiên đấu giá mới.
-     *
      * FACTORY PATTERN: Dùng ItemFactory để tạo đúng loại Item
      * theo itemType (ELECTRONICS / ART / VEHICLE).
      */
