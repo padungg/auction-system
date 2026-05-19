@@ -9,7 +9,7 @@ import com.auction.model.protocol.ResponseStatus;
 import com.auction.server.dao.AuctionDAO;
 import com.auction.server.dao.AutoBidDAO;
 import com.auction.server.dao.BidTransactionDAO;
-import com.auction.server.service.AutoBidEntry;
+import com.auction.model.entity.AutoBidEntry;
 import com.auction.server.service.AutoBidService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

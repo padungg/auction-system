@@ -3,6 +3,7 @@ package com.auction.server.service;
 import com.auction.model.dto.AutoBidDTO;
 import com.auction.model.entity.Auction;
 import com.auction.model.entity.AuctionStatus;
+import com.auction.model.entity.AutoBidEntry;
 import com.auction.model.entity.BidTransaction;
 import com.auction.model.protocol.Response;
 import com.auction.model.protocol.ResponseStatus;
@@ -20,7 +21,8 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.UUID;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Xử lý Auto-Bid (Đặt giá tự động)
@@ -28,7 +30,7 @@ import java.util.logging.Logger;
  * - Anti-loop: Giới hạn MAX_ROUNDS = 50 lần tự động phản giá liên tiếp.
  */
 public class AutoBidService {
-    private static final Logger LOGGER = Logger.getLogger(AutoBidService.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(AutoBidService.class);
 
     private static final int MAX_ROUNDS = 50;
 
@@ -52,7 +54,7 @@ public class AutoBidService {
                     entry.getAuctionId(), k -> new PriorityQueue<>());
             queue.add(entry);
         }
-        LOGGER.info("Đã load " + entries.size() + " auto-bids từ DB.");
+        LOGGER.info("Đã load {} auto-bids từ DB.", entries.size());
     }
 
     // ĐĂNG KÝ / HỦY AUTO-BID
@@ -107,11 +109,12 @@ public class AutoBidService {
         // Lưu vào DB
         autoBidDAO.save(newEntry);
 
-        LOGGER.info("REGISTER: phiên=" + dto.getAuctionId()
-                + " | user=" + userId
-                + " | maxBid=" + String.format("%,.0f", dto.getMaxBid())
-                + " | increment=" + String.format("%,.0f", dto.getIncrement())
-                + " | tổng auto-bidder=" + queue.size());
+        LOGGER.info("REGISTER: phiên={} | user={} | maxBid={} | increment={} | tổng auto-bidder={}",
+                dto.getAuctionId(),
+                userId,
+                String.format("%,.0f", dto.getMaxBid()),
+                String.format("%,.0f", dto.getIncrement()),
+                queue.size());
 
         // Kích hoạt ngay lập tức: nếu maxBid > currentPrice + increment
         // đặt giá ngay mà không cần chờ người khác bid trước
@@ -133,7 +136,7 @@ public class AutoBidService {
             if (queue != null && queue.isEmpty())
                 registry.remove(auctionId);
             autoBidDAO.delete(auctionId, userId);
-            LOGGER.info("CANCEL: phiên=" + auctionId + " | user=" + userId);
+            LOGGER.info("CANCEL: phiên={} | user={}", auctionId, userId);
             return new Response(ResponseStatus.SUCCESS, "Đã hủy đăng ký auto-bid", null);
         }
         return new Response(ResponseStatus.NOT_FOUND, "Bạn chưa đăng ký auto-bid cho phiên này", null);
@@ -146,7 +149,7 @@ public class AutoBidService {
     public synchronized void clearAuction(String auctionId) {
         registry.remove(auctionId);
         autoBidDAO.deleteByAuctionId(auctionId);
-        LOGGER.info("CLEAR: đã xóa auto-bid của phiên=" + auctionId);
+        LOGGER.info("CLEAR: đã xóa auto-bid của phiên={}", auctionId);
     }
 
     // KÍCH HOẠT AUTO-BID (gọi sau mỗi bid thành công)
@@ -201,9 +204,9 @@ public class AutoBidService {
             queue.removeAll(exhausted);
             if (!exhausted.isEmpty()) {
                 for (AutoBidEntry e : exhausted) {
-                    LOGGER.info("EXHAUSTED: user=" + e.getUserId()
-                            + " | maxBid=" + String.format("%,.0f", e.getMaxBid())
-                            + " vượt ngưỡng — loại khỏi queue");
+                    LOGGER.info("EXHAUSTED: user={} | maxBid={} vượt ngưỡng — loại khỏi queue",
+                            e.getUserId(),
+                            String.format("%,.0f", e.getMaxBid()));
                 }
             }
 
@@ -245,10 +248,11 @@ public class AutoBidService {
                 // Thông báo realtime cho tất cả client đang xem phiên
                 AuctionManager.getInstance().notifyBidUpdate(auctionId, currentPrice, currentWinnerId, bidTimeIso);
 
-                LOGGER.info("AUTO_BID: phiên=" + auctionId
-                        + " | user=" + currentWinnerId
-                        + " | " + String.format("%,.0f", oldPrice)
-                        + " → " + String.format("%,.0f", currentPrice) + " VNĐ");
+                LOGGER.info("AUTO_BID: phiên={} | user={} | {} → {} VNĐ",
+                        auctionId,
+                        currentWinnerId,
+                        String.format("%,.0f", oldPrice),
+                        String.format("%,.0f", currentPrice));
 
                 progress = true;
             }
@@ -257,8 +261,7 @@ public class AutoBidService {
         } while (progress && rounds < MAX_ROUNDS);
 
         if (rounds >= MAX_ROUNDS) {
-            LOGGER.warning("MAX_ROUNDS reached tại phiên=" + auctionId
-                    + " — dừng để tránh vòng lặp vô hạn");
+            LOGGER.warn("MAX_ROUNDS reached tại phiên={} — dừng để tránh vòng lặp vô hạn", auctionId);
         }
     }
 }

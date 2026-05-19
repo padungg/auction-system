@@ -1,6 +1,4 @@
-package com.auction.server.service;
-
-import com.auction.server.service.AutoBidEntry;
+package com.auction.model.entity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

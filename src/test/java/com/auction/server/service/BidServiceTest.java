@@ -11,7 +11,7 @@ import com.auction.server.dao.AutoBidDAO;
 import com.auction.server.dao.BidTransactionDAO;
 import com.auction.server.dao.ItemDAO;
 import com.auction.model.entity.Item;
-import com.auction.server.service.AutoBidEntry;
+import com.auction.model.entity.AutoBidEntry;
 import com.auction.server.service.AutoBidService;
 import com.auction.server.service.BidService;
 import org.junit.jupiter.api.BeforeEach;

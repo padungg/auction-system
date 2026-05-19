@@ -24,8 +24,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Logger;
-import java.util.logging.Level;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Service xử lý nghiệp vụ liên quan đến Phiên Đấu Giá.
@@ -37,7 +37,7 @@ import java.util.logging.Level;
  * - Payment: payAuction , getPendingPayments, getPaymentHistory
  */
 public class AuctionService {
-    private static final Logger LOGGER = Logger.getLogger(AuctionService.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuctionService.class);
     private final AuctionDAO auctionDAO;
     private final ItemDAO itemDAO;
     private final UserDAO userDAO;
@@ -63,7 +63,7 @@ public class AuctionService {
         for (Auction auction : auctions) {
             summaryList.add(toSummaryDTO(auction));
         }
-        LOGGER.info("GET_ALL: " + summaryList.size() + " phiên đang mở");
+        LOGGER.info("GET_ALL: {} phiên đang mở", summaryList.size());
         return new Response(ResponseStatus.SUCCESS, "Lấy danh sách thành công", summaryList);
     }
 
@@ -168,10 +168,11 @@ public class AuctionService {
 
         // 6. Trả về thông tin tóm tắt
         AuctionSummaryDTO result = toSummaryDTO(auction);
-        LOGGER.info("CREATE: item=" + item.getName()
-                + " | loại=" + dto.getItemType()
-                + " | giá khởi=" + String.format("%,.0f", dto.getStartingPrice()) + " VNĐ"
-                + " | auctionId=" + auction.getId());
+        LOGGER.info("CREATE: item={} | loại={} | giá khởi={} VNĐ | auctionId={}",
+                item.getName(),
+                dto.getItemType(),
+                String.format("%,.0f", dto.getStartingPrice()),
+                auction.getId());
         return new Response(ResponseStatus.SUCCESS, "Tạo phiên đấu giá thành công!", result);
     }
 
@@ -203,9 +204,10 @@ public class AuctionService {
 
         String resultMsg = "Phiên đã đóng! Winner: " + winnerName
                 + " | Giá cuối: " + String.format("%,.0f", auction.getCurrentPrice()) + " VNĐ";
-        LOGGER.info("CLOSE: auctionId=" + auctionId
-                + " | winner=" + winnerName
-                + " | giá cuối=" + String.format("%,.0f", auction.getCurrentPrice()) + " VNĐ");
+        LOGGER.info("CLOSE: auctionId={} | winner={} | giá cuối={} VNĐ",
+                auctionId,
+                winnerName,
+                String.format("%,.0f", auction.getCurrentPrice()));
         return new Response(ResponseStatus.SUCCESS, resultMsg, auction.getCurrentPrice());
     }
 
@@ -248,7 +250,7 @@ public class AuctionService {
         itemDAO.update(item);
         auctionDAO.update(auction);
 
-        LOGGER.info("UPDATE: auctionId=" + auction.getId() + " by seller=" + sellerId);
+        LOGGER.info("UPDATE: auctionId={} by seller={}", auction.getId(), sellerId);
         return new Response(ResponseStatus.SUCCESS, "Cập nhật sản phẩm thành công!", null);
     }
 
@@ -269,7 +271,7 @@ public class AuctionService {
         auctionDAO.delete(auction.getId());
         itemDAO.delete(item.getId());
 
-        LOGGER.info("DELETE: auctionId=" + auction.getId() + " by seller=" + sellerId);
+        LOGGER.info("DELETE: auctionId={} by seller={}", auction.getId(), sellerId);
         return new Response(ResponseStatus.SUCCESS, "Xóa sản phẩm thành công!", null);
     }
 
@@ -289,7 +291,7 @@ public class AuctionService {
                 pending.add(toSummaryDTO(a));
             }
         }
-        LOGGER.info("GET_PENDING_PAYMENTS: user=" + userId + " | " + pending.size() + " phiên");
+        LOGGER.info("GET_PENDING_PAYMENTS: user={} | {} phiên", userId, pending.size());
         return new Response(ResponseStatus.SUCCESS, "Lấy danh sách chờ thanh toán thành công", pending);
     }
 
@@ -307,7 +309,7 @@ public class AuctionService {
                 history.add(toSummaryDTO(a));
             }
         }
-        LOGGER.info("GET_PAYMENT_HISTORY: user=" + userId + " | " + history.size() + " phiên");
+        LOGGER.info("GET_PAYMENT_HISTORY: user={} | {} phiên", userId, history.size());
         return new Response(ResponseStatus.SUCCESS, "Lấy lịch sử thanh toán thành công", history);
     }
 
@@ -353,11 +355,12 @@ public class AuctionService {
         auction.setStatus(AuctionStatus.PAID);
         auctionDAO.update(auction);
 
-        LOGGER.info("PAY_AUCTION: auctionId=" + auctionId
-                + " | buyer=" + userId
-                + " | giá=" + String.format("%,.0f", basePrice)
-                + " | phí=" + String.format("%,.0f", platformFee)
-                + " | tổng=" + String.format("%,.0f", totalRequired) + " VNĐ");
+        LOGGER.info("PAY_AUCTION: auctionId={} | buyer={} | giá={} | phí={} | tổng={} VNĐ",
+                auctionId,
+                userId,
+                String.format("%,.0f", basePrice),
+                String.format("%,.0f", platformFee),
+                String.format("%,.0f", totalRequired));
         return new Response(ResponseStatus.SUCCESS,
                 "Thanh toán thành công! (Đã trợ phí 2%% = "
                         + String.format("%,.0f", platformFee) + " VNĐ)",
@@ -380,7 +383,7 @@ public class AuctionService {
             if (seller != null) {
                 seller.deposit(basePrice);
                 userDAO.update(seller);
-                LOGGER.info("PAY: seller=" + seller.getUsername() + " +" + String.format("%,.0f", basePrice) + " VNĐ");
+                LOGGER.info("PAY: seller={} +{} VNĐ", seller.getUsername(), String.format("%,.0f", basePrice));
             }
         }
 
@@ -389,10 +392,11 @@ public class AuctionService {
         if (admin != null) {
             admin.deposit(platformFee);
             userDAO.update(admin);
-            LOGGER.info("PAY: admin=" + admin.getUsername() + " +" + String.format("%,.0f", platformFee)
-                    + " VNĐ (phí 2%%)");
+            LOGGER.info("PAY: admin={} +{} VNĐ (phí 2%%)",
+                    admin.getUsername(),
+                    String.format("%,.0f", platformFee));
         } else {
-            LOGGER.warning("Không tìm thấy Admin để nhận phí!");
+            LOGGER.warn("Không tìm thấy Admin để nhận phí!");
         }
     }
 
@@ -455,7 +459,7 @@ public class AuctionService {
         Auction auction = validateAndGetAuction(auctionId);
         auction.setStatus(com.auction.model.entity.AuctionStatus.CANCELED);
         auctionDAO.update(auction);
-        LOGGER.info("ADMIN_CANCEL_AUCTION: auctionId=" + auctionId);
+        LOGGER.info("ADMIN_CANCEL_AUCTION: auctionId={}", auctionId);
         return new Response(ResponseStatus.SUCCESS, "Đã hủy phiên đấu giá thành công!", null);
     }
 
@@ -466,7 +470,7 @@ public class AuctionService {
         }
         auction.setStatus(com.auction.model.entity.AuctionStatus.PAID);
         auctionDAO.update(auction);
-        LOGGER.info("ADMIN_MARK_PAID: auctionId=" + auctionId);
+        LOGGER.info("ADMIN_MARK_PAID: auctionId={}", auctionId);
         return new Response(ResponseStatus.SUCCESS, "Đã đánh dấu phiên thành PAID thành công!", null);
     }
 

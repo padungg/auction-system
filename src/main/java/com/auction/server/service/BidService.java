@@ -18,7 +18,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Dịch vụ xử lý Đặt Giá (Bid).
@@ -27,7 +28,7 @@ import java.util.logging.Logger;
  * - Tích hợp AutoBid và lưu trữ lịch sử giao dịch.
  */
 public class BidService {
-    private static final Logger LOGGER = Logger.getLogger(BidService.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(BidService.class);
     private final AuctionDAO auctionDAO;
     private final BidTransactionDAO bidTransactionDAO;
     private final AutoBidService autoBidService;
@@ -106,9 +107,11 @@ public class BidService {
         // OBSERVER
         AuctionManager.getInstance().notifyBidUpdate(dto.getAuctionId(), bidAmount, bidderId, bidTimeIso);
 
-        LOGGER.info("PLACE_BID: phiên=" + dto.getAuctionId()
-                + " | bidder=" + bidderId
-                + " | " + String.format("%,.0f", oldPrice) + " → " + String.format("%,.0f", bidAmount) + " VNĐ");
+        LOGGER.info("PLACE_BID: phiên={} | bidder={} | {} → {} VNĐ",
+                dto.getAuctionId(),
+                bidderId,
+                String.format("%,.0f", oldPrice),
+                String.format("%,.0f", bidAmount));
 
         // AUTO-BID
         autoBidService.triggerAutoBids(dto.getAuctionId(), bidAmount, bidderId);
@@ -133,7 +136,7 @@ public class BidService {
         // Sắp xếp tăng dần theo thời gian (trục X) để phục vụ cho Line Chart
         history.sort((a, b) -> a.getBidTime().compareTo(b.getBidTime()));
 
-        LOGGER.info("GET_HISTORY: phiên=" + auctionId + " | " + history.size() + " bản ghi");
+        LOGGER.info("GET_HISTORY: phiên={} | {} bản ghi", auctionId, history.size());
         return new Response(ResponseStatus.SUCCESS, "Lấy lịch sử bid thành công", history);
     }
 
@@ -173,7 +176,7 @@ public class BidService {
             ));
         }
 
-        LOGGER.info("GET_MY_HISTORY: user=" + bidderId + " | " + result.size() + " bản ghi");
+        LOGGER.info("GET_MY_HISTORY: user={} | {} bản ghi", bidderId, result.size());
         return new Response(ResponseStatus.SUCCESS, "Lấy lịch sử bid cá nhân thành công", result);
     }
 }

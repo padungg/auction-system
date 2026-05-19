@@ -13,8 +13,8 @@ import com.auction.server.util.ValidationUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Dịch vụ xử lý nghiệp vụ Tài khoản (User).
@@ -22,7 +22,7 @@ import java.util.logging.Logger;
  */
 
 public class UserService {
-    private static final Logger LOGGER = Logger.getLogger(UserService.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
     private final UserDAO userDAO;
 
     public UserService(UserDAO userDAO) {
@@ -52,7 +52,7 @@ public class UserService {
         }
 
         UserResponseDTO userResponseDTO = toFullDTO(user);
-        LOGGER.info("LOGIN: " + user.getUsername() + " | role=" + user.getRole() + " -> SUCCESS");
+        LOGGER.info("LOGIN: {} | role={} -> SUCCESS", user.getUsername(), user.getRole());
         return new Response(ResponseStatus.SUCCESS, "Đăng nhập thành công!", userResponseDTO);
     }
 
@@ -92,8 +92,7 @@ public class UserService {
         }
 
         UserResponseDTO responseDTO = toFullDTO(newUser);
-        LOGGER.info(
-                "[UserService] REGISTER: " + newUser.getUsername() + " | id=" + newUser.getId() + " -> SUCCESS");
+        LOGGER.info("[UserService] REGISTER: {} | id={} -> SUCCESS", newUser.getUsername(), newUser.getId());
         return new Response(ResponseStatus.SUCCESS, "Đăng ký thành công!", responseDTO);
     }
 
@@ -108,7 +107,7 @@ public class UserService {
         for (User u : users) {
             dtos.add(toFullDTO(u));
         }
-        LOGGER.info("GET_ALL_USERS: " + dtos.size() + " users");
+        LOGGER.info("GET_ALL_USERS: {} users", dtos.size());
         return new Response(ResponseStatus.SUCCESS, "Lấy danh sách người dùng thành công", dtos);
     }
 
@@ -125,7 +124,7 @@ public class UserService {
         }
         user.setActive(false);
         userDAO.update(user);
-        LOGGER.info("LOCK_USER: " + user.getUsername());
+        LOGGER.info("LOCK_USER: {}", user.getUsername());
         return new Response(ResponseStatus.SUCCESS, "Đã khóa tài khoản: " + user.getUsername(), null);
     }
 
@@ -142,7 +141,7 @@ public class UserService {
         }
         user.setActive(true);
         userDAO.update(user);
-        LOGGER.info("UNLOCK_USER: " + user.getUsername());
+        LOGGER.info("UNLOCK_USER: {}", user.getUsername());
         return new Response(ResponseStatus.SUCCESS, "Đã mở khóa tài khoản: " + user.getUsername(), null);
     }
 
@@ -164,9 +163,10 @@ public class UserService {
         }
         user.deposit(amount);
         userDAO.update(user);
-        LOGGER.info("DEPOSIT: user=" + user.getUsername()
-                + " | +" + String.format("%,.0f", amount) + " VNĐ"
-                + " | balance=" + String.format("%,.0f", user.getBalance()) + " VNĐ");
+        LOGGER.info("DEPOSIT: user={} | +{} VNĐ | balance={} VNĐ",
+                user.getUsername(),
+                String.format("%,.0f", amount),
+                String.format("%,.0f", user.getBalance()));
         return new Response(ResponseStatus.SUCCESS,
                 "Nạp tiền thành công! Số dư: " + String.format("%,.0f", user.getBalance()) + " VNĐ",
                 user.getBalance());
@@ -192,9 +192,10 @@ public class UserService {
         }
         user.withdraw(amount);
         userDAO.update(user);
-        LOGGER.info("WITHDRAW: user=" + user.getUsername()
-                + " | -" + String.format("%,.0f", amount) + " VNĐ"
-                + " | balance=" + String.format("%,.0f", user.getBalance()) + " VNĐ");
+        LOGGER.info("WITHDRAW: user={} | -{} VNĐ | balance={} VNĐ",
+                user.getUsername(),
+                String.format("%,.0f", amount),
+                String.format("%,.0f", user.getBalance()));
         return new Response(ResponseStatus.SUCCESS,
                 "Rút tiền thành công! Số dư: " + String.format("%,.0f", user.getBalance()) + " VNĐ",
                 user.getBalance());
@@ -243,7 +244,7 @@ public class UserService {
         }
 
         userDAO.update(user);
-        LOGGER.info("UPDATE_PROFILE: user=" + user.getUsername() + " | fullName=" + fullName);
+        LOGGER.info("UPDATE_PROFILE: user={} | fullName={}", user.getUsername(), fullName);
         return new Response(ResponseStatus.SUCCESS, "Cập nhật hồ sơ thành công!", toFullDTO(user));
     }
 

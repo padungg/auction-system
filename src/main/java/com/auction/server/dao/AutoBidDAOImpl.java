@@ -1,7 +1,7 @@
 package com.auction.server.dao;
 
 import com.auction.server.database.DatabaseConnection;
-import com.auction.server.service.AutoBidEntry;
+import com.auction.model.entity.AutoBidEntry;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
