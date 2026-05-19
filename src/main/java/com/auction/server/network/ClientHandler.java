@@ -61,9 +61,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
         this.controller = controller;
     }
 
-    // ════════════════════════════════════════════════════════════════
     // VÒNG LẶP CHÍNH (Runnable)
-    // ════════════════════════════════════════════════════════════════
 
     @Override
     public void run() {
@@ -95,9 +93,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
         }
     }
 
-    // ════════════════════════════════════════════════════════════════
     // XỬ LÝ TỪNG MESSAGE
-    // ════════════════════════════════════════════════════════════════
 
     /**
      * Parse JSON → Request → xử lý đặc biệt SUBSCRIBE/UNSUBSCRIBE (cần 'this')
@@ -158,9 +154,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
         sendResponse(response);
     }
 
-    // ════════════════════════════════════════════════════════════════
     // OBSERVER CALLBACKS — push realtime từ AuctionManager
-    // ════════════════════════════════════════════════════════════════
 
     /**
      * Được gọi bởi AuctionManager khi có bid mới — từ thread khác.
@@ -197,9 +191,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
         sendPush(push.toString());
     }
 
-    // ════════════════════════════════════════════════════════════════
     // TIỆN ÍCH
-    // ════════════════════════════════════════════════════════════════
 
     /**
      * Gửi Response thông thường (kết quả xử lý Request) về client.

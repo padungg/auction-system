@@ -29,9 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("UserService Tests")
 class UserServiceTest {
 
-    // ══════════════════════════════════════════════════════
     // STUB: UserDAO in-memory thay vì Mockito mock
-    // ══════════════════════════════════════════════════════
     static class UserDAOStub implements UserDAO {
         private final Map<String, User> byUsername = new HashMap<>();
         private final Map<String, User> byId = new HashMap<>();
@@ -74,9 +72,7 @@ class UserServiceTest {
         userDAO.addUser(activeUser);
     }
 
-    // ═══════════════════════════════════════════════════
     // LOGIN TESTS
-    // ═══════════════════════════════════════════════════
     @Nested
     @DisplayName("login()")
     class LoginTests {
@@ -152,9 +148,7 @@ class UserServiceTest {
         }
     }
 
-    // ═══════════════════════════════════════════════════
     // REGISTER TESTS
-    // ═══════════════════════════════════════════════════
     @Nested
     @DisplayName("register()")
     class RegisterTests {

@@ -98,9 +98,7 @@ class BidServiceTest {
         auctionDAO.addAuction(runningAuction);
     }
 
-    // ══════════════════════════════════════════════════════
     // PLACE BID
-    // ══════════════════════════════════════════════════════
     @Nested
     @DisplayName("placeBid()")
     class PlaceBidTests {
@@ -196,9 +194,7 @@ class BidServiceTest {
         }
     }
 
-    // ══════════════════════════════════════════════════════
     // GET BID HISTORY
-    // ══════════════════════════════════════════════════════
     @Nested
     @DisplayName("getBidHistory()")
     class GetBidHistoryTests {
