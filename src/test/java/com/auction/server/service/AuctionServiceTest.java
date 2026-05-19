@@ -129,9 +129,7 @@ class AuctionServiceTest {
         auctionDAO.addAuction(runningAuction);
     }
 
-    // ══════════════════════════════════════════════════════
     // CREATE AUCTION
-    // ══════════════════════════════════════════════════════
     @Nested
     @DisplayName("createAuction()")
     class CreateAuctionTests {
@@ -204,9 +202,7 @@ class AuctionServiceTest {
         }
     }
 
-    // ══════════════════════════════════════════════════════
     // UPDATE AUCTION
-    // ══════════════════════════════════════════════════════
     @Nested
     @DisplayName("updateAuction()")
     class UpdateAuctionTests {
@@ -252,9 +248,7 @@ class AuctionServiceTest {
         }
     }
 
-    // ══════════════════════════════════════════════════════
     // DELETE AUCTION
-    // ══════════════════════════════════════════════════════
     @Nested
     @DisplayName("deleteAuctionItem()")
     class DeleteAuctionTests {
@@ -286,9 +280,7 @@ class AuctionServiceTest {
         }
     }
 
-    // ══════════════════════════════════════════════════════
     // GET ACTIVE AUCTIONS
-    // ══════════════════════════════════════════════════════
     @Nested
     @DisplayName("getAllAuctions()")
     class GetActiveAuctionsTests {
@@ -307,9 +299,7 @@ class AuctionServiceTest {
         }
     }
 
-    // ══════════════════════════════════════════════════════
     // CLOSE AUCTION
-    // ══════════════════════════════════════════════════════
     @Nested
     @DisplayName("closeAuction()")
     class CloseAuctionTests {
