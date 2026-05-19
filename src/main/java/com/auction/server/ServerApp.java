@@ -1,53 +1,56 @@
 package com.auction.server;
 
-import com.auction.server.dao.UserDAOImpl;
-import java.io.*;
-import java.net.*;
+import com.auction.server.dao.AuctionDAO;
+import com.auction.server.dao.AuctionDAOImpl;
+import com.auction.server.network.SocketServer;
+import com.auction.server.service.AuctionScheduler;
+import com.auction.server.database.DatabaseInitializer;
 
+/**
+ * ĐIỂM KHỞI ĐỘNG SERVER.
+ *
+ * Thứ tự khởi động:
+ * 1. AuctionScheduler.start() — đóng các phiên đã hết hạn từ trước lần restart
+ * 2. SocketServer.start() — bắt đầu nhận kết nối từ client (blocking)
+ *
+ * Shutdown Hook (Ctrl+C hoặc kill):
+ * - Đảm bảo AuctionScheduler dừng sạch (không cắt giữa lúc đang update DB)
+ * - Đảm bảo SocketServer dừng sạch (không cắt giữa lúc đang xử lý bid)
+ */
 public class ServerApp {
+
+    private static final int PORT = 8080;
+    private static final int MAX_CLIENTS = 20;
+
     public static void main(String[] args) {
+
+        // ── 0. Khởi tạo Database (tạo bảng nếu chưa có) ──────────
+        DatabaseInitializer.initialize();
+
+        // ── 1. Khởi tạo DAO cho Scheduler ───────────────────────
+        AuctionDAO auctionDAO = new AuctionDAOImpl();
+        AuctionScheduler scheduler = new AuctionScheduler(auctionDAO);
+
+        // ── 2. Khởi tạo SocketServer ─────────────────────────────
+        SocketServer socketServer = new SocketServer(PORT, MAX_CLIENTS);
+
+        // ── 3. Shutdown Hook — chạy khi JVM nhận tín hiệu tắt ───
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("\n[ServerApp] SHUTDOWN: đang dừng server...");
+            scheduler.stop(); // dừng Scheduler trước (không block lâu)
+            socketServer.stop(); // dừng SocketServer sau (chờ client xử lý xong)
+            System.out.println("[ServerApp] SHUTDOWN: hoàn tất — goodbye!");
+        }, "ShutdownHook-Thread"));
+
+        // ── 4. Start Scheduler (non-blocking, chạy ngầm) ─────────
+        scheduler.start();
+
+        // ── 5. Start SocketServer (blocking — giữ main thread sống) ─
         try {
-            ServerSocket serverSocket = new ServerSocket(1234);
-            // Thông báo khi bật máy chủ
-            System.out.println(">>> [Hệ thống]: Kết nối Database thành công!");
-            System.out.println(">>> [Hệ thống]: SERVER ĐANG CHẠY... ĐANG ĐỢI KẾT NỐI TẠI CỔNG 1234...");
-
-            while (true) {
-                Socket socket = serverSocket.accept();
-
-                DataInputStream in = new DataInputStream(socket.getInputStream());
-                DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-
-                String request = in.readUTF();
-                String[] parts = request.split(",");
-                String user = parts[0];
-                String pass = parts[1];
-
-                // BẮT ĐẦU THÊM CÁC DÒNG THÔNG BÁO Ở ĐÂY:
-                System.out.println("--------------------------------------------");
-                System.out.println(">>> [Hệ thống]: Có thiết bị yêu cầu đăng nhập...");
-
-                UserDAOImpl dao = new UserDAOImpl();
-                boolean isOk = dao.checkLogin(user, pass);
-
-                if (isOk) {
-                    // Nếu đúng tài khoản trong file txt
-                    System.out.println(">>> [Hệ thống]: Tài khoản '" + user + "' hợp lệ.");
-                    System.out.println(">>> [Hệ thống]: Đăng nhập thành công!");
-                    System.out.println(">>> Chào mừng Admin: " + user);
-                } else {
-                    // Nếu sai
-                    System.out.println(">>> [Hệ thống]: Đăng nhập thất bại!");
-                    System.out.println(">>> Cảnh báo: Sai tài khoản hoặc mật khẩu cho user: " + user);
-                }
-                System.out.println("--------------------------------------------");
-
-                out.writeBoolean(isOk);
-                out.flush();
-                socket.close();
-            }
-        } catch (IOException e) {
-            System.out.println(">>> [Hệ thống]: LỖI SERVER: " + e.getMessage());
+            socketServer.start(); // vòng lặp accept() — block tại đây
+        } catch (Exception e) {
+            System.out.println("[ServerApp] FATAL: " + e.getMessage());
+            System.exit(1);
         }
     }
 }

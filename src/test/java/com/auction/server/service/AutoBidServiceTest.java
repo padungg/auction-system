@@ -1,0 +1,279 @@
+package com.auction.server.service;
+
+import com.auction.model.dto.AutoBidDTO;
+import com.auction.model.entity.Auction;
+import com.auction.model.entity.AuctionStatus;
+import com.auction.model.entity.BidTransaction;
+import com.auction.model.protocol.Response;
+import com.auction.model.protocol.ResponseStatus;
+import com.auction.server.dao.AuctionDAO;
+import com.auction.server.dao.AutoBidDAO;
+import com.auction.server.dao.BidTransactionDAO;
+import com.auction.server.service.AutoBidEntry;
+import com.auction.server.service.AutoBidService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+/**
+ * Unit tests cho AutoBidService — Sử dụng stub thủ công thay thế Mockito.
+ */
+@DisplayName("AutoBidService Tests")
+class AutoBidServiceTest {
+
+    static class AuctionDAOStub implements AuctionDAO {
+        private final Map<String, Auction> auctions = new HashMap<>();
+        public int updateCount = 0;
+
+        public void addAuction(Auction a) { auctions.put(a.getId(), a); }
+
+        @Override public List<Auction> findAllByStatus(AuctionStatus status) { return new ArrayList<>(auctions.values()); }
+        @Override public Auction findById(String id) { return auctions.get(id); }
+        @Override public boolean save(Auction auction) { auctions.put(auction.getId(), auction); return true; }
+        @Override public boolean update(Auction auction) { auctions.put(auction.getId(), auction); updateCount++; return true; }
+        @Override public boolean delete(String id) { return auctions.remove(id) != null; }
+        public List<Auction> findAll() { return new ArrayList<>(auctions.values()); }
+        public List<Auction> findByCurrentWinnerId(String winnerId) { 
+            return auctions.values().stream().filter(a -> winnerId.equals(a.getCurrentWinnerId())).collect(java.util.stream.Collectors.toList()); 
+        }
+    }
+
+    static class BidTransactionDAOStub implements BidTransactionDAO {
+        public int saveCount = 0;
+        @Override public boolean save(BidTransaction bid) { saveCount++; return true; }
+        @Override public List<BidTransaction> findByAuctionId(String auctionId) { return new ArrayList<>(); }
+        public List<BidTransaction> findByBidderId(String bidderId) { return new ArrayList<>(); }
+    }
+
+    static class AutoBidDAOStub implements AutoBidDAO {
+        public int saveCount = 0;
+        public int deleteCount = 0;
+        @Override public List<AutoBidEntry> findAll() { return new ArrayList<>(); }
+        @Override public boolean save(AutoBidEntry entry) { saveCount++; return true; }
+        @Override public boolean delete(String auctionId, String userId) { deleteCount++; return true; }
+        @Override public boolean deleteByAuctionId(String auctionId) { return true; }
+    }
+
+    private AuctionDAOStub auctionDAO;
+    private BidTransactionDAOStub bidTransactionDAO;
+    private AutoBidDAOStub autoBidDAO;
+
+    private AutoBidService autoBidService;
+
+    private Auction runningAuction;
+
+    @BeforeEach
+    void setUp() {
+        auctionDAO = new AuctionDAOStub();
+        bidTransactionDAO = new BidTransactionDAOStub();
+        autoBidDAO = new AutoBidDAOStub();
+
+        autoBidService = new AutoBidService(auctionDAO, bidTransactionDAO, autoBidDAO);
+
+        runningAuction = new Auction("auc-001", "item-001", 1_000_000.0,
+                LocalDateTime.now().minusHours(1), LocalDateTime.now().plusHours(2));
+        runningAuction.setStatus(AuctionStatus.RUNNING);
+        auctionDAO.addAuction(runningAuction);
+    }
+
+    // ══════════════════════════════════════════════════════
+    // REGISTER AUTO-BID
+    // ══════════════════════════════════════════════════════
+    @Nested
+    @DisplayName("register()")
+    class RegisterTests {
+
+        @Test
+        @DisplayName("TC-AUTO-REG-01: DTO null → BAD_REQUEST")
+        void register_nullDto() {
+            Response res = autoBidService.register(null, "user-001");
+            assertEquals(ResponseStatus.BAD_REQUEST, res.getStatus());
+        }
+
+        @Test
+        @DisplayName("TC-AUTO-REG-02: userId null → UNAUTHORIZED")
+        void register_notLoggedIn() {
+            Response res = autoBidService.register(new AutoBidDTO("auc-001", 2_000_000.0, 100_000.0), null);
+            assertEquals(ResponseStatus.UNAUTHORIZED, res.getStatus());
+        }
+
+        @Test
+        @DisplayName("TC-AUTO-REG-03: maxBid <= 0 → BAD_REQUEST")
+        void register_invalidMaxBid() {
+            Response res = autoBidService.register(new AutoBidDTO("auc-001", 0, 100_000.0), "user-001");
+            assertEquals(ResponseStatus.BAD_REQUEST, res.getStatus());
+        }
+
+        @Test
+        @DisplayName("TC-AUTO-REG-04: increment <= 0 → BAD_REQUEST")
+        void register_invalidIncrement() {
+            Response res = autoBidService.register(new AutoBidDTO("auc-001", 2_000_000.0, 0), "user-001");
+            assertEquals(ResponseStatus.BAD_REQUEST, res.getStatus());
+        }
+
+        @Test
+        @DisplayName("TC-AUTO-REG-05: Phiên không tồn tại → NOT_FOUND")
+        void register_auctionNotFound() {
+            Response res = autoBidService.register(new AutoBidDTO("ghost", 2_000_000.0, 100_000.0), "user-001");
+            assertEquals(ResponseStatus.NOT_FOUND, res.getStatus());
+        }
+
+        @Test
+        @DisplayName("TC-AUTO-REG-06: Phiên không đang chạy → BAD_REQUEST")
+        void register_auctionNotRunning() {
+            runningAuction.setStatus(AuctionStatus.FINISHED);
+            Response res = autoBidService.register(new AutoBidDTO("auc-001", 2_000_000.0, 100_000.0), "user-001");
+            assertEquals(ResponseStatus.BAD_REQUEST, res.getStatus());
+        }
+
+        @Test
+        @DisplayName("TC-AUTO-REG-07: maxBid <= currentPrice → BAD_REQUEST")
+        void register_maxBidTooLow() {
+            // currentPrice = 1_000_000, maxBid = 900_000 → không hợp lệ
+            Response res = autoBidService.register(
+                    new AutoBidDTO("auc-001", 900_000.0, 50_000.0), "user-001");
+            assertEquals(ResponseStatus.BAD_REQUEST, res.getStatus());
+        }
+
+        @Test
+        @DisplayName("TC-AUTO-REG-08: Đăng ký thành công → SUCCESS + lưu vào DB")
+        void register_success() {
+            Response res = autoBidService.register(
+                    new AutoBidDTO("auc-001", 3_000_000.0, 100_000.0), "user-001");
+            assertEquals(ResponseStatus.SUCCESS, res.getStatus());
+            assertEquals(1, autoBidDAO.saveCount);
+        }
+
+        @Test
+        @DisplayName("TC-AUTO-REG-09: Đăng ký lại (ghi đè) → vẫn SUCCESS, thay thế entry cũ")
+        void register_override() {
+            autoBidService.register(new AutoBidDTO("auc-001", 3_000_000.0, 100_000.0), "user-001");
+            Response res = autoBidService.register(
+                    new AutoBidDTO("auc-001", 5_000_000.0, 200_000.0), "user-001");
+            assertEquals(ResponseStatus.SUCCESS, res.getStatus());
+            assertEquals(2, autoBidDAO.saveCount);
+        }
+    }
+
+    // ══════════════════════════════════════════════════════
+    // CANCEL AUTO-BID
+    // ══════════════════════════════════════════════════════
+    @Nested
+    @DisplayName("cancel()")
+    class CancelTests {
+
+        @Test
+        @DisplayName("TC-AUTO-CANCEL-01: auctionId null → BAD_REQUEST")
+        void cancel_nullAuctionId() {
+            Response res = autoBidService.cancel(null, "user-001");
+            assertEquals(ResponseStatus.BAD_REQUEST, res.getStatus());
+        }
+
+        @Test
+        @DisplayName("TC-AUTO-CANCEL-02: userId null → BAD_REQUEST")
+        void cancel_nullUserId() {
+            Response res = autoBidService.cancel("auc-001", null);
+            assertEquals(ResponseStatus.BAD_REQUEST, res.getStatus());
+        }
+
+        @Test
+        @DisplayName("TC-AUTO-CANCEL-03: Hủy khi chưa đăng ký → SUCCESS (queue null = đã xóa hoặc không có)")
+        void cancel_notRegistered() {
+            Response res = autoBidService.cancel("auc-001", "user-999");
+            assertEquals(ResponseStatus.SUCCESS, res.getStatus());
+        }
+
+        @Test
+        @DisplayName("TC-AUTO-CANCEL-04: Hủy thành công sau khi đã đăng ký")
+        void cancel_success() {
+            autoBidService.register(new AutoBidDTO("auc-001", 2_000_000.0, 100_000.0), "user-001");
+            Response res = autoBidService.cancel("auc-001", "user-001");
+            assertEquals(ResponseStatus.SUCCESS, res.getStatus());
+            assertTrue(autoBidDAO.deleteCount > 0);
+        }
+    }
+
+    // ══════════════════════════════════════════════════════
+    // TRIGGER AUTO-BIDS
+    // ══════════════════════════════════════════════════════
+    @Nested
+    @DisplayName("triggerAutoBids()")
+    class TriggerTests {
+
+        @Test
+        @DisplayName("TC-AUTO-TRIGGER-01: Không có queue → không thực hiện gì")
+        void trigger_noQueue() {
+            assertDoesNotThrow(() ->
+                    autoBidService.triggerAutoBids("auc-001", 1_000_000.0, "manual-bidder"));
+        }
+
+        @Test
+        @DisplayName("TC-AUTO-TRIGGER-02: Có 1 auto-bidder với đủ ngân sách → tự động phản giá 1 lần")
+        void trigger_singleAutoBidder_responds() {
+            autoBidService.register(new AutoBidDTO("auc-001", 3_000_000.0, 200_000.0), "auto-user");
+            
+            autoBidService.triggerAutoBids("auc-001", 1_000_000.0, "manual-bidder");
+
+            assertTrue(bidTransactionDAO.saveCount > 0);
+            assertTrue(auctionDAO.updateCount > 0);
+            assertEquals(1_200_000.0, runningAuction.getCurrentPrice(), 0.001);
+            assertEquals("auto-user", runningAuction.getCurrentWinnerId());
+        }
+
+        @Test
+        @DisplayName("TC-AUTO-TRIGGER-03: Auto-bidder là current winner → không phản giá")
+        void trigger_autoBidderIsWinner_skips() {
+            autoBidService.register(new AutoBidDTO("auc-001", 3_000_000.0, 200_000.0), "auto-user");
+            bidTransactionDAO.saveCount = 0;
+
+            // auto-user đang là winner → không cần phản giá
+            autoBidService.triggerAutoBids("auc-001", 2_000_000.0, "auto-user");
+
+            assertEquals(0, bidTransactionDAO.saveCount);
+        }
+
+        @Test
+        @DisplayName("TC-AUTO-TRIGGER-04: Auto-bidder hết ngân sách → bị loại khỏi queue")
+        void trigger_exhaustedBudget() {
+            autoBidService.register(new AutoBidDTO("auc-001", 1_100_000.0, 200_000.0), "poor-user");
+
+            // Trigger với giá 2_000_000 → poor-user không thể phản giá
+            autoBidService.triggerAutoBids("auc-001", 2_000_000.0, "manual-bidder");
+
+            assertEquals(0, bidTransactionDAO.saveCount);
+        }
+
+        @Test
+        @DisplayName("TC-AUTO-TRIGGER-05: FCFS - 2 auto-bidder, người đăng ký trước được ưu tiên")
+        void trigger_fcfsOrdering() throws InterruptedException {
+            autoBidService.register(new AutoBidDTO("auc-001", 5_000_000.0, 100_000.0), "user-A");
+            Thread.sleep(5);
+            autoBidService.register(new AutoBidDTO("auc-001", 5_000_000.0, 100_000.0), "user-B");
+
+            autoBidService.triggerAutoBids("auc-001", 1_000_000.0, "manual-bidder");
+
+            assertTrue(bidTransactionDAO.saveCount > 0);
+            assertTrue(auctionDAO.updateCount > 0);
+        }
+
+        @Test
+        @DisplayName("TC-AUTO-TRIGGER-06: Phiên đóng giữa chừng → dừng auto-bid")
+        void trigger_auctionClosedMidway() {
+            autoBidService.register(new AutoBidDTO("auc-001", 5_000_000.0, 100_000.0), "auto-user");
+
+            runningAuction.setStatus(AuctionStatus.FINISHED);
+
+            autoBidService.triggerAutoBids("auc-001", 1_000_000.0, "manual-bidder");
+            assertEquals(0, bidTransactionDAO.saveCount);
+        }
+    }
+}

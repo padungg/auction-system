@@ -1,4 +1,4 @@
-name: Java CI with Maven
+name: Java CI/CD Pipeline
 
 on:
   push:
@@ -7,16 +7,34 @@ on:
     branches: [ "main", "develop" ]
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
       - name: Set up JDK 25
         uses: actions/setup-java@v4
         with:
           java-version: '25'
           distribution: 'temurin'
           cache: maven
-      - name: Build and Test with Maven
-        run: mvn -B package --file pom.xml
+
+      - name: Cài đặt màn hình ảo (Xvfb) cho JavaFX
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+
+      - name: Chạy Unit Test tự động (CI)
+        # Sử dụng xvfb-run để giả lập màn hình cho các test liên quan tới đồ hoạ (nếu có)
+        run: xvfb-run -a mvn -B verify --file pom.xml
+
+      - name: Đóng gói dự án ra file JAR (CD)
+        # Nếu Test ở bước trên báo lỗi (FAIL), bước này sẽ bị hủy.
+        # Chỉ khi Test Pass 100% mới đóng gói file.
+        run: mvn -B package -DskipTests
+
+      - name: Lưu trữ File đóng gói (Artifacts) cho Giảng Viên
+        uses: actions/upload-artifact@v4
+        with:
+          name: auction-system-executable
+          path: target/*.jar

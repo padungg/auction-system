@@ -1,0 +1,27 @@
+package com.auction.client.util;
+
+import com.google.gson.*;
+import java.lang.reflect.Type;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+/**
+ * Gson adapter cho java.time.LocalDateTime.
+ * Cần thiết vì Gson mặc định không hỗ trợ serialize/deserialize LocalDateTime.
+ * Dùng cho AuctionDetailDTO có trường startTime, endTime kiểu LocalDateTime.
+ */
+public class LocalDateTimeAdapter implements JsonSerializer<LocalDateTime>, JsonDeserializer<LocalDateTime> {
+
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+
+    @Override
+    public JsonElement serialize(LocalDateTime src, Type typeOfSrc, JsonSerializationContext context) {
+        return new JsonPrimitive(src.format(FORMATTER));
+    }
+
+    @Override
+    public LocalDateTime deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
+            throws JsonParseException {
+        return LocalDateTime.parse(json.getAsString(), FORMATTER);
+    }
+}
