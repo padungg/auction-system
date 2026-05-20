@@ -29,9 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("UserService Tests")
 class UserServiceTest {
 
-    // ══════════════════════════════════════════════════════
     // STUB: UserDAO in-memory thay vì Mockito mock
-    // ══════════════════════════════════════════════════════
     static class UserDAOStub implements UserDAO {
         private final Map<String, User> byUsername = new HashMap<>();
         private final Map<String, User> byId = new HashMap<>();
@@ -74,9 +72,7 @@ class UserServiceTest {
         userDAO.addUser(activeUser);
     }
 
-    // ═══════════════════════════════════════════════════
     // LOGIN TESTS
-    // ═══════════════════════════════════════════════════
     @Nested
     @DisplayName("login()")
     class LoginTests {
@@ -152,9 +148,7 @@ class UserServiceTest {
         }
     }
 
-    // ═══════════════════════════════════════════════════
     // REGISTER TESTS
-    // ═══════════════════════════════════════════════════
     @Nested
     @DisplayName("register()")
     class RegisterTests {
@@ -253,6 +247,84 @@ class UserServiceTest {
                 assertEquals(ResponseStatus.SUCCESS, userService.register(dto).getStatus(),
                         "Email hợp lệ phải đăng ký được: " + email);
             }
+        }
+    }
+
+    @Nested
+    @DisplayName("deposit() và withdraw()")
+    class TransactionTests {
+
+        @Test
+        @DisplayName("TC-USER-DEP-01: userId null → UNAUTHORIZED")
+        void deposit_nullUserId() {
+            assertEquals(ResponseStatus.UNAUTHORIZED,
+                userService.deposit(null, 100_000.0).getStatus());
+        }
+
+        @Test
+        @DisplayName("TC-USER-DEP-02: amount <= 0 → BAD_REQUEST")
+        void deposit_invalidAmount() {
+            assertEquals(ResponseStatus.BAD_REQUEST,
+                userService.deposit("uid-001", 0).getStatus());
+            assertEquals(ResponseStatus.BAD_REQUEST,
+                userService.deposit("uid-001", -500.0).getStatus());
+        }
+
+        @Test
+        @DisplayName("TC-USER-DEP-03: Nạp tiền thành công → số dư tăng")
+        void deposit_success() {
+            Response res = userService.deposit("uid-001", 1_000_000.0);
+            assertEquals(ResponseStatus.SUCCESS, res.getStatus());
+            assertEquals(6_000_000.0, activeUser.getBalance(), 0.001);
+        }
+
+        @Test
+        @DisplayName("TC-USER-WD-01: Rút tiền khi số dư không đủ → BAD_REQUEST")
+        void withdraw_insufficientBalance() {
+            assertEquals(ResponseStatus.BAD_REQUEST,
+                userService.withdraw("uid-001", 10_000_000.0).getStatus());
+        }
+
+        @Test
+        @DisplayName("TC-USER-WD-02: Rút tiền thành công → số dư giảm")
+        void withdraw_success() {
+            Response res = userService.withdraw("uid-001", 1_000_000.0);
+            assertEquals(ResponseStatus.SUCCESS, res.getStatus());
+            assertEquals(4_000_000.0, activeUser.getBalance(), 0.001);
+        }
+    }
+
+    @Nested
+    @DisplayName("lockUser() và unlockUser()")
+    class LockUnlockTests {
+
+        @Test
+        @DisplayName("TC-USER-LOCK-01: userId null → BAD_REQUEST")
+        void lockUser_nullId() {
+            assertEquals(ResponseStatus.BAD_REQUEST, userService.lockUser(null).getStatus());
+        }
+
+        @Test
+        @DisplayName("TC-USER-LOCK-02: userId không tồn tại → NOT_FOUND")
+        void lockUser_notFound() {
+            assertEquals(ResponseStatus.NOT_FOUND, userService.lockUser("ghost-id").getStatus());
+        }
+
+        @Test
+        @DisplayName("TC-USER-LOCK-03: Khóa thành công → isActive = false")
+        void lockUser_success() {
+            Response res = userService.lockUser("uid-001");
+            assertEquals(ResponseStatus.SUCCESS, res.getStatus());
+            assertFalse(activeUser.isActive());
+        }
+
+        @Test
+        @DisplayName("TC-USER-LOCK-04: Mở khóa thành công → isActive = true")
+        void unlockUser_success() {
+            activeUser.setActive(false);
+            Response res = userService.unlockUser("uid-001");
+            assertEquals(ResponseStatus.SUCCESS, res.getStatus());
+            assertTrue(activeUser.isActive());
         }
     }
 }

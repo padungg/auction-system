@@ -12,9 +12,7 @@ public class DatabaseInitializer {
 
         public static void initialize() {
 
-                // ══════════════════════════════════════════════════════════════
                 // 1. TẠO BẢNG (CREATE TABLE IF NOT EXISTS)
-                // ══════════════════════════════════════════════════════════════
 
                 String createUsersTable = "CREATE TABLE IF NOT EXISTS users (" +
                                 "id VARCHAR(50) PRIMARY KEY, " +
@@ -101,9 +99,7 @@ public class DatabaseInitializer {
                                 // Cột đã tồn tại hoặc bảng chưa có data, có thể bỏ qua
                         }
 
-                        // ══════════════════════════════════════════════════════
                         // 2. SEED TÀI KHOẢN
-                        // ══════════════════════════════════════════════════════
 
                         stmt.execute("INSERT IGNORE INTO users (id, username, password, email, full_name, phone, address, is_active, role, balance, store_name, rating) "
                                         +
@@ -113,9 +109,7 @@ public class DatabaseInitializer {
                                         +
                                         "VALUES ('USR-MEM-001', 'member', '123', 'member@auction.com', 'Member 1', '0987654321', 'HCM', true, 'MEMBER', 5000000.0, NULL, 5.0);");
 
-                        // ══════════════════════════════════════════════════════
                         // 3. SEED SẢN PHẨM (7 item cho 7 phiên đấu giá)
-                        // ══════════════════════════════════════════════════════
 
                         // -- 3 item gốc (tương ứng AUC-001, AUC-002, AUC-003 tạo thủ công) --
                         stmt.execute("INSERT IGNORE INTO items (id, name, description, condition_item, seller_id, starting_price, item_type, artist_name, material, creation_year, brand, model, year, km, warranty_months) "
@@ -147,9 +141,7 @@ public class DatabaseInitializer {
                                         +
                                         "VALUES ('ITEM-ELE-011', 'iPhone 15 Pro Max 256GB', 'Hàng chính hãng VN/A, máy như mới 99%.', 'Như mới', 'USR-ADMIN-001', 22000000.0, 'ELECTRONICS', NULL, NULL, NULL, 'Apple', NULL, NULL, NULL, 9);");
 
-                        // ══════════════════════════════════════════════════════
                         // 4. SEED PHIÊN ĐẤU GIÁ (7 phiên)
-                        // ══════════════════════════════════════════════════════
 
                         // -- 3 phiên gốc (khớp với data đã tạo thủ công) --
                         stmt.execute("INSERT IGNORE INTO auctions (id, item_id, current_winner_id, current_price, start_time, end_time, status) "
@@ -181,9 +173,7 @@ public class DatabaseInitializer {
                                         +
                                         "VALUES ('AUC-013', 'ITEM-ELE-011', 'USR-MEM-001', 25000000.0, DATE_SUB(NOW(), INTERVAL 15 DAY), DATE_SUB(NOW(), INTERVAL 5 DAY), 'PAID');");
 
-                        // ══════════════════════════════════════════════════════
                         // 5. SEED BID MẪU (cho các phiên đã kết thúc)
-                        // ══════════════════════════════════════════════════════
 
                         stmt.execute("INSERT IGNORE INTO bid_transactions (id, bidder_id, auction_id, bid_amount, bid_time, is_auto_bid) "
                                         +

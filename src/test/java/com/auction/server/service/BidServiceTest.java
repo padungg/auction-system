@@ -98,9 +98,7 @@ class BidServiceTest {
         auctionDAO.addAuction(runningAuction);
     }
 
-    // ══════════════════════════════════════════════════════
     // PLACE BID
-    // ══════════════════════════════════════════════════════
     @Nested
     @DisplayName("placeBid()")
     class PlaceBidTests {
@@ -163,11 +161,40 @@ class BidServiceTest {
             assertEquals(ResponseStatus.SUCCESS, res.getStatus());
             assertTrue(snipeAuction.getEndTime().isAfter(oldEndTime), "Phải gia hạn thời gian (Anti-Sniping)");
         }
+
+        @Test
+        @DisplayName("TC-BID-08: Số tiền đặt giá bằng 0 → BAD_REQUEST")
+        void placeBid_amountZero() {
+            assertEquals(ResponseStatus.BAD_REQUEST,
+                bidService.placeBid(new BidRequestDTO("auc-001", 0), "user-001").getStatus());
+        }
+
+        @Test
+        @DisplayName("TC-BID-09: Tự bid vào phiên mình đang top 1 → BAD_REQUEST")
+        void placeBid_bidAgainstSelf() {
+            runningAuction.setCurrentWinnerId("user-001");
+            Response res = bidService.placeBid(new BidRequestDTO("auc-001", 5_000_000.0), "user-001");
+            assertEquals(ResponseStatus.BAD_REQUEST, res.getStatus());
+            assertTrue(res.getMessage().contains("không cần bid thêm"));
+        }
+
+        @Test
+        @DisplayName("TC-BID-10: Bid vào phiên đã quá giờ → auto FINISHED + BAD_REQUEST")
+        void placeBid_auctionExpiredByTime() {
+            Auction expiredAuction = new Auction("auc-expired", "item-001", 1_000_000.0,
+                    LocalDateTime.now().minusHours(2), LocalDateTime.now().minusSeconds(5));
+            expiredAuction.setStatus(AuctionStatus.RUNNING);
+            auctionDAO.addAuction(expiredAuction);
+
+            Response res = bidService.placeBid(new BidRequestDTO("auc-expired", 5_000_000.0), "user-001");
+
+            assertEquals(ResponseStatus.BAD_REQUEST, res.getStatus());
+            assertEquals(AuctionStatus.FINISHED, expiredAuction.getStatus());
+            assertTrue(auctionDAO.updateCount > 0, "Phải cập nhật DB khi tự đóng phiên");
+        }
     }
 
-    // ══════════════════════════════════════════════════════
     // GET BID HISTORY
-    // ══════════════════════════════════════════════════════
     @Nested
     @DisplayName("getBidHistory()")
     class GetBidHistoryTests {

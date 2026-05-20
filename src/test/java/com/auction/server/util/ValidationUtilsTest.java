@@ -17,9 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("ValidationUtils Tests")
 class ValidationUtilsTest {
 
-    // ══════════════════════════════════════════════════════
     // requireNonBlank
-    // ══════════════════════════════════════════════════════
 
     @Test
     @DisplayName("TC-VAL-01: requireNonBlank với chuỗi hợp lệ → không ném exception")
@@ -46,9 +44,7 @@ class ValidationUtilsTest {
         assertTrue(ex.getMessage().contains("Username"));
     }
 
-    // ══════════════════════════════════════════════════════
     // requireValidEmail
-    // ══════════════════════════════════════════════════════
 
     @ParameterizedTest
     @ValueSource(strings = {

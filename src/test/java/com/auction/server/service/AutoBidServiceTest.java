@@ -85,9 +85,7 @@ class AutoBidServiceTest {
         auctionDAO.addAuction(runningAuction);
     }
 
-    // ══════════════════════════════════════════════════════
     // REGISTER AUTO-BID
-    // ══════════════════════════════════════════════════════
     @Nested
     @DisplayName("register()")
     class RegisterTests {
@@ -164,9 +162,7 @@ class AutoBidServiceTest {
         }
     }
 
-    // ══════════════════════════════════════════════════════
     // CANCEL AUTO-BID
-    // ══════════════════════════════════════════════════════
     @Nested
     @DisplayName("cancel()")
     class CancelTests {
@@ -202,9 +198,7 @@ class AutoBidServiceTest {
         }
     }
 
-    // ══════════════════════════════════════════════════════
     // TRIGGER AUTO-BIDS
-    // ══════════════════════════════════════════════════════
     @Nested
     @DisplayName("triggerAutoBids()")
     class TriggerTests {
