@@ -31,9 +31,7 @@ public class AdminController {
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(AdminController.class);
 
-    // =========================================================================
     // THÀNH PHẦN GIAO DIỆN FXML - QUẢN LÝ NGƯỜI DÙNG (USERS MANAGEMENT)
-    // =========================================================================
     @FXML private TableView<UserResponseDTO> tableUsers;
     @FXML private TableColumn<UserResponseDTO, Boolean> colSelect;
     @FXML private TableColumn<UserResponseDTO, String> colUserId;
@@ -67,9 +65,7 @@ public class AdminController {
     // Cấu trúc ánh xạ để duy trì trạng thái lưu trữ của cột Checkbox độc lập với chu kỳ nạp dữ liệu
     private java.util.Map<String, javafx.beans.property.BooleanProperty> selectedUsersMap = new java.util.HashMap<>();
 
-    // =========================================================================
     // THÀNH PHẦN GIAO DIỆN FXML - QUẢN LÝ PHIÊN ĐẤU GIÁ (AUCTIONS MANAGEMENT)
-    // =========================================================================
     @FXML private TableView<AuctionSummaryDTO> tableAuctions;
     @FXML private TableColumn<AuctionSummaryDTO, String> colAucProduct;
     @FXML private TableColumn<AuctionSummaryDTO, Double> colAucPrice;

@@ -46,7 +46,7 @@ public class ProductcardController {
         lblType.setText(auction.getItemType() != null ? auction.getItemType() : "Khác");
         lblBidCount.setText(String.format("🔨 %d lượt bid", auction.getBidCount()));
 
-        // Xác định biểu tượng cảm xúc dựa trên phân loại danh mục sản phẩm
+        // TRÍCH XUẤT BIỂU TƯỢNG CẢM XÚC DỰA TRÊN PHÂN LOẠI DANH MỤC SẢN PHẨM
         if (auction.getItemType() != null) {
             switch (auction.getItemType()) {
                 case "ELECTRONICS": lblEmoji.setText("💻"); break;
@@ -56,7 +56,7 @@ public class ProductcardController {
             }
         }
 
-        // Cấu hình nhãn trạng thái và phân cấp thuộc tính giao diện trực quan (Style Badge)
+        // CẤU HÌNH NHÃN TRẠNG THÁI VÀ PHÂN CẤP THUỘC TÍNH GIAO DIỆN TRỰC QUAN (STYLE BADGE)
         String status = auction.getStatus();
         lblBadge.setText(status);
         lblBadge.getStyleClass().removeAll("card-badge-running", "card-badge-open", "card-badge-finished");
@@ -78,7 +78,7 @@ public class ProductcardController {
             lblBadge.setStyle("-fx-background-color: transparent; -fx-text-fill: #64748b; -fx-font-weight: bold; -fx-font-size: 11;");
         }
 
-        // Thiết lập cấu trúc đồng hồ đếm thời gian dựa trên các trạng thái vòng đời phiên đấu giá
+        // THIẾT LẬP CẤU TRÚC ĐỒNG HỒ ĐẾM THỜI GIAN DỰA TRÊN CÁC TRẠNG THÁI VÒNG ĐỜI PHIÊN ĐẤU GIÁ
         if ("FINISHED".equalsIgnoreCase(status) || "PAID".equalsIgnoreCase(status) || "CANCELLED".equalsIgnoreCase(status)) {
             lblTimeLeft.setText("⏱ Đã kết thúc");
             lblTimeLeft.setStyle("-fx-text-fill: #d97706; -fx-font-size: 12; -fx-font-weight: bold;");

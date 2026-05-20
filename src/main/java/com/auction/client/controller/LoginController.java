@@ -44,9 +44,7 @@ public class LoginController implements Initializable {
 
     private final Gson GSON = GsonProvider.getInstance();
 
-    // =========================================================================
     // THÀNH PHẦN GIAO DIỆN FXML - KHUNG ĐIỀU HƯỚNG TỔNG (CONTAINERS & TABS)
-    // =========================================================================
     @FXML private Label lblTitle;
     @FXML private Label lblSubtitle;
     @FXML private Button tabLogin;
@@ -54,16 +52,12 @@ public class LoginController implements Initializable {
     @FXML private VBox loginForm;
     @FXML private VBox registerForm;
 
-    // =========================================================================
     // THÀNH PHẦN GIAO DIỆN FXML - FORM ĐĂNG NHẬP (LOGIN FIELDS)
-    // =========================================================================
     @FXML private TextField loginUsername;
     @FXML private PasswordField loginPassword;
     @FXML private Label loginMessage;
 
-    // =========================================================================
     // THÀNH PHẦN GIAO DIỆN FXML - FORM ĐĂNG KÝ (REGISTER FIELDS)
-    // =========================================================================
     @FXML private TextField regFullName;
     @FXML private TextField regEmail;
     @FXML private TextField regUsername;

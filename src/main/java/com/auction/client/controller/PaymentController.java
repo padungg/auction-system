@@ -274,7 +274,6 @@ public class PaymentController {
                                 "Bạn đã thanh toán thành công cho sản phẩm: " + dto.getItemName());
                         loadPending();
                         loadHistory();
-                        // Refresh số dư từ Server thực sự (không dùng cache cũ)
                         if (MainController.getInstance() != null) {
                             MainController.getInstance().refreshBalanceFromServer();
                         }
@@ -309,7 +308,7 @@ public class PaymentController {
         }).start();
     }
 
-    // ── Pagination ────────────────────────────────────────
+    // Pagination
 
     private void renderHistPage() {
         int total = allHistory.size();

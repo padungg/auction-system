@@ -43,9 +43,7 @@ public class AccountController {
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(AccountController.class);
 
-    // =========================================================================
     // THÀNH PHẦN GIAO DIỆN FXML - THÔNG TIN CÁ NHÂN (PROFILE LABELS)
-    // =========================================================================
     @FXML private Label lblAvatar;
     @FXML private Label lblName;
     @FXML private Label lblUsername;
@@ -59,9 +57,7 @@ public class AccountController {
     @FXML private HBox boxStore;
     @FXML private TextField txtAmount;
 
-    // =========================================================================
     // THÀNH PHẦN GIAO DIỆN FXML - BẢNG LỊCH SỬ ĐẶT GIÁ (BID HISTORY TABLE)
-    // =========================================================================
     @FXML private TableView<MyBidHistoryDTO> tableHistory;
     @FXML private TableColumn<MyBidHistoryDTO, String> colAuctionId;
     @FXML private TableColumn<MyBidHistoryDTO, String> colItemName;
@@ -69,9 +65,7 @@ public class AccountController {
     @FXML private TableColumn<MyBidHistoryDTO, LocalDateTime> colTime;
     @FXML private TableColumn<MyBidHistoryDTO, String> colResult;
 
-    // =========================================================================
     // THÀNH PHẦN GIAO DIỆN FXML - ĐIỀU KHIỂN PHÂN TRANG (PAGINATION CONTROLS)
-    // =========================================================================
     @FXML private HBox histPageBox;
     @FXML private Label histPageInfo;
     @FXML private Button histBtnFirst;
@@ -96,9 +90,7 @@ public class AccountController {
         loadBidHistory();
     }
 
-    // =========================================================================
-    // KHỞI TẠO CẤU TRÚC HIỂN THỊ BẢNG (TABLEVIEW SETUP)
-    // =========================================================================
+    // KHỔI TẠO CẤU TRÚC HIỂN THỊ BẢNG (TABLEVIEW SETUP)
 
     /**
      * Định hình quy tắc liên kết thuộc tính DTO và tùy biến giao diện CSS cho các Cell đặc thù trong bảng.
@@ -191,9 +183,7 @@ public class AccountController {
         tableHistory.setFixedCellSize(48); // Khống chế kích thước dòng cố định để tối ưu hóa hiệu năng cuộn của lưới
     }
 
-    // =========================================================================
     // ĐỒNG BỘ VÀ TẢI DỮ LIỆU TỪ HỆ THỐNG MẠNG (DATA LOADING)
-    // =========================================================================
 
     /**
      * Giải nén thông tin người dùng hiện tại từ Memory Cache Session và ánh xạ trực tiếp lên cấu trúc Label UI.
@@ -260,9 +250,7 @@ public class AccountController {
         }).start();
     }
 
-    // =========================================================================
     // THUẬT TOÁN VÀ LOGIC PHÂN TRANG UI (PAGINATION LOGIC)
-    // =========================================================================
 
     /**
      * Tính toán lát cắt danh sách lịch sử dựa trên chỉ mục trang hiện hành và tiến hành render nhóm nút điều hướng động.
@@ -315,9 +303,7 @@ public class AccountController {
         renderHistPage();
     }
 
-    // =========================================================================
     // XỬ LÝ BIỂU MẪU CẬP NHẬT HỒ SƠ (EDIT PROFILE DIALOG POPUP)
-    // =========================================================================
 
     /**
      * Khởi tạo giao diện lưới (GridPane) tích hợp bên trong JavaFX Dialog để thu thập thông tin thay đổi hồ sơ từ người dùng.
@@ -423,9 +409,7 @@ public class AccountController {
         });
     }
 
-    // =========================================================================
     // NGHIỆP VỤ XỬ LÝ GIAO DIỆN GIAO DỊCH TÀI CHÍNH (DEPOSIT / WITHDRAWAL)
-    // =========================================================================
 
     @FXML void handleDeposit(ActionEvent event) { processTransaction(RequestType.DEPOSIT, "Nạp tiền"); }
     @FXML void handleWithdraw(ActionEvent event) { processTransaction(RequestType.WITHDRAW, "Rút tiền"); }
@@ -476,9 +460,7 @@ public class AccountController {
         }
     }
 
-    // =========================================================================
-    // PHƯƠNG THỨC TRỢ GIÚP GIAO DIỆN (HELPER METHOD)
-    // =========================================================================
+    // HELPER METHOD
 
     /**
      * Đóng gói khởi tạo và hiển thị cấu trúc hộp thoại Pop-up (Modal Alert Window) tùy biến linh hoạt theo chỉ thị tham số đầu vào.
