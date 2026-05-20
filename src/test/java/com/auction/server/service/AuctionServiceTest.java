@@ -286,7 +286,7 @@ class AuctionServiceTest {
     class GetActiveAuctionsTests {
 
         @Test
-        @DisplayName("TC-AUC-GET-01: Trả về danh sách DTO của các phiên RUNNING")
+        @DisplayName("TC-AUC-GET-01: Trả về danh sách DTO của tất cả phiên đấu giá")
         void getActive_success() {
             Response res = auctionService.getAllAuctions();
             assertEquals(ResponseStatus.SUCCESS, res.getStatus());
@@ -294,8 +294,10 @@ class AuctionServiceTest {
 
             @SuppressWarnings("unchecked")
             List<AuctionSummaryDTO> list = (List<AuctionSummaryDTO>) res.getPayload();
-            assertEquals(1, list.size()); // Có 1 auc-running được setup sẵn
-            assertEquals("auc-running", list.get(0).getAuctionId());
+            // getAllAuctions() trả về TẤT CẢ phiên (không lọc theo status),
+            // setup có 2 phiên: auc-pending (OPEN) và auc-running (RUNNING)
+            assertEquals(2, list.size());
+            assertTrue(list.stream().anyMatch(dto -> "auc-running".equals(dto.getAuctionId())));
         }
     }
 
