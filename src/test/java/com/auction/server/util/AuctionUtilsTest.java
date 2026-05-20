@@ -3,7 +3,6 @@ package com.auction.server.util;
 import com.auction.model.entity.Auction;
 import com.auction.model.entity.AuctionStatus;
 import com.auction.server.dao.AuctionDAO;
-import com.auction.server.util.AuctionUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -25,18 +24,42 @@ class AuctionUtilsTest {
         int updateCount = 0;
         Auction lastUpdatedAuction = null;
 
-        @Override public List<Auction> findAllByStatus(AuctionStatus status) { return null; }
-        @Override public Auction findById(String id) { return null; }
-        @Override public boolean save(Auction auction) { return true; }
+        @Override
+        public List<Auction> findAllByStatus(AuctionStatus status) {
+            return null;
+        }
+
+        @Override
+        public Auction findById(String id) {
+            return null;
+        }
+
+        @Override
+        public boolean save(Auction auction) {
+            return true;
+        }
+
         @Override
         public boolean update(Auction auction) {
             updateCount++;
             lastUpdatedAuction = auction;
             return true;
         }
-        @Override public boolean delete(String id) { return true; }
-        @Override public List<Auction> findAll() { return new java.util.ArrayList<>(); }
-        @Override public List<Auction> findByCurrentWinnerId(String winnerId) { return new java.util.ArrayList<>(); }
+
+        @Override
+        public boolean delete(String id) {
+            return true;
+        }
+
+        @Override
+        public List<Auction> findAll() {
+            return new java.util.ArrayList<>();
+        }
+
+        @Override
+        public List<Auction> findByCurrentWinnerId(String winnerId) {
+            return new java.util.ArrayList<>();
+        }
     }
 
     private Auction buildAuction(long secondsUntilEnd) {
@@ -68,9 +91,9 @@ class AuctionUtilsTest {
     void applyAntiSnipe_exactlyAtThreshold() {
         Auction auction = buildAuction(60);
         AuctionDAOStub daoStub = new AuctionDAOStub();
-        
+
         AuctionUtils.applyAntiSnipe(auction, daoStub);
-        
+
         assertEquals(1, daoStub.updateCount);
     }
 
