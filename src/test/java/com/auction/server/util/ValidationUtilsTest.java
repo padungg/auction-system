@@ -1,7 +1,5 @@
 package com.auction.server.util;
 
-import com.auction.server.util.ValidationException;
-import com.auction.server.util.ValidationUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -27,7 +25,7 @@ class ValidationUtilsTest {
 
     @ParameterizedTest
     @NullAndEmptySource
-    @ValueSource(strings = {"  ", "\t", "\n"})
+    @ValueSource(strings = { "  ", "\t", "\n" })
     @DisplayName("TC-VAL-02: requireNonBlank với null/rỗng/whitespace → ném ValidationException")
     void requireNonBlank_invalidStrings(String value) {
         ValidationException ex = assertThrows(ValidationException.class,

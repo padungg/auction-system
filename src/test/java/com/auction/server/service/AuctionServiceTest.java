@@ -9,7 +9,6 @@ import com.auction.model.protocol.ResponseStatus;
 import com.auction.server.dao.AuctionDAO;
 import com.auction.server.dao.ItemDAO;
 import com.auction.server.dao.UserDAO;
-import com.auction.server.service.AuctionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -218,10 +217,11 @@ class AuctionServiceTest {
         }
 
         @Test
-        @DisplayName("TC-AUC-UPDATE-01: Phiên không tồn tại → NOT_FOUND")
+        @DisplayName("TC-AUC-UPDATE-01: Phiên không tồn tại → ValidationException")
         void update_notFound() {
             updateDto.setAuctionId("ghost");
-            assertEquals(ResponseStatus.NOT_FOUND, auctionService.updateAuctionItem(updateDto, "seller-001").getStatus());
+            assertThrows(com.auction.server.util.ValidationException.class, 
+                () -> auctionService.updateAuctionItem(updateDto, "seller-001"));
         }
 
         @Test
@@ -254,9 +254,10 @@ class AuctionServiceTest {
     class DeleteAuctionTests {
 
         @Test
-        @DisplayName("TC-AUC-DEL-01: Không tồn tại → NOT_FOUND")
+        @DisplayName("TC-AUC-DEL-01: Không tồn tại → ValidationException")
         void delete_notFound() {
-            assertEquals(ResponseStatus.NOT_FOUND, auctionService.deleteAuctionItem("ghost", "seller-001").getStatus());
+            assertThrows(com.auction.server.util.ValidationException.class,
+                () -> auctionService.deleteAuctionItem("ghost", "seller-001"));
         }
 
         @Test
@@ -286,7 +287,7 @@ class AuctionServiceTest {
     class GetActiveAuctionsTests {
 
         @Test
-        @DisplayName("TC-AUC-GET-01: Trả về danh sách DTO của các phiên RUNNING")
+        @DisplayName("TC-AUC-GET-01: Trả về danh sách DTO của tất cả phiên đấu giá")
         void getActive_success() {
             Response res = auctionService.getAllAuctions();
             assertEquals(ResponseStatus.SUCCESS, res.getStatus());
@@ -294,8 +295,10 @@ class AuctionServiceTest {
 
             @SuppressWarnings("unchecked")
             List<AuctionSummaryDTO> list = (List<AuctionSummaryDTO>) res.getPayload();
-            assertEquals(1, list.size()); // Có 1 auc-running được setup sẵn
-            assertEquals("auc-running", list.get(0).getAuctionId());
+            // getAllAuctions() trả về TẤT CẢ phiên (không lọc theo status),
+            // setup có 2 phiên: auc-pending (OPEN) và auc-running (RUNNING)
+            assertEquals(2, list.size());
+            assertTrue(list.stream().anyMatch(dto -> "auc-running".equals(dto.getAuctionId())));
         }
     }
 

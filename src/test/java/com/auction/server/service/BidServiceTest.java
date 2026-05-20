@@ -12,8 +12,6 @@ import com.auction.server.dao.BidTransactionDAO;
 import com.auction.server.dao.ItemDAO;
 import com.auction.model.entity.Item;
 import com.auction.model.entity.AutoBidEntry;
-import com.auction.server.service.AutoBidService;
-import com.auction.server.service.BidService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -29,7 +27,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests cho BidService.
- * Đã thay thế Mockito bằng manual stubs (in-memory DAOs) để tương thích Java 25.
+ * Đã thay thế Mockito bằng manual stubs (in-memory DAOs) để tương thích Java
+ * 25.
  */
 @DisplayName("BidService Tests")
 class BidServiceTest {
@@ -38,39 +37,113 @@ class BidServiceTest {
         private final Map<String, Auction> auctions = new HashMap<>();
         public int updateCount = 0;
 
-        public void addAuction(Auction a) { auctions.put(a.getId(), a); }
+        public void addAuction(Auction a) {
+            auctions.put(a.getId(), a);
+        }
 
-        @Override public List<Auction> findAllByStatus(AuctionStatus status) { return new ArrayList<>(auctions.values()); }
-        @Override public Auction findById(String id) { return auctions.get(id); }
-        @Override public boolean save(Auction auction) { auctions.put(auction.getId(), auction); return true; }
-        @Override public boolean update(Auction auction) { auctions.put(auction.getId(), auction); updateCount++; return true; }
-        @Override public boolean delete(String id) { return auctions.remove(id) != null; }
-        @Override public List<Auction> findAll() { return new ArrayList<>(auctions.values()); }
-        @Override public List<Auction> findByCurrentWinnerId(String winnerId) { 
-            return auctions.values().stream().filter(a -> winnerId.equals(a.getCurrentWinnerId())).collect(java.util.stream.Collectors.toList()); 
+        @Override
+        public List<Auction> findAllByStatus(AuctionStatus status) {
+            return new ArrayList<>(auctions.values());
+        }
+
+        @Override
+        public Auction findById(String id) {
+            return auctions.get(id);
+        }
+
+        @Override
+        public boolean save(Auction auction) {
+            auctions.put(auction.getId(), auction);
+            return true;
+        }
+
+        @Override
+        public boolean update(Auction auction) {
+            auctions.put(auction.getId(), auction);
+            updateCount++;
+            return true;
+        }
+
+        @Override
+        public boolean delete(String id) {
+            return auctions.remove(id) != null;
+        }
+
+        @Override
+        public List<Auction> findAll() {
+            return new ArrayList<>(auctions.values());
+        }
+
+        @Override
+        public List<Auction> findByCurrentWinnerId(String winnerId) {
+            return auctions.values().stream().filter(a -> winnerId.equals(a.getCurrentWinnerId()))
+                    .collect(java.util.stream.Collectors.toList());
         }
     }
 
     static class BidTransactionDAOStub implements BidTransactionDAO {
         public int saveCount = 0;
         public List<BidTransaction> bids = new ArrayList<>();
-        @Override public boolean save(BidTransaction bid) { saveCount++; return true; }
-        @Override public List<BidTransaction> findByAuctionId(String auctionId) { return bids; }
-        @Override public List<BidTransaction> findByBidderId(String bidderId) { return new ArrayList<>(); }
+
+        @Override
+        public boolean save(BidTransaction bid) {
+            saveCount++;
+            return true;
+        }
+
+        @Override
+        public List<BidTransaction> findByAuctionId(String auctionId) {
+            return bids;
+        }
+
+        @Override
+        public List<BidTransaction> findByBidderId(String bidderId) {
+            return new ArrayList<>();
+        }
     }
 
     static class AutoBidDAOStub implements AutoBidDAO {
-        @Override public List<AutoBidEntry> findAll() { return new ArrayList<>(); }
-        @Override public boolean save(AutoBidEntry entry) { return true; }
-        @Override public boolean delete(String auctionId, String userId) { return true; }
-        @Override public boolean deleteByAuctionId(String auctionId) { return true; }
+        @Override
+        public List<AutoBidEntry> findAll() {
+            return new ArrayList<>();
+        }
+
+        @Override
+        public boolean save(AutoBidEntry entry) {
+            return true;
+        }
+
+        @Override
+        public boolean delete(String auctionId, String userId) {
+            return true;
+        }
+
+        @Override
+        public boolean deleteByAuctionId(String auctionId) {
+            return true;
+        }
     }
 
     static class ItemDAOStub implements ItemDAO {
-        @Override public Item findById(String id) { return null; }
-        @Override public boolean save(Item item) { return true; }
-        @Override public boolean update(Item item) { return true; }
-        @Override public boolean delete(String id) { return true; }
+        @Override
+        public Item findById(String id) {
+            return null;
+        }
+
+        @Override
+        public boolean save(Item item) {
+            return true;
+        }
+
+        @Override
+        public boolean update(Item item) {
+            return true;
+        }
+
+        @Override
+        public boolean delete(String id) {
+            return true;
+        }
     }
 
     private AuctionDAOStub auctionDAO;
@@ -112,26 +185,30 @@ class BidServiceTest {
         @Test
         @DisplayName("TC-BID-02: userId null → UNAUTHORIZED")
         void placeBid_nullUserId() {
-            assertEquals(ResponseStatus.UNAUTHORIZED, bidService.placeBid(new BidRequestDTO("auc-001", 1_500_000.0), null).getStatus());
+            assertEquals(ResponseStatus.UNAUTHORIZED,
+                    bidService.placeBid(new BidRequestDTO("auc-001", 1_500_000.0), null).getStatus());
         }
 
         @Test
         @DisplayName("TC-BID-03: Phiên đấu giá không tồn tại → NOT_FOUND")
         void placeBid_auctionNotFound() {
-            assertEquals(ResponseStatus.NOT_FOUND, bidService.placeBid(new BidRequestDTO("ghost", 1_500_000.0), "user-001").getStatus());
+            assertEquals(ResponseStatus.NOT_FOUND,
+                    bidService.placeBid(new BidRequestDTO("ghost", 1_500_000.0), "user-001").getStatus());
         }
 
         @Test
         @DisplayName("TC-BID-04: Phiên đã đóng (không phải RUNNING) → BAD_REQUEST")
         void placeBid_auctionNotRunning() {
             runningAuction.setStatus(AuctionStatus.FINISHED);
-            assertEquals(ResponseStatus.BAD_REQUEST, bidService.placeBid(new BidRequestDTO("auc-001", 1_500_000.0), "user-001").getStatus());
+            assertEquals(ResponseStatus.BAD_REQUEST,
+                    bidService.placeBid(new BidRequestDTO("auc-001", 1_500_000.0), "user-001").getStatus());
         }
 
         @Test
         @DisplayName("TC-BID-05: Đặt giá thấp hơn hoặc bằng giá hiện tại → BAD_REQUEST")
         void placeBid_bidTooLow() {
-            assertEquals(ResponseStatus.BAD_REQUEST, bidService.placeBid(new BidRequestDTO("auc-001", 1_000_000.0), "user-001").getStatus());
+            assertEquals(ResponseStatus.BAD_REQUEST,
+                    bidService.placeBid(new BidRequestDTO("auc-001", 1_000_000.0), "user-001").getStatus());
         }
 
         @Test
@@ -166,7 +243,7 @@ class BidServiceTest {
         @DisplayName("TC-BID-08: Số tiền đặt giá bằng 0 → BAD_REQUEST")
         void placeBid_amountZero() {
             assertEquals(ResponseStatus.BAD_REQUEST,
-                bidService.placeBid(new BidRequestDTO("auc-001", 0), "user-001").getStatus());
+                    bidService.placeBid(new BidRequestDTO("auc-001", 0), "user-001").getStatus());
         }
 
         @Test
@@ -211,8 +288,7 @@ class BidServiceTest {
         void getHistory_success() {
             bidTransactionDAO.bids = new ArrayList<>(List.of(
                     new BidTransaction("bid-1", "u1", "auc-001", 1_100_000.0, LocalDateTime.now()),
-                    new BidTransaction("bid-2", "u2", "auc-001", 1_200_000.0, LocalDateTime.now())
-            ));
+                    new BidTransaction("bid-2", "u2", "auc-001", 1_200_000.0, LocalDateTime.now())));
 
             Response res = bidService.getBidHistory("auc-001");
             assertEquals(ResponseStatus.SUCCESS, res.getStatus());
