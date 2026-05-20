@@ -8,7 +8,6 @@ import com.auction.model.entity.UserRole;
 import com.auction.model.protocol.Response;
 import com.auction.model.protocol.ResponseStatus;
 import com.auction.server.dao.UserDAO;
-import com.auction.server.service.UserService;
 import com.auction.server.util.ValidationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -40,19 +39,52 @@ class UserServiceTest {
             byId.put(u.getId(), u);
         }
 
-        void setSaveReturnValue(boolean v) { this.saveReturnValue = v; }
+        void setSaveReturnValue(boolean v) {
+            this.saveReturnValue = v;
+        }
 
-        @Override public User findByUsername(String username) { return byUsername.get(username); }
-        @Override public User findById(String id) { return byId.get(id); }
-        @Override public boolean existsByUsername(String username) { return byUsername.containsKey(username); }
-        @Override public boolean save(User user) {
-            if (saveReturnValue) addUser(user);
+        @Override
+        public User findByUsername(String username) {
+            return byUsername.get(username);
+        }
+
+        @Override
+        public User findById(String id) {
+            return byId.get(id);
+        }
+
+        @Override
+        public boolean existsByUsername(String username) {
+            return byUsername.containsKey(username);
+        }
+
+        @Override
+        public boolean save(User user) {
+            if (saveReturnValue)
+                addUser(user);
             return saveReturnValue;
         }
-        public boolean update(User user) { addUser(user); return true; }
-        public List<User> findAll() { return new ArrayList<>(byUsername.values()); }
-        public boolean delete(String id) { User u = byId.remove(id); if(u!=null) byUsername.remove(u.getUsername()); return u!=null; }
-        @Override public User findFirstByRole(com.auction.model.entity.UserRole role) { return byUsername.values().stream().filter(u -> u.getRole() == role).findFirst().orElse(null); }
+
+        public boolean update(User user) {
+            addUser(user);
+            return true;
+        }
+
+        public List<User> findAll() {
+            return new ArrayList<>(byUsername.values());
+        }
+
+        public boolean delete(String id) {
+            User u = byId.remove(id);
+            if (u != null)
+                byUsername.remove(u.getUsername());
+            return u != null;
+        }
+
+        @Override
+        public User findFirstByRole(com.auction.model.entity.UserRole role) {
+            return byUsername.values().stream().filter(u -> u.getRole() == role).findFirst().orElse(null);
+        }
     }
 
     private UserDAOStub userDAO;
@@ -67,8 +99,7 @@ class UserServiceTest {
         activeUser = new User(
                 "uid-001", "alice", "pass123",
                 "alice@example.com", "Alice Nguyen", "0901234567",
-                "HN", true, UserRole.MEMBER, 5_000_000.0, null, 0.0
-        );
+                "HN", true, UserRole.MEMBER, 5_000_000.0, null, 0.0);
         userDAO.addUser(activeUser);
     }
 
@@ -159,8 +190,7 @@ class UserServiceTest {
         void setUp() {
             validDto = new RegisterDTO(
                     "newuser", "securePass1", "newuser@mail.com",
-                    "New User", "0900000000", "HCM"
-            );
+                    "New User", "0900000000", "HCM");
         }
 
         @Test
@@ -238,12 +268,11 @@ class UserServiceTest {
         @Test
         @DisplayName("TC-REG-10: Các format email hợp lệ khác nhau")
         void register_validEmailFormats() {
-            String[] emails = {"a@b.vn", "user.name@domain.org", "x@y.com"};
+            String[] emails = { "a@b.vn", "user.name@domain.org", "x@y.com" };
             int i = 0;
             for (String email : emails) {
                 RegisterDTO dto = new RegisterDTO(
-                        "user" + i++, "pass123", email, "Name", "", ""
-                );
+                        "user" + i++, "pass123", email, "Name", "", "");
                 assertEquals(ResponseStatus.SUCCESS, userService.register(dto).getStatus(),
                         "Email hợp lệ phải đăng ký được: " + email);
             }
@@ -258,16 +287,16 @@ class UserServiceTest {
         @DisplayName("TC-USER-DEP-01: userId null → UNAUTHORIZED")
         void deposit_nullUserId() {
             assertEquals(ResponseStatus.UNAUTHORIZED,
-                userService.deposit(null, 100_000.0).getStatus());
+                    userService.deposit(null, 100_000.0).getStatus());
         }
 
         @Test
         @DisplayName("TC-USER-DEP-02: amount <= 0 → BAD_REQUEST")
         void deposit_invalidAmount() {
             assertEquals(ResponseStatus.BAD_REQUEST,
-                userService.deposit("uid-001", 0).getStatus());
+                    userService.deposit("uid-001", 0).getStatus());
             assertEquals(ResponseStatus.BAD_REQUEST,
-                userService.deposit("uid-001", -500.0).getStatus());
+                    userService.deposit("uid-001", -500.0).getStatus());
         }
 
         @Test
@@ -282,7 +311,7 @@ class UserServiceTest {
         @DisplayName("TC-USER-WD-01: Rút tiền khi số dư không đủ → BAD_REQUEST")
         void withdraw_insufficientBalance() {
             assertEquals(ResponseStatus.BAD_REQUEST,
-                userService.withdraw("uid-001", 10_000_000.0).getStatus());
+                    userService.withdraw("uid-001", 10_000_000.0).getStatus());
         }
 
         @Test

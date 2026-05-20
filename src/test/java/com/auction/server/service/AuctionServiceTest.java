@@ -9,7 +9,6 @@ import com.auction.model.protocol.ResponseStatus;
 import com.auction.server.dao.AuctionDAO;
 import com.auction.server.dao.ItemDAO;
 import com.auction.server.dao.UserDAO;
-import com.auction.server.service.AuctionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -221,7 +220,7 @@ class AuctionServiceTest {
         @DisplayName("TC-AUC-UPDATE-01: Phiên không tồn tại → ValidationException")
         void update_notFound() {
             updateDto.setAuctionId("ghost");
-            assertThrows(com.auction.server.util.ValidationException.class,
+            assertThrows(com.auction.server.util.ValidationException.class, 
                 () -> auctionService.updateAuctionItem(updateDto, "seller-001"));
         }
 

@@ -10,7 +10,6 @@ import com.auction.server.dao.AuctionDAO;
 import com.auction.server.dao.AutoBidDAO;
 import com.auction.server.dao.BidTransactionDAO;
 import com.auction.model.entity.AutoBidEntry;
-import com.auction.server.service.AutoBidService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -34,33 +33,95 @@ class AutoBidServiceTest {
         private final Map<String, Auction> auctions = new HashMap<>();
         public int updateCount = 0;
 
-        public void addAuction(Auction a) { auctions.put(a.getId(), a); }
+        public void addAuction(Auction a) {
+            auctions.put(a.getId(), a);
+        }
 
-        @Override public List<Auction> findAllByStatus(AuctionStatus status) { return new ArrayList<>(auctions.values()); }
-        @Override public Auction findById(String id) { return auctions.get(id); }
-        @Override public boolean save(Auction auction) { auctions.put(auction.getId(), auction); return true; }
-        @Override public boolean update(Auction auction) { auctions.put(auction.getId(), auction); updateCount++; return true; }
-        @Override public boolean delete(String id) { return auctions.remove(id) != null; }
-        @Override public List<Auction> findAll() { return new ArrayList<>(auctions.values()); }
-        @Override public List<Auction> findByCurrentWinnerId(String winnerId) { 
-            return auctions.values().stream().filter(a -> winnerId.equals(a.getCurrentWinnerId())).collect(java.util.stream.Collectors.toList()); 
+        @Override
+        public List<Auction> findAllByStatus(AuctionStatus status) {
+            return new ArrayList<>(auctions.values());
+        }
+
+        @Override
+        public Auction findById(String id) {
+            return auctions.get(id);
+        }
+
+        @Override
+        public boolean save(Auction auction) {
+            auctions.put(auction.getId(), auction);
+            return true;
+        }
+
+        @Override
+        public boolean update(Auction auction) {
+            auctions.put(auction.getId(), auction);
+            updateCount++;
+            return true;
+        }
+
+        @Override
+        public boolean delete(String id) {
+            return auctions.remove(id) != null;
+        }
+
+        @Override
+        public List<Auction> findAll() {
+            return new ArrayList<>(auctions.values());
+        }
+
+        @Override
+        public List<Auction> findByCurrentWinnerId(String winnerId) {
+            return auctions.values().stream().filter(a -> winnerId.equals(a.getCurrentWinnerId()))
+                    .collect(java.util.stream.Collectors.toList());
         }
     }
 
     static class BidTransactionDAOStub implements BidTransactionDAO {
         public int saveCount = 0;
-        @Override public boolean save(BidTransaction bid) { saveCount++; return true; }
-        @Override public List<BidTransaction> findByAuctionId(String auctionId) { return new ArrayList<>(); }
-        @Override public List<BidTransaction> findByBidderId(String bidderId) { return new ArrayList<>(); }
+
+        @Override
+        public boolean save(BidTransaction bid) {
+            saveCount++;
+            return true;
+        }
+
+        @Override
+        public List<BidTransaction> findByAuctionId(String auctionId) {
+            return new ArrayList<>();
+        }
+
+        @Override
+        public List<BidTransaction> findByBidderId(String bidderId) {
+            return new ArrayList<>();
+        }
     }
 
     static class AutoBidDAOStub implements AutoBidDAO {
         public int saveCount = 0;
         public int deleteCount = 0;
-        @Override public List<AutoBidEntry> findAll() { return new ArrayList<>(); }
-        @Override public boolean save(AutoBidEntry entry) { saveCount++; return true; }
-        @Override public boolean delete(String auctionId, String userId) { deleteCount++; return true; }
-        @Override public boolean deleteByAuctionId(String auctionId) { return true; }
+
+        @Override
+        public List<AutoBidEntry> findAll() {
+            return new ArrayList<>();
+        }
+
+        @Override
+        public boolean save(AutoBidEntry entry) {
+            saveCount++;
+            return true;
+        }
+
+        @Override
+        public boolean delete(String auctionId, String userId) {
+            deleteCount++;
+            return true;
+        }
+
+        @Override
+        public boolean deleteByAuctionId(String auctionId) {
+            return true;
+        }
     }
 
     private AuctionDAOStub auctionDAO;
@@ -206,15 +267,14 @@ class AutoBidServiceTest {
         @Test
         @DisplayName("TC-AUTO-TRIGGER-01: Không có queue → không thực hiện gì")
         void trigger_noQueue() {
-            assertDoesNotThrow(() ->
-                    autoBidService.triggerAutoBids("auc-001", 1_000_000.0, "manual-bidder"));
+            assertDoesNotThrow(() -> autoBidService.triggerAutoBids("auc-001", 1_000_000.0, "manual-bidder"));
         }
 
         @Test
         @DisplayName("TC-AUTO-TRIGGER-02: Có 1 auto-bidder với đủ ngân sách → tự động phản giá 1 lần")
         void trigger_singleAutoBidder_responds() {
             autoBidService.register(new AutoBidDTO("auc-001", 3_000_000.0, 200_000.0), "auto-user");
-            
+
             autoBidService.triggerAutoBids("auc-001", 1_000_000.0, "manual-bidder");
 
             assertTrue(bidTransactionDAO.saveCount > 0);
@@ -262,7 +322,8 @@ class AutoBidServiceTest {
         @Test
         @DisplayName("TC-AUTO-TRIGGER-06: Phiên đóng giữa chừng → dừng auto-bid từ lần trigger sau")
         void trigger_auctionClosedMidway() {
-            // register() gọi triggerAutoBids() ngay lập tức (auction vẫn RUNNING) → save 1 lần
+            // register() gọi triggerAutoBids() ngay lập tức (auction vẫn RUNNING) → save 1
+            // lần
             autoBidService.register(new AutoBidDTO("auc-001", 5_000_000.0, 100_000.0), "auto-user");
             int saveAfterRegister = bidTransactionDAO.saveCount; // = 1 (do register tự trigger)
 
