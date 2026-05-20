@@ -218,10 +218,11 @@ class AuctionServiceTest {
         }
 
         @Test
-        @DisplayName("TC-AUC-UPDATE-01: Phiên không tồn tại → NOT_FOUND")
+        @DisplayName("TC-AUC-UPDATE-01: Phiên không tồn tại → ValidationException")
         void update_notFound() {
             updateDto.setAuctionId("ghost");
-            assertEquals(ResponseStatus.NOT_FOUND, auctionService.updateAuctionItem(updateDto, "seller-001").getStatus());
+            assertThrows(com.auction.server.util.ValidationException.class,
+                () -> auctionService.updateAuctionItem(updateDto, "seller-001"));
         }
 
         @Test
@@ -254,9 +255,10 @@ class AuctionServiceTest {
     class DeleteAuctionTests {
 
         @Test
-        @DisplayName("TC-AUC-DEL-01: Không tồn tại → NOT_FOUND")
+        @DisplayName("TC-AUC-DEL-01: Không tồn tại → ValidationException")
         void delete_notFound() {
-            assertEquals(ResponseStatus.NOT_FOUND, auctionService.deleteAuctionItem("ghost", "seller-001").getStatus());
+            assertThrows(com.auction.server.util.ValidationException.class,
+                () -> auctionService.deleteAuctionItem("ghost", "seller-001"));
         }
 
         @Test

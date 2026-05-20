@@ -260,14 +260,18 @@ class AutoBidServiceTest {
         }
 
         @Test
-        @DisplayName("TC-AUTO-TRIGGER-06: Phiên đóng giữa chừng → dừng auto-bid")
+        @DisplayName("TC-AUTO-TRIGGER-06: Phiên đóng giữa chừng → dừng auto-bid từ lần trigger sau")
         void trigger_auctionClosedMidway() {
+            // register() gọi triggerAutoBids() ngay lập tức (auction vẫn RUNNING) → save 1 lần
             autoBidService.register(new AutoBidDTO("auc-001", 5_000_000.0, 100_000.0), "auto-user");
+            int saveAfterRegister = bidTransactionDAO.saveCount; // = 1 (do register tự trigger)
 
+            // Sau đó đóng phiên và trigger lại → không save thêm
             runningAuction.setStatus(AuctionStatus.FINISHED);
-
             autoBidService.triggerAutoBids("auc-001", 1_000_000.0, "manual-bidder");
-            assertEquals(0, bidTransactionDAO.saveCount);
+
+            // saveCount không tăng thêm so với sau register
+            assertEquals(saveAfterRegister, bidTransactionDAO.saveCount);
         }
     }
 }
