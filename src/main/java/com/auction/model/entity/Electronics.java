@@ -22,8 +22,8 @@ public class Electronics extends Item {
     }
 
     @Override
-    public String getItemType() {
-        return "ELECTRONICS";
+    public ItemType getItemType() {
+        return ItemType.ELECTRONICS;
     }
 
     @Override

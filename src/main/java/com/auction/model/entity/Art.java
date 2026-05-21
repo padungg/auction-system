@@ -22,8 +22,8 @@ public class Art extends Item{
     }
 
     @Override
-    public String getItemType() {
-        return "ART";
+    public ItemType getItemType() {
+        return ItemType.ART;
     }
 
     @Override

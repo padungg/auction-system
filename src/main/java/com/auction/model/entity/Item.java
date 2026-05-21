@@ -24,10 +24,10 @@ public abstract class Item extends Entity {
     }
 
     /**
-     * Trả về loại item dưới dạng chuỗi (ART, ELECTRONICS, VEHICLE).
-     * Dùng để xác định itemType mà không cần instanceof.
+     * Trả về loại item (ART, ELECTRONICS, VEHICLE).
+     * Dùng để xác định kiểu sản phẩm mà không cần instanceof.
      */
-    public abstract String getItemType();
+    public abstract ItemType getItemType();
 
     /**
      * Áp dụng cập nhật các field đặc thù của từng loại item từ DTO.

@@ -23,8 +23,8 @@ public class Vehicle extends Item{
     }
 
     @Override
-    public String getItemType() {
-        return "VEHICLE";
+    public ItemType getItemType() {
+        return ItemType.VEHICLE;
     }
 
     @Override

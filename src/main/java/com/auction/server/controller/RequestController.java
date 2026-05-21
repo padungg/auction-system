@@ -9,6 +9,7 @@ import com.auction.server.service.AuctionService;
 import com.auction.server.service.AutoBidService;
 import com.auction.server.service.BidService;
 import com.auction.server.service.UserService;
+import com.auction.server.service.PaymentService;
 import com.auction.server.util.ValidationException;
 
 import org.slf4j.Logger;
@@ -30,7 +31,8 @@ public class RequestController {
     public RequestController(UserService userService,
                              AuctionService auctionService,
                              BidService bidService,
-                             AutoBidService autoBidService) {
+                             AutoBidService autoBidService,
+                             PaymentService paymentService) {
 
         handlerMap = new EnumMap<>(RequestType.class);
 
@@ -41,7 +43,7 @@ public class RequestController {
         AutoBidHandler autoBidHandler = new AutoBidHandler(autoBidService);
         AdminHandler adminHandler = new AdminHandler(userService, auctionService);
         AccountHandler accountHandler = new AccountHandler(userService);
-        PaymentHandler paymentHandler = new PaymentHandler(auctionService);
+        PaymentHandler paymentHandler = new PaymentHandler(paymentService);
 
         // Thêm các request vào MAP
         // USER

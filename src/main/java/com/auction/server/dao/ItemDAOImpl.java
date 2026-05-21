@@ -84,15 +84,19 @@ public class ItemDAOImpl implements ItemDAO {
             stmt.setObject(14, null);
             stmt.setObject(15, null);
 
+            if (item.getItemType() != null) {
+                stmt.setString(7, item.getItemType().name());
+            } else {
+                stmt.setString(7, "UNKNOWN");
+            }
+
             if (item instanceof Art) {
-                stmt.setString(7, "ART");
                 Art art = (Art) item;
                 stmt.setString(8, art.getArtistName());
                 stmt.setString(9, art.getMaterial());
                 stmt.setInt(10, art.getCreationYear());
                 
             } else if (item instanceof Vehicle) {
-                stmt.setString(7, "VEHICLE");
                 Vehicle vehicle = (Vehicle) item;
                 stmt.setString(11, vehicle.getBrand());
                 stmt.setString(12, vehicle.getModel());
@@ -100,13 +104,9 @@ public class ItemDAOImpl implements ItemDAO {
                 stmt.setInt(14, vehicle.getKm());
                 
             } else if (item instanceof Electronics) {
-                stmt.setString(7, "ELECTRONICS");
                 Electronics electronics = (Electronics) item;
                 stmt.setString(11, electronics.getBrand());
                 stmt.setInt(15, electronics.getWarrantyMonths());
-                
-            } else {
-                stmt.setString(7, "UNKNOWN");
             }
             
             int rowsAffected = stmt.executeUpdate();

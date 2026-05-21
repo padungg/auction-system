@@ -23,12 +23,16 @@ public class AppConfig {
 
         // Khởi tạo các Service
         UserService userService = new UserService(userDAO);
-        AuctionService auctionService = new AuctionService(auctionDAO, itemDAO, userDAO, bidTransactionDAO);
+        ItemService itemService = new ItemService(itemDAO);
+        AuctionMapper auctionMapper = new AuctionMapper(itemDAO, userDAO, bidTransactionDAO);
+        
+        AuctionService auctionService = new AuctionService(auctionDAO, userDAO, itemService, auctionMapper);
         AutoBidService autoBidService = new AutoBidService(auctionDAO, bidTransactionDAO, autoBidDAO);
         BidService bidService = new BidService(auctionDAO, bidTransactionDAO, autoBidService, itemDAO);
+        PaymentService paymentService = new PaymentService(auctionDAO, userDAO, itemDAO, auctionMapper);
 
         // Khởi tạo Controller
-        requestController = new RequestController(userService, auctionService, bidService, autoBidService);
+        requestController = new RequestController(userService, auctionService, bidService, autoBidService, paymentService);
     }
 
     public static synchronized AppConfig getInstance() {
