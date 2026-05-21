@@ -129,14 +129,18 @@ public class UserService {
         if (userId == null || userId.trim().isEmpty()) {
             return new Response(ResponseStatus.BAD_REQUEST, "Thiếu userId", null);
         }
-        User user = userDAO.findById(userId.trim());
-        if (user == null) {
-            return new Response(ResponseStatus.NOT_FOUND, "Không tìm thấy người dùng", null);
+        
+        Object lock = com.auction.server.util.LockManager.getUserLock(userId.trim());
+        synchronized (lock) {
+            User user = userDAO.findById(userId.trim());
+            if (user == null) {
+                return new Response(ResponseStatus.NOT_FOUND, "Không tìm thấy người dùng", null);
+            }
+            user.setActive(status);
+            userDAO.update(user);
+            LOGGER.info("{}: {}", logAction, user.getUsername());
+            return new Response(ResponseStatus.SUCCESS, successMsg + user.getUsername(), null);
         }
-        user.setActive(status);
-        userDAO.update(user);
-        LOGGER.info("{}: {}", logAction, user.getUsername());
-        return new Response(ResponseStatus.SUCCESS, successMsg + user.getUsername(), null);
     }
 
     // ACCOUNT OPERATIONS (NẠP/RÚT TIỀN)
@@ -162,36 +166,40 @@ public class UserService {
         if (amount <= 0) {
             return new Response(ResponseStatus.BAD_REQUEST, "Số tiền phải lớn hơn 0", null);
         }
-        User user = userDAO.findById(userId);
-        if (user == null) {
-            return new Response(ResponseStatus.NOT_FOUND, "Không tìm thấy tài khoản", null);
-        }
-
-        if (isDeposit) {
-            user.deposit(amount);
-        } else {
-            if (user.getBalance() < amount) {
-                return new Response(ResponseStatus.BAD_REQUEST,
-                        "Số dư không đủ! Hiện có: " + String.format("%,.0f", user.getBalance()) + " VNĐ", null);
+        
+        Object lock = com.auction.server.util.LockManager.getUserLock(userId);
+        synchronized (lock) {
+            User user = userDAO.findById(userId);
+            if (user == null) {
+                return new Response(ResponseStatus.NOT_FOUND, "Không tìm thấy tài khoản", null);
             }
-            user.withdraw(amount);
+
+            if (isDeposit) {
+                user.deposit(amount);
+            } else {
+                if (user.getBalance() < amount) {
+                    return new Response(ResponseStatus.BAD_REQUEST,
+                            "Số dư không đủ! Hiện có: " + String.format("%,.0f", user.getBalance()) + " VNĐ", null);
+                }
+                user.withdraw(amount);
+            }
+            userDAO.update(user);
+
+            String action = isDeposit ? "DEPOSIT" : "WITHDRAW";
+            String sign = isDeposit ? "+" : "-";
+            String msg = isDeposit ? "Nạp tiền thành công! Số dư: " : "Rút tiền thành công! Số dư: ";
+
+            LOGGER.info("{}: user={} | {}{} VNĐ | balance={} VNĐ",
+                    action,
+                    user.getUsername(),
+                    sign,
+                    String.format("%,.0f", amount),
+                    String.format("%,.0f", user.getBalance()));
+
+            return new Response(ResponseStatus.SUCCESS,
+                    msg + String.format("%,.0f", user.getBalance()) + " VNĐ",
+                    user.getBalance());
         }
-        userDAO.update(user);
-
-        String action = isDeposit ? "DEPOSIT" : "WITHDRAW";
-        String sign = isDeposit ? "+" : "-";
-        String msg = isDeposit ? "Nạp tiền thành công! Số dư: " : "Rút tiền thành công! Số dư: ";
-
-        LOGGER.info("{}: user={} | {}{} VNĐ | balance={} VNĐ",
-                action,
-                user.getUsername(),
-                sign,
-                String.format("%,.0f", amount),
-                String.format("%,.0f", user.getBalance()));
-
-        return new Response(ResponseStatus.SUCCESS,
-                msg + String.format("%,.0f", user.getBalance()) + " VNĐ",
-                user.getBalance());
     }
 
     // GET MY PROFILE — Refresh bảng tài khoản từ DB
@@ -213,32 +221,36 @@ public class UserService {
         if (userId == null) {
             return new Response(ResponseStatus.UNAUTHORIZED, "Chưa đăng nhập", null);
         }
-        User user = userDAO.findById(userId);
-        if (user == null) {
-            return new Response(ResponseStatus.NOT_FOUND, "Không tìm thấy tài khoản", null);
+        
+        Object lock = com.auction.server.util.LockManager.getUserLock(userId);
+        synchronized (lock) {
+            User user = userDAO.findById(userId);
+            if (user == null) {
+                return new Response(ResponseStatus.NOT_FOUND, "Không tìm thấy tài khoản", null);
+            }
+
+            String fullName  = payload.getOrDefault("fullName", "").trim();
+            String phone     = payload.getOrDefault("phone", "").trim();
+            String address   = payload.getOrDefault("address", "").trim();
+            String storeName = payload.getOrDefault("storeName", "").trim();
+            String password  = payload.getOrDefault("password", "").trim();
+
+            if (fullName.isEmpty()) {
+                return new Response(ResponseStatus.BAD_REQUEST, "Họ và tên không được để trống", null);
+            }
+
+            user.setFullName(fullName);
+            user.setPhone(phone);
+            user.setAddress(address);
+            user.setStoreName(storeName);
+            if (!password.isEmpty()) {
+                user.setPassword(password);
+            }
+
+            userDAO.update(user);
+            LOGGER.info("UPDATE_PROFILE: user={} | fullName={}", user.getUsername(), fullName);
+            return new Response(ResponseStatus.SUCCESS, "Cập nhật hồ sơ thành công!", toFullDTO(user));
         }
-
-        String fullName  = payload.getOrDefault("fullName", "").trim();
-        String phone     = payload.getOrDefault("phone", "").trim();
-        String address   = payload.getOrDefault("address", "").trim();
-        String storeName = payload.getOrDefault("storeName", "").trim();
-        String password  = payload.getOrDefault("password", "").trim();
-
-        if (fullName.isEmpty()) {
-            return new Response(ResponseStatus.BAD_REQUEST, "Họ và tên không được để trống", null);
-        }
-
-        user.setFullName(fullName);
-        user.setPhone(phone);
-        user.setAddress(address);
-        user.setStoreName(storeName);
-        if (!password.isEmpty()) {
-            user.setPassword(password);
-        }
-
-        userDAO.update(user);
-        LOGGER.info("UPDATE_PROFILE: user={} | fullName={}", user.getUsername(), fullName);
-        return new Response(ResponseStatus.SUCCESS, "Cập nhật hồ sơ thành công!", toFullDTO(user));
     }
 
     // HELPER

@@ -162,8 +162,9 @@ class BidServiceTest {
         autoBidDAO = new AutoBidDAOStub();
         itemDAO = new ItemDAOStub();
 
-        autoBidService = new AutoBidService(auctionDAO, bidTransactionDAO, autoBidDAO);
+        autoBidService = new AutoBidService(auctionDAO, autoBidDAO);
         bidService = new BidService(auctionDAO, bidTransactionDAO, autoBidService, itemDAO);
+        autoBidService.setBidService(bidService);
 
         runningAuction = new Auction("auc-001", "item-001", 1_000_000.0,
                 LocalDateTime.now().minusHours(1), LocalDateTime.now().plusHours(2));

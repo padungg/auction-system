@@ -12,6 +12,8 @@ public class AppConfig {
 
     private final AuctionDAO auctionDAO;
     private final RequestController requestController;
+    private final AuctionService auctionService;
+    private final AutoBidService autoBidService;
 
     private AppConfig() {
         // Khởi tạo các DAO
@@ -26,9 +28,10 @@ public class AppConfig {
         ItemService itemService = new ItemService(itemDAO);
         AuctionMapper auctionMapper = new AuctionMapper(itemDAO, userDAO, bidTransactionDAO);
         
-        AuctionService auctionService = new AuctionService(auctionDAO, userDAO, itemService, auctionMapper);
-        AutoBidService autoBidService = new AutoBidService(auctionDAO, bidTransactionDAO, autoBidDAO);
+        autoBidService = new AutoBidService(auctionDAO, autoBidDAO);
+        auctionService = new AuctionService(auctionDAO, userDAO, itemService, auctionMapper, autoBidService);
         BidService bidService = new BidService(auctionDAO, bidTransactionDAO, autoBidService, itemDAO);
+        autoBidService.setBidService(bidService);
         PaymentService paymentService = new PaymentService(auctionDAO, userDAO, itemDAO, auctionMapper);
 
         // Khởi tạo Controller
@@ -44,6 +47,14 @@ public class AppConfig {
 
     public AuctionDAO getAuctionDAO() {
         return auctionDAO;
+    }
+
+    public AuctionService getAuctionService() {
+        return auctionService;
+    }
+
+    public AutoBidService getAutoBidService() {
+        return autoBidService;
     }
 
     public RequestController getRequestController() {

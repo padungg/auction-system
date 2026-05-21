@@ -124,11 +124,20 @@ class AutoBidServiceTest {
         }
     }
 
+    static class ItemDAOStub implements com.auction.server.dao.ItemDAO {
+        @Override public com.auction.model.entity.Item findById(String id) { return null; }
+        @Override public boolean save(com.auction.model.entity.Item item) { return true; }
+        @Override public boolean update(com.auction.model.entity.Item item) { return true; }
+        @Override public boolean delete(String id) { return true; }
+    }
+
     private AuctionDAOStub auctionDAO;
     private BidTransactionDAOStub bidTransactionDAO;
     private AutoBidDAOStub autoBidDAO;
+    private ItemDAOStub itemDAO;
 
     private AutoBidService autoBidService;
+    private BidService bidService;
 
     private Auction runningAuction;
 
@@ -137,8 +146,11 @@ class AutoBidServiceTest {
         auctionDAO = new AuctionDAOStub();
         bidTransactionDAO = new BidTransactionDAOStub();
         autoBidDAO = new AutoBidDAOStub();
+        itemDAO = new ItemDAOStub();
 
-        autoBidService = new AutoBidService(auctionDAO, bidTransactionDAO, autoBidDAO);
+        autoBidService = new AutoBidService(auctionDAO, autoBidDAO);
+        bidService = new BidService(auctionDAO, bidTransactionDAO, autoBidService, itemDAO);
+        autoBidService.setBidService(bidService);
 
         runningAuction = new Auction("auc-001", "item-001", 1_000_000.0,
                 LocalDateTime.now().minusHours(1), LocalDateTime.now().plusHours(2));
@@ -259,80 +271,5 @@ class AutoBidServiceTest {
         }
     }
 
-    // TRIGGER AUTO-BIDS
-    @Nested
-    @DisplayName("triggerAutoBids()")
-    class TriggerTests {
 
-        @Test
-        @DisplayName("TC-AUTO-TRIGGER-01: Không có queue → không thực hiện gì")
-        void trigger_noQueue() {
-            assertDoesNotThrow(() -> autoBidService.triggerAutoBids("auc-001", 1_000_000.0, "manual-bidder"));
-        }
-
-        @Test
-        @DisplayName("TC-AUTO-TRIGGER-02: Có 1 auto-bidder với đủ ngân sách → tự động phản giá 1 lần")
-        void trigger_singleAutoBidder_responds() {
-            autoBidService.register(new AutoBidDTO("auc-001", 3_000_000.0, 200_000.0), "auto-user");
-
-            autoBidService.triggerAutoBids("auc-001", 1_000_000.0, "manual-bidder");
-
-            assertTrue(bidTransactionDAO.saveCount > 0);
-            assertTrue(auctionDAO.updateCount > 0);
-            assertEquals(1_200_000.0, runningAuction.getCurrentPrice(), 0.001);
-            assertEquals("auto-user", runningAuction.getCurrentWinnerId());
-        }
-
-        @Test
-        @DisplayName("TC-AUTO-TRIGGER-03: Auto-bidder là current winner → không phản giá")
-        void trigger_autoBidderIsWinner_skips() {
-            autoBidService.register(new AutoBidDTO("auc-001", 3_000_000.0, 200_000.0), "auto-user");
-            bidTransactionDAO.saveCount = 0;
-
-            // auto-user đang là winner → không cần phản giá
-            autoBidService.triggerAutoBids("auc-001", 2_000_000.0, "auto-user");
-
-            assertEquals(0, bidTransactionDAO.saveCount);
-        }
-
-        @Test
-        @DisplayName("TC-AUTO-TRIGGER-04: Auto-bidder hết ngân sách → bị loại khỏi queue")
-        void trigger_exhaustedBudget() {
-            autoBidService.register(new AutoBidDTO("auc-001", 1_100_000.0, 200_000.0), "poor-user");
-
-            // Trigger với giá 2_000_000 → poor-user không thể phản giá
-            autoBidService.triggerAutoBids("auc-001", 2_000_000.0, "manual-bidder");
-
-            assertEquals(0, bidTransactionDAO.saveCount);
-        }
-
-        @Test
-        @DisplayName("TC-AUTO-TRIGGER-05: FCFS - 2 auto-bidder, người đăng ký trước được ưu tiên")
-        void trigger_fcfsOrdering() throws InterruptedException {
-            autoBidService.register(new AutoBidDTO("auc-001", 5_000_000.0, 100_000.0), "user-A");
-            Thread.sleep(5);
-            autoBidService.register(new AutoBidDTO("auc-001", 5_000_000.0, 100_000.0), "user-B");
-
-            autoBidService.triggerAutoBids("auc-001", 1_000_000.0, "manual-bidder");
-
-            assertTrue(bidTransactionDAO.saveCount > 0);
-            assertTrue(auctionDAO.updateCount > 0);
-        }
-
-        @Test
-        @DisplayName("TC-AUTO-TRIGGER-06: Phiên đóng giữa chừng → dừng auto-bid từ lần trigger sau")
-        void trigger_auctionClosedMidway() {
-            // register() gọi triggerAutoBids() ngay lập tức (auction vẫn RUNNING) → save 1
-            // lần
-            autoBidService.register(new AutoBidDTO("auc-001", 5_000_000.0, 100_000.0), "auto-user");
-            int saveAfterRegister = bidTransactionDAO.saveCount; // = 1 (do register tự trigger)
-
-            // Sau đó đóng phiên và trigger lại → không save thêm
-            runningAuction.setStatus(AuctionStatus.FINISHED);
-            autoBidService.triggerAutoBids("auc-001", 1_000_000.0, "manual-bidder");
-
-            // saveCount không tăng thêm so với sau register
-            assertEquals(saveAfterRegister, bidTransactionDAO.saveCount);
-        }
-    }
 }

@@ -32,12 +32,14 @@ public class AuctionService {
     private final UserDAO userDAO;
     private final ItemService itemService;
     private final AuctionMapper auctionMapper;
+    private final AutoBidService autoBidService;
 
-    public AuctionService(AuctionDAO auctionDAO, UserDAO userDAO, ItemService itemService, AuctionMapper auctionMapper) {
+    public AuctionService(AuctionDAO auctionDAO, UserDAO userDAO, ItemService itemService, AuctionMapper auctionMapper, AutoBidService autoBidService) {
         this.auctionDAO = auctionDAO;
         this.userDAO = userDAO;
         this.itemService = itemService;
         this.auctionMapper = auctionMapper;
+        this.autoBidService = autoBidService;
     }
 
     public Response getAllAuctions() {
@@ -91,29 +93,42 @@ public class AuctionService {
     }
 
     public Response closeAuction(String auctionId) throws ValidationException {
-        Auction auction = validateAndGetAuction(auctionId);
-        if (auction.getStatus() != AuctionStatus.RUNNING) {
-            return new Response(ResponseStatus.BAD_REQUEST,
-                    "Phiên đấu giá không thể đóng — trạng thái hiện tại: " + auction.getStatus(), null);
+        if (auctionId == null || auctionId.trim().isEmpty()) {
+            throw new ValidationException("Thiếu mã phiên đấu giá");
         }
+        
+        Object lock = com.auction.server.util.LockManager.getAuctionLock(auctionId);
+        synchronized (lock) {
+            Auction auction = auctionDAO.findById(auctionId.trim());
+            if (auction == null) {
+                throw new ValidationException("Không tìm thấy phiên đấu giá");
+            }
+            if (auction.getStatus() != AuctionStatus.RUNNING) {
+                return new Response(ResponseStatus.BAD_REQUEST,
+                        "Phiên đấu giá không thể đóng — trạng thái hiện tại: " + auction.getStatus(), null);
+            }
 
-        auction.setStatus(AuctionStatus.FINISHED);
-        auctionDAO.update(auction);
+            auction.setStatus(AuctionStatus.FINISHED);
+            auctionDAO.update(auction);
 
-        AuctionManager.getInstance().notifyAuctionClosed(
-                auctionId, auction.getCurrentPrice(), auction.getCurrentWinnerId());
+            // Dọn dẹp AutoBid queue để tránh Memory Leak
+            autoBidService.clearAuction(auctionId);
 
-        String winnerName = "Không có người đặt giá";
-        if (auction.getCurrentWinnerId() != null) {
-            User winner = userDAO.findById(auction.getCurrentWinnerId());
-            if (winner != null) winnerName = winner.getFullName();
+            AuctionManager.getInstance().notifyAuctionClosed(
+                    auctionId, auction.getCurrentPrice(), auction.getCurrentWinnerId());
+
+            String winnerName = "Không có người đặt giá";
+            if (auction.getCurrentWinnerId() != null) {
+                User winner = userDAO.findById(auction.getCurrentWinnerId());
+                if (winner != null) winnerName = winner.getFullName();
+            }
+
+            String resultMsg = "Phiên đã đóng! Winner: " + winnerName
+                    + " | Giá cuối: " + String.format("%,.0f", auction.getCurrentPrice()) + " VNĐ";
+            LOGGER.info("CLOSE: auctionId={} | winner={} | giá cuối={} VNĐ",
+                    auctionId, winnerName, String.format("%,.0f", auction.getCurrentPrice()));
+            return new Response(ResponseStatus.SUCCESS, resultMsg, auction.getCurrentPrice());
         }
-
-        String resultMsg = "Phiên đã đóng! Winner: " + winnerName
-                + " | Giá cuối: " + String.format("%,.0f", auction.getCurrentPrice()) + " VNĐ";
-        LOGGER.info("CLOSE: auctionId={} | winner={} | giá cuối={} VNĐ",
-                auctionId, winnerName, String.format("%,.0f", auction.getCurrentPrice()));
-        return new Response(ResponseStatus.SUCCESS, resultMsg, auction.getCurrentPrice());
     }
 
     public Response updateAuctionItem(UpdateAuctionDTO dto, String sellerId) throws ValidationException {

@@ -14,19 +14,19 @@ public class ItemFactory {
         try {
             type = ItemType.valueOf(dto.getItemType().toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new ValidationException("Loại sản phẩm không hợp lệ. Chỉ chấp nhận: ELECTRONICS, ART, VEHICLE");
+            throw new ValidationException("Loại sản phẩm không hợp lệ. Chỉ chấp nhận: " + java.util.Arrays.toString(ItemType.values()));
         }
 
         switch (type) {
             case ELECTRONICS:
-                return new Electronics(id, dto.getName(), dto.getDescription(), condition, sellerId, 
-                                       dto.getStartingPrice(), dto.getBrand(), dto.getWarrantyMonths());
+                return new Electronics(id, dto.getName(), dto.getDescription(), condition, sellerId,
+                        dto.getStartingPrice(), dto.getBrand(), dto.getWarrantyMonths());
             case ART:
-                return new Art(id, dto.getName(), dto.getDescription(), condition, sellerId, 
-                               dto.getStartingPrice(), dto.getArtistName(), dto.getMaterial(), dto.getCreationYear());
+                return new Art(id, dto.getName(), dto.getDescription(), condition, sellerId,
+                        dto.getStartingPrice(), dto.getArtistName(), dto.getMaterial(), dto.getCreationYear());
             case VEHICLE:
-                return new Vehicle(id, dto.getName(), dto.getDescription(), condition, sellerId, 
-                                   dto.getStartingPrice(), dto.getBrand(), dto.getModel(), dto.getYear(), dto.getKm());
+                return new Vehicle(id, dto.getName(), dto.getDescription(), condition, sellerId,
+                        dto.getStartingPrice(), dto.getBrand(), dto.getModel(), dto.getYear(), dto.getKm());
             default:
                 throw new ValidationException("Loại sản phẩm không hợp lệ.");
         }

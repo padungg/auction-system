@@ -24,7 +24,7 @@ public class ServerApp {
         AppConfig appConfig = AppConfig.getInstance();
 
         // Khởi tạo Scheduler (dùng để đóng các phiên hết hạn)
-        AuctionScheduler scheduler = new AuctionScheduler(appConfig.getAuctionDAO());
+        AuctionScheduler scheduler = new AuctionScheduler(appConfig.getAuctionDAO(), appConfig.getAuctionService());
 
         // Khởi tạo SocketServer
         SocketServer socketServer = new SocketServer(PORT, MAX_CLIENTS, appConfig.getRequestController());
