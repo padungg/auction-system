@@ -1,0 +1,55 @@
+package com.auction.server.controller.handler;
+
+import com.auction.model.protocol.Request;
+import com.auction.model.protocol.Response;
+import com.auction.model.protocol.ResponseStatus;
+import com.auction.server.service.UserService;
+import com.google.gson.reflect.TypeToken;
+
+import java.lang.reflect.Type;
+import java.util.Map;
+
+public class AccountHandler extends BaseHandler {
+    private final UserService userService;
+
+    public AccountHandler(UserService userService) {
+        this.userService = userService;
+    }
+
+    @Override
+    public Response handle(Request request, String loggedInUserId) {
+        switch (request.getType()) {
+            case GET_MY_PROFILE:
+                return userService.getMyProfile(loggedInUserId);
+            case DEPOSIT:
+                return handleDeposit(request, loggedInUserId);
+            case WITHDRAW:
+                return handleWithdraw(request, loggedInUserId);
+            case UPDATE_PROFILE:
+                return handleUpdateProfile(request, loggedInUserId);
+            default:
+                return new Response(ResponseStatus.BAD_REQUEST, "Loại request không được hỗ trợ trong AccountHandler", null);
+        }
+    }
+
+    private Response handleDeposit(Request request, String userId) {
+        double amount = parsePayload(request, Double.class);
+        return userService.deposit(userId, amount);
+    }
+
+    private Response handleWithdraw(Request request, String userId) {
+        double amount = parsePayload(request, Double.class);
+        return userService.withdraw(userId, amount);
+    }
+
+    private Response handleUpdateProfile(Request request, String userId) {
+        Type type = new TypeToken<Map<String, String>>() {}.getType();
+        Map<String, String> payload = parsePayload(request, type);
+
+        if (payload == null) {
+            return new Response(ResponseStatus.BAD_REQUEST, "Payload không hợp lệ", null);
+        }
+
+        return userService.updateProfile(userId, payload);
+    }
+}
