@@ -24,7 +24,9 @@ public class AppConfig {
         AutoBidDAO autoBidDAO = new AutoBidDAOImpl();
 
         // Khởi tạo các Service
+        UserMapper userMapper = new UserMapper();
         UserService userService = new UserService(userDAO);
+        WalletService walletService = new WalletService(userDAO, auctionDAO, userMapper);
         ItemService itemService = new ItemService(itemDAO);
         AuctionMapper auctionMapper = new AuctionMapper(itemDAO, userDAO, bidTransactionDAO);
         
@@ -35,7 +37,7 @@ public class AppConfig {
         PaymentService paymentService = new PaymentService(auctionDAO, userDAO, itemDAO, auctionMapper);
 
         // Khởi tạo Controller
-        requestController = new RequestController(userService, auctionService, bidService, autoBidService, paymentService);
+        requestController = new RequestController(userService, walletService, auctionService, bidService, autoBidService, paymentService);
     }
 
     public static synchronized AppConfig getInstance() {

@@ -10,6 +10,7 @@ import com.auction.model.protocol.ResponseStatus;
 import com.auction.server.dao.AuctionDAO;
 import com.auction.server.dao.ItemDAO;
 import com.auction.server.dao.UserDAO;
+import com.auction.server.util.LockManager;
 import com.auction.server.util.ValidationException;
 
 import java.util.ArrayList;
@@ -81,46 +82,51 @@ public class PaymentService {
         if (userId == null) {
             return new Response(ResponseStatus.UNAUTHORIZED, "Bạn chưa đăng nhập", null);
         }
-        Auction auction = auctionDAO.findById(auctionId);
-        if (auction == null) {
-            return new Response(ResponseStatus.NOT_FOUND, "Không tìm thấy phiên đấu giá", null);
+
+        // Lock theo userId để tránh Race Condition thanh toán 2 lần cùng lúc
+        Object lock = LockManager.getUserLock(userId);
+        synchronized (lock) {
+            Auction auction = auctionDAO.findById(auctionId);
+            if (auction == null) {
+                return new Response(ResponseStatus.NOT_FOUND, "Không tìm thấy phiên đấu giá", null);
+            }
+            if (auction.getStatus() != AuctionStatus.FINISHED) {
+                return new Response(ResponseStatus.BAD_REQUEST, "Phiên chưa kết thúc hoặc đã thanh toán rồi", null);
+            }
+            if (!userId.equals(auction.getCurrentWinnerId())) {
+                return new Response(ResponseStatus.UNAUTHORIZED, "Bạn không phải người thắng phiên này", null);
+            }
+
+            User user = userDAO.findById(userId);
+            if (user == null) {
+                return new Response(ResponseStatus.NOT_FOUND, "Không tìm thấy tài khoản", null);
+            }
+
+            double basePrice = auction.getCurrentPrice();
+            double platformFee = Math.round(basePrice * PLATFORM_FEE_PERCENTAGE * 100.0) / 100.0;
+            double totalRequired = basePrice + platformFee;
+
+            if (user.getBalance() < totalRequired) {
+                return new Response(ResponseStatus.BAD_REQUEST,
+                        "Số dư không đủ! Cần: " + String.format("%,.0f", totalRequired)
+                                + " VNĐ (gồm " + (PLATFORM_FEE_PERCENTAGE * 100) + "% phí) | Có: "
+                                + String.format("%,.0f", user.getBalance()) + " VNĐ",
+                        null);
+            }
+
+            // Thực hiện giao dịch tài chính
+            processPaymentTransaction(user, basePrice, platformFee, totalRequired, auction.getItemId());
+
+            // Chuyển status sang PAID
+            auction.setStatus(AuctionStatus.PAID);
+            auctionDAO.update(auction);
+
+            LOGGER.info("PAY_AUCTION: auctionId={} | buyer={} | giá={} | phí={} | tổng={} VNĐ",
+                    auctionId, userId, String.format("%,.0f", basePrice), String.format("%,.0f", platformFee), String.format("%,.0f", totalRequired));
+            return new Response(ResponseStatus.SUCCESS,
+                    "Thanh toán thành công! (Đã trợ phí " + (PLATFORM_FEE_PERCENTAGE * 100) + "% = "
+                            + String.format("%,.0f", platformFee) + " VNĐ)", null);
         }
-        if (auction.getStatus() != AuctionStatus.FINISHED) {
-            return new Response(ResponseStatus.BAD_REQUEST, "Phiên chưa kết thúc hoặc đã thanh toán rồi", null);
-        }
-        if (!userId.equals(auction.getCurrentWinnerId())) {
-            return new Response(ResponseStatus.UNAUTHORIZED, "Bạn không phải người thắng phiên này", null);
-        }
-
-        User user = userDAO.findById(userId);
-        if (user == null) {
-            return new Response(ResponseStatus.NOT_FOUND, "Không tìm thấy tài khoản", null);
-        }
-
-        double basePrice = auction.getCurrentPrice();
-        double platformFee = Math.round(basePrice * PLATFORM_FEE_PERCENTAGE * 100.0) / 100.0;
-        double totalRequired = basePrice + platformFee;
-
-        if (user.getBalance() < totalRequired) {
-            return new Response(ResponseStatus.BAD_REQUEST,
-                    "Số dư không đủ! Cần: " + String.format("%,.0f", totalRequired)
-                            + " VNĐ (gồm " + (PLATFORM_FEE_PERCENTAGE * 100) + "% phí) | Có: "
-                            + String.format("%,.0f", user.getBalance()) + " VNĐ",
-                    null);
-        }
-
-        // Thực hiện giao dịch tài chính
-        processPaymentTransaction(user, basePrice, platformFee, totalRequired, auction.getItemId());
-
-        // Chuyển status sang PAID
-        auction.setStatus(AuctionStatus.PAID);
-        auctionDAO.update(auction);
-
-        LOGGER.info("PAY_AUCTION: auctionId={} | buyer={} | giá={} | phí={} | tổng={} VNĐ",
-                auctionId, userId, String.format("%,.0f", basePrice), String.format("%,.0f", platformFee), String.format("%,.0f", totalRequired));
-        return new Response(ResponseStatus.SUCCESS,
-                "Thanh toán thành công! (Đã trợ phí " + (PLATFORM_FEE_PERCENTAGE * 100) + "% = "
-                        + String.format("%,.0f", platformFee) + " VNĐ)", null);
     }
 
     /**

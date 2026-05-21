@@ -3,7 +3,6 @@ package com.auction.server.service;
 import com.auction.model.entity.Auction;
 import com.auction.model.entity.AuctionStatus;
 import com.auction.server.dao.AuctionDAO;
-import com.auction.server.observer.AuctionManager;
 
 import java.time.LocalDateTime;
 import java.util.List;

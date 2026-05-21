@@ -280,48 +280,65 @@ class UserServiceTest {
     }
 
     @Nested
-    @DisplayName("deposit() và withdraw()")
-    class TransactionTests {
+    @DisplayName("WalletService — deposit() và withdraw()")
+    class WalletServiceTransactionTests {
+
+        private WalletService walletService;
+
+        @BeforeEach
+        void setUp() {
+            com.auction.server.dao.AuctionDAO dummyAuctionDAO = new com.auction.server.dao.AuctionDAO() {
+                @Override public boolean save(com.auction.model.entity.Auction a) { return false; }
+                @Override public boolean update(com.auction.model.entity.Auction a) { return false; }
+                @Override public boolean delete(String id) { return false; }
+                @Override public com.auction.model.entity.Auction findById(String id) { return null; }
+                @Override public java.util.List<com.auction.model.entity.Auction> findAll() { return new java.util.ArrayList<>(); }
+                @Override public java.util.List<com.auction.model.entity.Auction> findAllByStatus(com.auction.model.entity.AuctionStatus status) { return new java.util.ArrayList<>(); }
+                @Override public java.util.List<com.auction.model.entity.Auction> findByCurrentWinnerId(String winnerId) { return new java.util.ArrayList<>(); }
+            };
+            walletService = new WalletService(userDAO, dummyAuctionDAO, new UserMapper());
+        }
 
         @Test
-        @DisplayName("TC-USER-DEP-01: userId null → UNAUTHORIZED")
+        @DisplayName("TC-WALLET-DEP-01: userId null → UNAUTHORIZED")
         void deposit_nullUserId() {
             assertEquals(ResponseStatus.UNAUTHORIZED,
-                    userService.deposit(null, 100_000.0).getStatus());
+                    walletService.deposit(null, 100_000.0).getStatus());
         }
 
         @Test
-        @DisplayName("TC-USER-DEP-02: amount <= 0 → BAD_REQUEST")
+        @DisplayName("TC-WALLET-DEP-02: amount <= 0 → BAD_REQUEST")
         void deposit_invalidAmount() {
             assertEquals(ResponseStatus.BAD_REQUEST,
-                    userService.deposit("uid-001", 0).getStatus());
+                    walletService.deposit("uid-001", 0).getStatus());
             assertEquals(ResponseStatus.BAD_REQUEST,
-                    userService.deposit("uid-001", -500.0).getStatus());
+                    walletService.deposit("uid-001", -500.0).getStatus());
         }
 
         @Test
-        @DisplayName("TC-USER-DEP-03: Nạp tiền thành công → số dư tăng")
+        @DisplayName("TC-WALLET-DEP-03: Nạp tiền thành công → số dư tăng")
         void deposit_success() {
-            Response res = userService.deposit("uid-001", 1_000_000.0);
+            Response res = walletService.deposit("uid-001", 1_000_000.0);
             assertEquals(ResponseStatus.SUCCESS, res.getStatus());
             assertEquals(6_000_000.0, activeUser.getBalance(), 0.001);
         }
 
         @Test
-        @DisplayName("TC-USER-WD-01: Rút tiền khi số dư không đủ → BAD_REQUEST")
+        @DisplayName("TC-WALLET-WD-01: Rút tiền khi số dư không đủ → BAD_REQUEST")
         void withdraw_insufficientBalance() {
             assertEquals(ResponseStatus.BAD_REQUEST,
-                    userService.withdraw("uid-001", 10_000_000.0).getStatus());
+                    walletService.withdraw("uid-001", 10_000_000.0).getStatus());
         }
 
         @Test
-        @DisplayName("TC-USER-WD-02: Rút tiền thành công → số dư giảm")
+        @DisplayName("TC-WALLET-WD-02: Rút tiền thành công → số dư giảm")
         void withdraw_success() {
-            Response res = userService.withdraw("uid-001", 1_000_000.0);
+            Response res = walletService.withdraw("uid-001", 1_000_000.0);
             assertEquals(ResponseStatus.SUCCESS, res.getStatus());
             assertEquals(4_000_000.0, activeUser.getBalance(), 0.001);
         }
     }
+
 
     @Nested
     @DisplayName("lockUser() và unlockUser()")

@@ -8,8 +8,9 @@ import com.auction.server.controller.handler.*;
 import com.auction.server.service.AuctionService;
 import com.auction.server.service.AutoBidService;
 import com.auction.server.service.BidService;
-import com.auction.server.service.UserService;
 import com.auction.server.service.PaymentService;
+import com.auction.server.service.UserService;
+import com.auction.server.service.WalletService;
 import com.auction.server.util.ValidationException;
 
 import org.slf4j.Logger;
@@ -29,6 +30,7 @@ public class RequestController {
     private final Map<RequestType, RequestHandler> handlerMap;
 
     public RequestController(UserService userService,
+                             WalletService walletService,
                              AuctionService auctionService,
                              BidService bidService,
                              AutoBidService autoBidService,
@@ -42,7 +44,7 @@ public class RequestController {
         BidHandler bidHandler = new BidHandler(bidService);
         AutoBidHandler autoBidHandler = new AutoBidHandler(autoBidService);
         AdminHandler adminHandler = new AdminHandler(userService, auctionService);
-        AccountHandler accountHandler = new AccountHandler(userService);
+        AccountHandler accountHandler = new AccountHandler(walletService);
         PaymentHandler paymentHandler = new PaymentHandler(paymentService);
 
         // Thêm các request vào MAP

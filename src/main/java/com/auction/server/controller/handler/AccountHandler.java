@@ -3,24 +3,24 @@ package com.auction.server.controller.handler;
 import com.auction.model.protocol.Request;
 import com.auction.model.protocol.Response;
 import com.auction.model.protocol.ResponseStatus;
-import com.auction.server.service.UserService;
+import com.auction.server.service.WalletService;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
 import java.util.Map;
 
 public class AccountHandler extends BaseHandler {
-    private final UserService userService;
+    private final WalletService walletService;
 
-    public AccountHandler(UserService userService) {
-        this.userService = userService;
+    public AccountHandler(WalletService walletService) {
+        this.walletService = walletService;
     }
 
     @Override
     public Response handle(Request request, String loggedInUserId) {
         switch (request.getType()) {
             case GET_MY_PROFILE:
-                return userService.getMyProfile(loggedInUserId);
+                return walletService.getMyProfile(loggedInUserId);
             case DEPOSIT:
                 return handleDeposit(request, loggedInUserId);
             case WITHDRAW:
@@ -34,12 +34,12 @@ public class AccountHandler extends BaseHandler {
 
     private Response handleDeposit(Request request, String userId) {
         double amount = parsePayload(request, Double.class);
-        return userService.deposit(userId, amount);
+        return walletService.deposit(userId, amount);
     }
 
     private Response handleWithdraw(Request request, String userId) {
         double amount = parsePayload(request, Double.class);
-        return userService.withdraw(userId, amount);
+        return walletService.withdraw(userId, amount);
     }
 
     private Response handleUpdateProfile(Request request, String userId) {
@@ -50,6 +50,6 @@ public class AccountHandler extends BaseHandler {
             return new Response(ResponseStatus.BAD_REQUEST, "Payload không hợp lệ", null);
         }
 
-        return userService.updateProfile(userId, payload);
+        return walletService.updateProfile(userId, payload);
     }
 }
