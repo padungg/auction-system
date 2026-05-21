@@ -162,6 +162,9 @@ public class AuctionService {
 
         itemService.deleteItem(auction.getItemId(), sellerId);
         auctionDAO.delete(auction.getId());
+        
+        // Tránh memory leak
+        com.auction.server.util.LockManager.removeAuctionLock(auctionId);
 
         LOGGER.info("DELETE: auctionId={} by seller={}", auction.getId(), sellerId);
         return new Response(ResponseStatus.SUCCESS, "Xóa sản phẩm thành công!", null);

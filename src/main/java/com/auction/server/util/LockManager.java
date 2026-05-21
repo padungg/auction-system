@@ -17,4 +17,14 @@ public class LockManager {
     public static Object getUserLock(String userId) {
         return userLocks.computeIfAbsent(userId, k -> new Object());
     }
+
+    /** Xóa lock của phiên đấu giá (gọi khi xóa phiên) để tránh memory leak */
+    public static void removeAuctionLock(String auctionId) {
+        auctionLocks.remove(auctionId);
+    }
+
+    /** Xóa lock của user (gọi khi xóa tài khoản) để tránh memory leak */
+    public static void removeUserLock(String userId) {
+        userLocks.remove(userId);
+    }
 }

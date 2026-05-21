@@ -13,8 +13,21 @@ import org.slf4j.LoggerFactory;
 public class ServerApp {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ServerApp.class);
-    private static final int PORT = 8080;
-    private static final int MAX_CLIENTS = 20;
+    // Cấu hình từ biến môi trường (Environment Variables) hoặc dùng giá trị mặc định
+    private static final int PORT = getEnv("SERVER_PORT", 8080);
+    private static final int MAX_CLIENTS = getEnv("MAX_CLIENTS", 20);
+
+    private static int getEnv(String key, int defaultValue) {
+        String val = System.getenv(key);
+        if (val != null && !val.trim().isEmpty()) {
+            try {
+                return Integer.parseInt(val.trim());
+            } catch (NumberFormatException e) {
+                LOGGER.warn("Cấu hình {} = {} không hợp lệ, dùng mặc định: {}", key, val, defaultValue);
+            }
+        }
+        return defaultValue;
+    }
 
     public static void main(String[] args) {
         // Khởi tạo Database (tạo bảng nếu chưa có)
