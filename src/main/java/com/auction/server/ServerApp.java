@@ -1,7 +1,6 @@
 package com.auction.server;
 
-import com.auction.server.dao.AuctionDAO;
-import com.auction.server.dao.AuctionDAOImpl;
+import com.auction.server.config.AppConfig;
 import com.auction.server.network.SocketServer;
 import com.auction.server.service.AuctionScheduler;
 import com.auction.server.database.DatabaseInitializer;
@@ -9,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Điểm khởi động Server: Nạp DB, chạy Scheduler và mở SocketServer.
+ * Điểm khởi động Server: Nạp DB, khởi tạo DI, chạy Scheduler và mở SocketServer.
  */
 public class ServerApp {
 
@@ -21,12 +20,14 @@ public class ServerApp {
         // Khởi tạo Database (tạo bảng nếu chưa có)
         DatabaseInitializer.initialize();
 
+        // Khởi tạo Dependency Injection container
+        AppConfig appConfig = AppConfig.getInstance();
+
         // Khởi tạo Scheduler (dùng để đóng các phiên hết hạn)
-        AuctionDAO auctionDAO = new AuctionDAOImpl();
-        AuctionScheduler scheduler = new AuctionScheduler(auctionDAO);
+        AuctionScheduler scheduler = new AuctionScheduler(appConfig.getAuctionDAO());
 
         // Khởi tạo SocketServer
-        SocketServer socketServer = new SocketServer(PORT, MAX_CLIENTS);
+        SocketServer socketServer = new SocketServer(PORT, MAX_CLIENTS, appConfig.getRequestController());
 
         // Shutdown Hook: Đảm bảo dừng an toàn Scheduler và SocketServer khi tắt
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
