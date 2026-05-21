@@ -1,6 +1,5 @@
 package com.auction.server.observer;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,12 +21,15 @@ public class AuctionManager {
     }
 
     private final Map<String, List<AuctionObserver>> observerMap;
+
     private AuctionManager() {
         this.observerMap = new ConcurrentHashMap<>();
     }
+
     public static AuctionManager getInstance() {
         return Holder.INSTANCE;
     }
+
     /**
      * Đăng ký theo dõi 1 phiên đấu giá.
      */
@@ -39,31 +41,30 @@ public class AuctionManager {
         }
         LOGGER.info("SUBSCRIBE: phiên={} | tổng observer={}", auctionId, observers.size());
     }
+
     /**
      * Hủy theo dõi 1 phiên đấu giá.
      */
     public void unsubscribe(String auctionId, AuctionObserver observer) {
-        List<AuctionObserver> observers = observerMap.get(auctionId);
-        if (observers != null) {
+        observerMap.computeIfPresent(auctionId, (key, observers) -> {
             observers.remove(observer);
-            if (observers.isEmpty()) {
-                observerMap.remove(auctionId, observers);
-            }
-        }
+            return observers.isEmpty() ? null : observers; // Tự động xóa khỏi Map nếu rỗng
+        });
         LOGGER.info("UNSUBSCRIBE: phiên={}", auctionId);
     }
+
     /**
      * Hủy toàn bộ theo dõi của 1 observer (khi client ngắt kết nối).
      */
-    public void unsubscribeAll(AuctionObserver observer){
-        for (Map.Entry<String, List<AuctionObserver>> entry : observerMap.entrySet()) {
-            List<AuctionObserver> observers = entry.getValue();
-            observers.remove(observer);
-            if (observers.isEmpty()){
-                observerMap.remove(entry.getKey(), observers);
-            }
+    public void unsubscribeAll(AuctionObserver observer) {
+        for (String auctionId : observerMap.keySet()) {
+            observerMap.computeIfPresent(auctionId, (key, observers) -> {
+                observers.remove(observer);
+                return observers.isEmpty() ? null : observers;
+            });
         }
     }
+
     /**
      * Thông báo cho TẤT CẢ observer đang xem phiên này rằng có bid mới.
      */
@@ -85,27 +86,22 @@ public class AuctionManager {
     }
 
     /**
-     * Thông báo phiên đấu giá đã đóng (khác với bid thường).
+     * Thông báo phiên đấu giá đã đóng
      * Được gọi bởi AuctionScheduler khi hết hạn, hoặc người bán kết thúc sớm.
      */
     public void notifyAuctionClosed(String auctionId, double finalPrice, String winnerId) {
-        List<AuctionObserver> observers = observerMap.get(auctionId);
-        if (observers == null || observers.isEmpty()) {
-            observerMap.remove(auctionId); // dọn bộ nhớ
-            return;
-        }
+        List<AuctionObserver> observers = observerMap.remove(auctionId);
 
-        // Snapshot để tránh ConcurrentModificationException khi unsubscribe trong callback
-        List<AuctionObserver> snapshot = new ArrayList<>(observers);
-        for (AuctionObserver observer : snapshot) {
-            try {
-                observer.onAuctionClosed(auctionId, finalPrice, winnerId);
-            } catch (Exception e) {
-                LOGGER.error("CLOSE_NOTIFY_ERROR: {}", e.getMessage(), e);
+        if (observers != null && !observers.isEmpty()) {
+            for (AuctionObserver observer : observers) {
+                try {
+                    observer.onAuctionClosed(auctionId, finalPrice, winnerId);
+                } catch (Exception e) {
+                    LOGGER.error("CLOSE_NOTIFY_ERROR: {}", e.getMessage(), e);
+                }
             }
         }
-        // Dọn map sau khi phiên đóng — không còn observer nào cần theo dõi
-        observerMap.remove(auctionId);
+
         LOGGER.info("AUCTION_CLOSED: phiên={} | giá cuối={} VNĐ | winner={}",
                 auctionId, String.format("%,.0f", finalPrice), winnerId != null ? winnerId : "Không có");
     }
