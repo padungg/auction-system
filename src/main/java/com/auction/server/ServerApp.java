@@ -3,7 +3,7 @@ package com.auction.server;
 import com.auction.server.config.AppConfig;
 import com.auction.server.network.SocketServer;
 import com.auction.server.service.AuctionScheduler;
-import com.auction.server.database.DatabaseInitializer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,8 +30,7 @@ public class ServerApp {
     }
 
     public static void main(String[] args) {
-        // Khởi tạo Database (tạo bảng nếu chưa có)
-        DatabaseInitializer.initialize();
+        // Database đã được khởi tạo và quản lý trực tiếp trên Supabase (không cần chạy code tạo bảng ở đây nữa)
 
         // Khởi tạo Dependency Injection container
         AppConfig appConfig = AppConfig.getInstance();
