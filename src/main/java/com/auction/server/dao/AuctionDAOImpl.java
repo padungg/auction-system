@@ -57,9 +57,9 @@ public class AuctionDAOImpl implements AuctionDAO {
 
     @Override
     public boolean save(Auction auction) {
-        String sql = "INSERT INTO auctions (id, item_id, current_winner_id, current_price, start_time, end_time, status) "
+        String sql = "INSERT INTO auctions (id, item_id, current_winner_id, current_price, start_time, end_time, status, step_price) "
                 +
-                "VALUES (?, ?, ?, ?, ?, ?, ?)";
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -70,6 +70,7 @@ public class AuctionDAOImpl implements AuctionDAO {
             stmt.setTimestamp(5, Timestamp.valueOf(auction.getStartTime()));
             stmt.setTimestamp(6, Timestamp.valueOf(auction.getEndTime()));
             stmt.setString(7, auction.getStatus().name());
+            stmt.setDouble(8, auction.getStepPrice());
 
             int rowsAffected = stmt.executeUpdate();
             return rowsAffected > 0;
@@ -82,7 +83,7 @@ public class AuctionDAOImpl implements AuctionDAO {
 
     @Override
     public boolean update(Auction auction) {
-        String sql = "UPDATE auctions SET current_winner_id = ?, current_price = ?, status = ?, end_time = ? WHERE id = ?";
+        String sql = "UPDATE auctions SET current_winner_id = ?, current_price = ?, status = ?, end_time = ?, step_price = ? WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -90,7 +91,8 @@ public class AuctionDAOImpl implements AuctionDAO {
             stmt.setDouble(2, auction.getCurrentPrice());
             stmt.setString(3, auction.getStatus().name());
             stmt.setTimestamp(4, Timestamp.valueOf(auction.getEndTime()));
-            stmt.setString(5, auction.getId());
+            stmt.setDouble(5, auction.getStepPrice());
+            stmt.setString(6, auction.getId());
 
             int rowsAffected = stmt.executeUpdate();
             return rowsAffected > 0;
@@ -110,6 +112,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                 rs.getTimestamp("end_time").toLocalDateTime()
         );
         auction.setCurrentWinnerId(rs.getString("current_winner_id"));
+        auction.setStepPrice(rs.getDouble("step_price"));
 
         String statusStr = rs.getString("status");
         try {

@@ -74,10 +74,36 @@ public class AuctionScheduler {
     private void checkExpiredAuctions() {
         try {
             LocalDateTime now = LocalDateTime.now();
-            List<Auction> openingAuctions = auctionDAO.findAllByStatus(AuctionStatus.RUNNING);
 
+            // 1. Kích hoạt các phiên OPEN đã đến giờ bắt đầu
+            List<Auction> openAuctions = auctionDAO.findAllByStatus(AuctionStatus.OPEN);
+            int startedCount = 0;
+            for (Auction auction : openAuctions) {
+                if (!now.isBefore(auction.getStartTime())) {
+                    Object lock = com.auction.server.util.LockManager.getAuctionLock(auction.getId());
+                    synchronized (lock) {
+                        try {
+                            Auction currentAuction = auctionDAO.findById(auction.getId());
+                            if (currentAuction != null && currentAuction.getStatus() == AuctionStatus.OPEN) {
+                                currentAuction.setStatus(AuctionStatus.RUNNING);
+                                auctionDAO.update(currentAuction);
+                                startedCount++;
+                                LOGGER.info("SCHEDULER: Phiên đấu giá {} bắt đầu hoạt động (RUNNING).", currentAuction.getId());
+                            }
+                        } catch (Exception e) {
+                            LOGGER.error("Lỗi khi chuyển trạng thái phiên đấu giá sang RUNNING: {}", auction.getId(), e);
+                        }
+                    }
+                }
+            }
+            if (startedCount > 0) {
+                LOGGER.info("CHECK: Đã kích hoạt {} phiên đấu giá mới", startedCount);
+            }
+
+            // 2. Đóng các phiên RUNNING đã hết hạn
+            List<Auction> runningAuctions = auctionDAO.findAllByStatus(AuctionStatus.RUNNING);
             int closedCount = 0;
-            for (Auction auction : openingAuctions) {
+            for (Auction auction : runningAuctions) {
                 if (now.isAfter(auction.getEndTime())) {
                     try {
                         auctionService.closeAuction(auction.getId());
@@ -93,7 +119,7 @@ public class AuctionScheduler {
             }
 
         } catch (Exception e) {
-            LOGGER.error("ERROR khi kiểm tra phiên hết hạn", e);
+            LOGGER.error("ERROR khi kiểm tra phiên đấu giá", e);
         }
     }
 }

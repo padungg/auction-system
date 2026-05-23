@@ -152,4 +152,15 @@ public class UserService {
             return new Response(ResponseStatus.SUCCESS, successMsg + user.getUsername(), null);
         }
     }
+
+    /**
+     * Kiểm tra xem người dùng có phải là Admin hay không.
+     */
+    public boolean isAdmin(String userId) {
+        if (userId == null || userId.trim().isEmpty()) {
+            return false;
+        }
+        User user = userDAO.findById(userId.trim());
+        return user != null && user.isActive() && user.getRole() == UserRole.ADMIN;
+    }
 }

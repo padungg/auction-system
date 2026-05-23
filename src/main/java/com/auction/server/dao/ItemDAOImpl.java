@@ -33,24 +33,29 @@ public class ItemDAOImpl implements ItemDAO {
                     String sellerId = rs.getString("seller_id");
                     double startingPrice = rs.getDouble("starting_price");
                     
+                    Item item = null;
                     if ("ART".equalsIgnoreCase(itemType)) {
                         String artistName = rs.getString("artist_name");
                         String material = rs.getString("material");
                         int creationYear = rs.getInt("creation_year");
-                        return new Art(id, name, description, condition, sellerId, startingPrice, artistName, material, creationYear);
+                        item = new Art(id, name, description, condition, sellerId, startingPrice, artistName, material, creationYear);
                         
                     } else if ("VEHICLE".equalsIgnoreCase(itemType)) {
                         String brand = rs.getString("brand");
                         String model = rs.getString("model");
                         int year = rs.getInt("year");
                         int km = rs.getInt("km");
-                        return new Vehicle(id, name, description, condition, sellerId, startingPrice, brand, model, year, km);
+                        item = new Vehicle(id, name, description, condition, sellerId, startingPrice, brand, model, year, km);
                         
                     } else if ("ELECTRONICS".equalsIgnoreCase(itemType)) {
                         String brand = rs.getString("brand");
                         int warrantyMonths = rs.getInt("warranty_months");
-                        return new Electronics(id, name, description, condition, sellerId, startingPrice, brand, warrantyMonths);
+                        item = new Electronics(id, name, description, condition, sellerId, startingPrice, brand, warrantyMonths);
                     }
+                    if (item != null) {
+                        item.setImageBase64(rs.getString("image_base64"));
+                    }
+                    return item;
                 }
             }
         } catch (SQLException e) {
@@ -62,8 +67,8 @@ public class ItemDAOImpl implements ItemDAO {
     @Override
     public boolean save(Item item) {
         String sql = "INSERT INTO items (id, name, description, condition_item, seller_id, starting_price, item_type, " +
-                     "artist_name, material, creation_year, brand, model, year, km, warranty_months) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                     "artist_name, material, creation_year, brand, model, year, km, warranty_months, image_base64) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
@@ -83,6 +88,7 @@ public class ItemDAOImpl implements ItemDAO {
             stmt.setObject(13, null);
             stmt.setObject(14, null);
             stmt.setObject(15, null);
+            stmt.setString(16, item.getImageBase64());
 
             if (item.getItemType() != null) {
                 stmt.setString(7, item.getItemType().name());
@@ -121,7 +127,8 @@ public class ItemDAOImpl implements ItemDAO {
     @Override
     public boolean update(Item item) {
         String sql = "UPDATE items SET name = ?, description = ?, condition_item = ?, starting_price = ?, " +
-                     "artist_name = ?, material = ?, creation_year = ?, brand = ?, model = ?, year = ?, km = ?, warranty_months = ? " +
+                     "artist_name = ?, material = ?, creation_year = ?, brand = ?, model = ?, year = ?, km = ?, warranty_months = ?, " +
+                     "image_base64 = ? " +
                      "WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -158,7 +165,8 @@ public class ItemDAOImpl implements ItemDAO {
                 stmt.setInt(12, electronics.getWarrantyMonths());
             }
 
-            stmt.setString(13, item.getId());
+            stmt.setString(13, item.getImageBase64());
+            stmt.setString(14, item.getId());
 
             int rowsAffected = stmt.executeUpdate();
             return rowsAffected > 0;

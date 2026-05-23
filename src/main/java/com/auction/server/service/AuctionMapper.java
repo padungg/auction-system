@@ -52,7 +52,7 @@ public class AuctionMapper {
                 ? auction.getEndTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
                 : null;
 
-        return new AuctionSummaryDTO(
+        AuctionSummaryDTO dto = new AuctionSummaryDTO(
                 auction.getId(),
                 itemName,
                 auction.getCurrentPrice(),
@@ -64,6 +64,11 @@ public class AuctionMapper {
                 bidCount,
                 endTime,
                 auction.getCurrentWinnerId());
+        dto.setStepPrice(auction.getStepPrice());
+        if (item != null) {
+            dto.setImageBase64(item.getImageBase64());
+        }
+        return dto;
     }
 
     public AuctionDetailDTO toDetailDTO(Auction auction) {
@@ -95,6 +100,8 @@ public class AuctionMapper {
         detail.setStartTime(auction.getStartTime());
         detail.setEndTime(auction.getEndTime());
         detail.setStatus(auction.getStatus().name());
+        detail.setStepPrice(auction.getStepPrice());
+        detail.setImageBase64(item != null ? item.getImageBase64() : null);
         return detail;
     }
 }

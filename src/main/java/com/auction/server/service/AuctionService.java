@@ -34,7 +34,8 @@ public class AuctionService {
     private final AuctionMapper auctionMapper;
     private final AutoBidService autoBidService;
 
-    public AuctionService(AuctionDAO auctionDAO, UserDAO userDAO, ItemService itemService, AuctionMapper auctionMapper, AutoBidService autoBidService) {
+    public AuctionService(AuctionDAO auctionDAO, UserDAO userDAO, ItemService itemService, AuctionMapper auctionMapper,
+            AutoBidService autoBidService) {
         this.auctionDAO = auctionDAO;
         this.userDAO = userDAO;
         this.itemService = itemService;
@@ -67,22 +68,55 @@ public class AuctionService {
         if (dto.getStartingPrice() <= 0) {
             return new Response(ResponseStatus.BAD_REQUEST, "Giá khởi điểm phải lớn hơn 0", null);
         }
-        if (dto.getDurationDays() <= 0) {
-            return new Response(ResponseStatus.BAD_REQUEST, "Thời gian đấu giá phải lớn hơn 0 ngày", null);
+        if (dto.getStepPrice() <= 0) {
+            return new Response(ResponseStatus.BAD_REQUEST, "Bước giá tối thiểu phải lớn hơn 0", null);
+        }
+        if (dto.getDurationHours() <= 0) {
+            return new Response(ResponseStatus.BAD_REQUEST, "Thời gian đấu giá phải lớn hơn 0 giờ", null);
+        }
+
+        LocalDateTime startTime = LocalDateTime.now();
+        if (dto.getStartTimeStr() != null && !dto.getStartTimeStr().trim().isEmpty()) {
+            String startStr = dto.getStartTimeStr().trim();
+            try {
+                if (startStr.length() == 16) { // yyyy-MM-dd HH:mm
+                    startTime = LocalDateTime.parse(startStr,
+                            java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+                } else if (startStr.length() == 19) { // yyyy-MM-dd HH:mm:ss
+                    startTime = LocalDateTime.parse(startStr,
+                            java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                } else {
+                    return new Response(ResponseStatus.BAD_REQUEST,
+                            "Thời gian bắt đầu không đúng định dạng yyyy-MM-dd HH:mm", null);
+                }
+            } catch (Exception e) {
+                return new Response(ResponseStatus.BAD_REQUEST,
+                        "Thời gian bắt đầu không đúng định dạng yyyy-MM-dd HH:mm", null);
+            }
+        }
+
+        LocalDateTime endTime = startTime.plusHours(dto.getDurationHours());
+        if (!endTime.isAfter(startTime)) {
+            return new Response(ResponseStatus.BAD_REQUEST, "Thời gian kết thúc phải sau thời gian bắt đầu", null);
         }
 
         // Tạo Item thông qua ItemService
         Item item = itemService.createItem(dto, sellerId);
 
         // Tạo Auction
-        LocalDateTime now = LocalDateTime.now();
         Auction auction = new Auction(
                 UUID.randomUUID().toString(),
                 item.getId(),
                 dto.getStartingPrice(),
-                now,
-                now.plusDays(dto.getDurationDays()));
-        auction.setStatus(AuctionStatus.RUNNING);
+                startTime,
+                endTime);
+        auction.setStepPrice(dto.getStepPrice());
+
+        if (startTime.isAfter(LocalDateTime.now())) {
+            auction.setStatus(AuctionStatus.OPEN);
+        } else {
+            auction.setStatus(AuctionStatus.RUNNING);
+        }
 
         auctionDAO.save(auction);
 
@@ -96,7 +130,7 @@ public class AuctionService {
         if (auctionId == null || auctionId.trim().isEmpty()) {
             throw new ValidationException("Thiếu mã phiên đấu giá");
         }
-        
+
         Object lock = com.auction.server.util.LockManager.getAuctionLock(auctionId);
         synchronized (lock) {
             Auction auction = auctionDAO.findById(auctionId.trim());
@@ -120,13 +154,17 @@ public class AuctionService {
             String winnerName = "Không có người đặt giá";
             if (auction.getCurrentWinnerId() != null) {
                 User winner = userDAO.findById(auction.getCurrentWinnerId());
-                if (winner != null) winnerName = winner.getFullName();
+                if (winner != null)
+                    winnerName = winner.getFullName();
             }
 
             String resultMsg = "Phiên đã đóng! Winner: " + winnerName
                     + " | Giá cuối: " + String.format("%,.0f", auction.getCurrentPrice()) + " VNĐ";
             LOGGER.info("CLOSE: auctionId={} | winner={} | giá cuối={} VNĐ",
                     auctionId, winnerName, String.format("%,.0f", auction.getCurrentPrice()));
+
+            com.auction.server.util.LockManager.removeAuctionLock(auctionId);
+
             return new Response(ResponseStatus.SUCCESS, resultMsg, auction.getCurrentPrice());
         }
     }
@@ -135,23 +173,26 @@ public class AuctionService {
         if (dto == null) {
             return new Response(ResponseStatus.BAD_REQUEST, "Thiếu thông tin", null);
         }
-        Auction auction = validateAndGetAuction(dto.getAuctionId());
-        if (auction.getCurrentWinnerId() != null) {
-            return new Response(ResponseStatus.BAD_REQUEST, "Không thể sửa sản phẩm đã có người đặt giá", null);
-        }
-        if (auction.getStatus() == AuctionStatus.FINISHED || auction.getStatus() == AuctionStatus.PAID) {
-            return new Response(ResponseStatus.BAD_REQUEST, "Không thể sửa phiên đấu giá đã kết thúc", null);
-        }
+        Object lock = com.auction.server.util.LockManager.getAuctionLock(dto.getAuctionId());
+        synchronized (lock) {
+            Auction auction = validateAndGetAuction(dto.getAuctionId());
+            if (auction.getCurrentWinnerId() != null) {
+                return new Response(ResponseStatus.BAD_REQUEST, "Không thể sửa sản phẩm đã có người đặt giá", null);
+            }
+            if (auction.getStatus() == AuctionStatus.FINISHED || auction.getStatus() == AuctionStatus.PAID) {
+                return new Response(ResponseStatus.BAD_REQUEST, "Không thể sửa phiên đấu giá đã kết thúc", null);
+            }
 
-        itemService.updateItem(auction.getItemId(), dto, sellerId);
+            itemService.updateItem(auction.getItemId(), dto, sellerId);
 
-        if (dto.getStartingPrice() > 0) {
-            auction.setCurrentPrice(dto.getStartingPrice());
+            if (dto.getStartingPrice() > 0) {
+                auction.setCurrentPrice(dto.getStartingPrice());
+            }
+            auctionDAO.update(auction);
+
+            LOGGER.info("UPDATE: auctionId={} by seller={}", auction.getId(), sellerId);
+            return new Response(ResponseStatus.SUCCESS, "Cập nhật sản phẩm thành công!", null);
         }
-        auctionDAO.update(auction);
-
-        LOGGER.info("UPDATE: auctionId={} by seller={}", auction.getId(), sellerId);
-        return new Response(ResponseStatus.SUCCESS, "Cập nhật sản phẩm thành công!", null);
     }
 
     public Response deleteAuctionItem(String auctionId, String sellerId) throws ValidationException {
@@ -162,7 +203,7 @@ public class AuctionService {
 
         itemService.deleteItem(auction.getItemId(), sellerId);
         auctionDAO.delete(auction.getId());
-        
+
         // Tránh memory leak
         com.auction.server.util.LockManager.removeAuctionLock(auctionId);
 

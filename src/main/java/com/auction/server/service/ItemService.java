@@ -24,12 +24,13 @@ public class ItemService {
         String condition = dto.getCondition() != null ? dto.getCondition() : "Mới";
 
         Item item = ItemFactory.createItemFromDTO(itemId, sellerId, condition, dto);
+        item.setImageBase64(dto.getImageBase64());
 
         itemDAO.save(item);
         return item;
     }
 
-    public Item updateItem(String itemId, UpdateAuctionDTO dto, String sellerId) throws ValidationException {
+    public void updateItem(String itemId, UpdateAuctionDTO dto, String sellerId) throws ValidationException {
         Item item = itemDAO.findById(itemId);
         if (item == null || !item.getSellerId().equals(sellerId)) {
             throw new ValidationException("Bạn không có quyền sửa sản phẩm này");
@@ -47,7 +48,6 @@ public class ItemService {
 
         item.applyUpdate(dto);
         itemDAO.update(item);
-        return item;
     }
 
     public void deleteItem(String itemId, String sellerId) throws ValidationException {

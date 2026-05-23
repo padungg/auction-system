@@ -4,8 +4,7 @@ import com.auction.model.dto.UserResponseDTO;
 import com.auction.model.entity.User;
 
 /**
- * Chuyên trách chuyển đổi User entity → UserResponseDTO.
- * Tách ra khỏi UserService để tuân thủ SRP.
+ * Chuyên trách chuyển đổi User entity sang UserResponseDTO.
  */
 public class UserMapper {
 

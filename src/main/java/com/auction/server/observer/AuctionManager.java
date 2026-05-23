@@ -35,7 +35,7 @@ public class AuctionManager {
      */
     public void subscribe(String auctionId, AuctionObserver observer) {
         List<AuctionObserver> observers = observerMap
-                .computeIfAbsent(auctionId, k -> new CopyOnWriteArrayList<>());
+                .computeIfAbsent(auctionId, ignored -> new CopyOnWriteArrayList<>());
         if (!observers.contains(observer)) {
             observers.add(observer);
         }
@@ -46,7 +46,7 @@ public class AuctionManager {
      * Hủy theo dõi 1 phiên đấu giá.
      */
     public void unsubscribe(String auctionId, AuctionObserver observer) {
-        observerMap.computeIfPresent(auctionId, (key, observers) -> {
+        observerMap.computeIfPresent(auctionId, (ignored, observers) -> {
             observers.remove(observer);
             return observers.isEmpty() ? null : observers; // Tự động xóa khỏi Map nếu rỗng
         });
@@ -58,7 +58,7 @@ public class AuctionManager {
      */
     public void unsubscribeAll(AuctionObserver observer) {
         for (String auctionId : observerMap.keySet()) {
-            observerMap.computeIfPresent(auctionId, (key, observers) -> {
+            observerMap.computeIfPresent(auctionId, (ignored, observers) -> {
                 observers.remove(observer);
                 return observers.isEmpty() ? null : observers;
             });
@@ -68,14 +68,15 @@ public class AuctionManager {
     /**
      * Thông báo cho TẤT CẢ observer đang xem phiên này rằng có bid mới.
      */
-    public void notifyBidUpdate(String auctionId, double newPrice, String bidderId, String bidTime) {
+    public void notifyBidUpdate(String auctionId, double newPrice, String bidderId,
+                                String bidderName, String itemName, String bidTime) {
         List<AuctionObserver> observers = observerMap.get(auctionId);
         if (observers == null || observers.isEmpty()) return;
 
         int count = 0;
         for (AuctionObserver observer : observers) {
             try {
-                observer.onBidUpdated(auctionId, newPrice, bidderId, bidTime);
+                observer.onBidUpdated(auctionId, newPrice, bidderId, bidderName, itemName, bidTime);
                 count++;
             } catch (Exception e) {
                 LOGGER.error("NOTIFY_ERROR: {}", e.getMessage(), e);

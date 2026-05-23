@@ -11,11 +11,11 @@ public class LockManager {
     private static final ConcurrentHashMap<String, Object> userLocks = new ConcurrentHashMap<>();
 
     public static Object getAuctionLock(String auctionId) {
-        return auctionLocks.computeIfAbsent(auctionId, k -> new Object());
+        return auctionLocks.computeIfAbsent(auctionId, ignored -> new Object());
     }
 
     public static Object getUserLock(String userId) {
-        return userLocks.computeIfAbsent(userId, k -> new Object());
+        return userLocks.computeIfAbsent(userId, ignored -> new Object());
     }
 
     /** Xóa lock của phiên đấu giá (gọi khi xóa phiên) để tránh memory leak */

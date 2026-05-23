@@ -32,7 +32,7 @@ public class AppConfig {
         
         autoBidService = new AutoBidService(auctionDAO, autoBidDAO);
         auctionService = new AuctionService(auctionDAO, userDAO, itemService, auctionMapper, autoBidService);
-        BidService bidService = new BidService(auctionDAO, bidTransactionDAO, autoBidService, itemDAO);
+        BidService bidService = new BidService(auctionDAO, bidTransactionDAO, autoBidService, itemDAO, userDAO);
         autoBidService.setBidService(bidService);
         PaymentService paymentService = new PaymentService(auctionDAO, userDAO, itemDAO, auctionMapper);
 

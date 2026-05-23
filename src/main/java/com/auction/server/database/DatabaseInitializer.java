@@ -45,6 +45,7 @@ public class DatabaseInitializer {
                                 "year INT, " +
                                 "km INT, " +
                                 "warranty_months INT, " +
+                                "image_base64 LONGTEXT, " +
                                 "FOREIGN KEY (seller_id) REFERENCES users(id) ON DELETE CASCADE" +
                                 ");";
 
@@ -56,6 +57,7 @@ public class DatabaseInitializer {
                                 "start_time TIMESTAMP, " +
                                 "end_time TIMESTAMP, " +
                                 "status VARCHAR(20), " +
+                                "step_price DOUBLE DEFAULT 0, " +
                                 "FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE" +
                                 ");";
 
@@ -91,12 +93,18 @@ public class DatabaseInitializer {
                         stmt.execute(createBidTransactionsTable);
                         stmt.execute(createAutoBidsTable);
 
-                        // Tự động thêm cột is_auto_bid nếu database cũ chưa có (tránh lỗi khi người
-                        // dùng quên xóa DB)
+                        // Tự động thêm cột nếu database cũ chưa có
                         try {
                                 stmt.execute("ALTER TABLE bid_transactions ADD COLUMN is_auto_bid BOOLEAN DEFAULT FALSE;");
                         } catch (SQLException ignored) {
-                                // Cột đã tồn tại hoặc bảng chưa có data, có thể bỏ qua
+                        }
+                        try {
+                                stmt.execute("ALTER TABLE items ADD COLUMN image_base64 LONGTEXT;");
+                        } catch (SQLException ignored) {
+                        }
+                        try {
+                                stmt.execute("ALTER TABLE auctions ADD COLUMN step_price DOUBLE DEFAULT 0;");
+                        } catch (SQLException ignored) {
                         }
 
                         // 2. SEED TÀI KHOẢN

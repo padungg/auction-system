@@ -49,7 +49,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
 
         try {
             in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
-            out = new PrintWriter(socket.getOutputStream(), true);
+            out = new PrintWriter(new java.io.OutputStreamWriter(socket.getOutputStream(), java.nio.charset.StandardCharsets.UTF_8), true);
 
             String line;
             while ((line = in.readLine()) != null) {
@@ -101,6 +101,10 @@ public class ClientHandler implements Runnable, AuctionObserver {
             }
         }
 
+        if (response != null && request.getRequestId() != null) {
+            response.setRequestId(request.getRequestId());
+        }
+
         sendResponse(response);
     }
 
@@ -110,19 +114,28 @@ public class ClientHandler implements Runnable, AuctionObserver {
     private boolean handleSubscriptionRequest(Request request) {
         if (request.getType() == RequestType.SUBSCRIBE_AUCTION) {
             String auctionId = GSON.fromJson(GSON.toJson(request.getPayload()), String.class);
+            Response response;
             if (auctionId == null || auctionId.isBlank()) {
-                sendResponse(new Response(ResponseStatus.BAD_REQUEST, "Thiếu auctionId", null));
+                response = new Response(ResponseStatus.BAD_REQUEST, "Thiếu auctionId", null);
             } else {
                 AuctionManager.getInstance().subscribe(auctionId, this);
-                sendResponse(new Response(ResponseStatus.SUCCESS, "Đã đăng ký nhận cập nhật cho phiên " + auctionId, null));
+                response = new Response(ResponseStatus.SUCCESS, "Đã đăng ký nhận cập nhật cho phiên " + auctionId, null);
             }
+            if (request.getRequestId() != null) {
+                response.setRequestId(request.getRequestId());
+            }
+            sendResponse(response);
             return true;
         } else if (request.getType() == RequestType.UNSUBSCRIBE_AUCTION) {
             String auctionId = GSON.fromJson(GSON.toJson(request.getPayload()), String.class);
             if (auctionId != null && !auctionId.isBlank()) {
                 AuctionManager.getInstance().unsubscribe(auctionId, this);
             }
-            sendResponse(new Response(ResponseStatus.SUCCESS, "Đã hủy đăng ký", null));
+            Response response = new Response(ResponseStatus.SUCCESS, "Đã hủy đăng ký", null);
+            if (request.getRequestId() != null) {
+                response.setRequestId(request.getRequestId());
+            }
+            sendResponse(response);
             return true;
         }
         return false;
@@ -132,8 +145,10 @@ public class ClientHandler implements Runnable, AuctionObserver {
      * Cập nhật realtime khi có bid mới.
      */
     @Override
-    public void onBidUpdated(String auctionId, double newPrice, String bidderId, String bidTime) {
-        BidUpdateNotificationDTO notification = new BidUpdateNotificationDTO(auctionId, newPrice, bidderId, bidTime);
+    public void onBidUpdated(String auctionId, double newPrice, String bidderId,
+                             String bidderName, String itemName, String bidTime) {
+        BidUpdateNotificationDTO notification = new BidUpdateNotificationDTO(
+                auctionId, newPrice, bidderId, bidderName, itemName, bidTime);
         sendPush(GSON.toJson(notification));
     }
 
@@ -163,6 +178,12 @@ public class ClientHandler implements Runnable, AuctionObserver {
      */
     private void cleanup(String clientAddr) {
         AuctionManager.getInstance().unsubscribeAll(this);
+        try {
+            if (in != null) in.close();
+        } catch (IOException e) {
+            LOGGER.error("IN_CLOSE_ERROR: {}", e.getMessage());
+        }
+        if (out != null) out.close();
         try {
             if (socket != null && !socket.isClosed()) {
                 socket.close();

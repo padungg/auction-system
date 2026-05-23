@@ -23,14 +23,14 @@ import org.slf4j.LoggerFactory;
  */
 public class PaymentService {
     private static final Logger LOGGER = LoggerFactory.getLogger(PaymentService.class);
-    
+
     private final AuctionDAO auctionDAO;
     private final UserDAO userDAO;
     private final ItemDAO itemDAO;
     private final AuctionMapper auctionMapper;
 
     // Phí nền tảng  là 2%
-    private static final double PLATFORM_FEE_PERCENTAGE = 0.02;
+    public static final double PLATFORM_FEE_PERCENTAGE = 0.02;
 
     public PaymentService(AuctionDAO auctionDAO, UserDAO userDAO, ItemDAO itemDAO, AuctionMapper auctionMapper) {
         this.auctionDAO = auctionDAO;
@@ -75,6 +75,37 @@ public class PaymentService {
         return new Response(ResponseStatus.SUCCESS, "Lấy lịch sử thanh toán thành công", history);
     }
 
+    @FunctionalInterface
+    private interface PaymentAction {
+        Response execute() throws ValidationException;
+    }
+
+    private Response executeWithUserLocks(List<String> userIds, int index, PaymentAction action) throws ValidationException {
+        if (index >= userIds.size()) {
+            return action.execute();
+        }
+        Object lock = LockManager.getUserLock(userIds.get(index));
+        synchronized (lock) {
+            return executeWithUserLocks(userIds, index + 1, action);
+        }
+    }
+
+    /**
+     * Helper kiểm tra tính hợp lệ của phiên đấu giá để thanh toán.
+     */
+    private Response validateAuctionForPayment(Auction auction, String userId) {
+        if (auction == null) {
+            return new Response(ResponseStatus.NOT_FOUND, "Không tìm thấy phiên đấu giá", null);
+        }
+        if (auction.getStatus() != AuctionStatus.FINISHED) {
+            return new Response(ResponseStatus.BAD_REQUEST, "Phiên chưa kết thúc hoặc đã thanh toán rồi", null);
+        }
+        if (!userId.equals(auction.getCurrentWinnerId())) {
+            return new Response(ResponseStatus.UNAUTHORIZED, "Bạn không phải người thắng phiên này", null);
+        }
+        return null;
+    }
+
     /**
      * Thanh toán phiên đấu giá đã thắng.
      */
@@ -83,18 +114,41 @@ public class PaymentService {
             return new Response(ResponseStatus.UNAUTHORIZED, "Bạn chưa đăng nhập", null);
         }
 
-        // Lock theo userId để tránh Race Condition thanh toán 2 lần cùng lúc
-        Object lock = LockManager.getUserLock(userId);
-        synchronized (lock) {
-            Auction auction = auctionDAO.findById(auctionId);
-            if (auction == null) {
-                return new Response(ResponseStatus.NOT_FOUND, "Không tìm thấy phiên đấu giá", null);
-            }
-            if (auction.getStatus() != AuctionStatus.FINISHED) {
-                return new Response(ResponseStatus.BAD_REQUEST, "Phiên chưa kết thúc hoặc đã thanh toán rồi", null);
-            }
-            if (!userId.equals(auction.getCurrentWinnerId())) {
-                return new Response(ResponseStatus.UNAUTHORIZED, "Bạn không phải người thắng phiên này", null);
+        Auction auction = auctionDAO.findById(auctionId);
+        Response validation = validateAuctionForPayment(auction, userId);
+        if (validation != null) {
+            return validation;
+        }
+
+        // Tìm sellerId từ Item để khóa
+        String sellerId = null;
+        Item item = itemDAO.findById(auction.getItemId());
+        if (item != null) {
+            sellerId = item.getSellerId();
+        }
+
+        // Tìm adminId để khóa
+        User admin = userDAO.findFirstByRole(com.auction.model.entity.UserRole.ADMIN);
+        String adminId = (admin != null) ? admin.getId() : null;
+
+        // Tạo danh sách Lock và sắp xếp alphabetically để tránh deadlock
+        List<String> lockIds = new ArrayList<>();
+        lockIds.add(userId);
+        if (sellerId != null) lockIds.add(sellerId);
+        if (adminId != null) lockIds.add(adminId);
+
+        List<String> sortedLocks = lockIds.stream()
+                .filter(java.util.Objects::nonNull)
+                .distinct()
+                .sorted()
+                .collect(java.util.stream.Collectors.toList());
+
+        return executeWithUserLocks(sortedLocks, 0, () -> {
+            // Re-fetch auction inside lock block to guarantee data consistency
+            Auction lockedAuction = auctionDAO.findById(auctionId);
+            Response lockedValidation = validateAuctionForPayment(lockedAuction, userId);
+            if (lockedValidation != null) {
+                return lockedValidation;
             }
 
             User user = userDAO.findById(userId);
@@ -102,7 +156,7 @@ public class PaymentService {
                 return new Response(ResponseStatus.NOT_FOUND, "Không tìm thấy tài khoản", null);
             }
 
-            double basePrice = auction.getCurrentPrice();
+            double basePrice = lockedAuction.getCurrentPrice();
             double platformFee = Math.round(basePrice * PLATFORM_FEE_PERCENTAGE * 100.0) / 100.0;
             double totalRequired = basePrice + platformFee;
 
@@ -115,18 +169,18 @@ public class PaymentService {
             }
 
             // Thực hiện giao dịch tài chính
-            processPaymentTransaction(user, basePrice, platformFee, totalRequired, auction.getItemId());
+            processPaymentTransaction(user, basePrice, platformFee, totalRequired, lockedAuction.getItemId());
 
             // Chuyển status sang PAID
-            auction.setStatus(AuctionStatus.PAID);
-            auctionDAO.update(auction);
+            lockedAuction.setStatus(AuctionStatus.PAID);
+            auctionDAO.update(lockedAuction);
 
             LOGGER.info("PAY_AUCTION: auctionId={} | buyer={} | giá={} | phí={} | tổng={} VNĐ",
                     auctionId, userId, String.format("%,.0f", basePrice), String.format("%,.0f", platformFee), String.format("%,.0f", totalRequired));
             return new Response(ResponseStatus.SUCCESS,
                     "Thanh toán thành công! (Đã trợ phí " + (PLATFORM_FEE_PERCENTAGE * 100) + "% = "
                             + String.format("%,.0f", platformFee) + " VNĐ)", null);
-        }
+        });
     }
 
     /**

@@ -6,11 +6,13 @@ import com.auction.model.entity.Auction;
 import com.auction.model.entity.AuctionStatus;
 import com.auction.model.entity.BidTransaction;
 import com.auction.model.entity.Item;
+import com.auction.model.entity.User;
 import com.auction.model.protocol.Response;
 import com.auction.model.protocol.ResponseStatus;
 import com.auction.server.dao.AuctionDAO;
 import com.auction.server.dao.BidTransactionDAO;
 import com.auction.server.dao.ItemDAO;
+import com.auction.server.dao.UserDAO;
 import com.auction.server.observer.AuctionManager;
 import com.auction.server.util.AuctionUtils;
 import java.time.LocalDateTime;
@@ -33,13 +35,15 @@ public class BidService {
     private final BidTransactionDAO bidTransactionDAO;
     private final AutoBidService autoBidService;
     private final ItemDAO itemDAO;
+    private final UserDAO userDAO;
 
     public BidService(AuctionDAO auctionDAO, BidTransactionDAO bidTransactionDAO,
-                      AutoBidService autoBidService, ItemDAO itemDAO) {
+                      AutoBidService autoBidService, ItemDAO itemDAO, UserDAO userDAO) {
         this.auctionDAO = auctionDAO;
         this.bidTransactionDAO = bidTransactionDAO;
         this.autoBidService = autoBidService;
         this.itemDAO = itemDAO;
+        this.userDAO = userDAO;
     }
 
     /**
@@ -85,9 +89,19 @@ public class BidService {
             }
             // Xử lý đặt giá
             double bidAmount = dto.getBidAmount();
-            if (bidAmount <= auction.getCurrentPrice()) {
-                return new Response(ResponseStatus.BAD_REQUEST,
-                        "Giá bid phải cao hơn giá hiện tại: " + auction.getCurrentPrice(), null);
+            double minRequiredBid;
+            if (auction.getCurrentWinnerId() == null) {
+                minRequiredBid = auction.getCurrentPrice(); // startingPrice
+                if (bidAmount < minRequiredBid) {
+                    return new Response(ResponseStatus.BAD_REQUEST,
+                            "Giá đặt phải lớn hơn hoặc bằng giá khởi điểm: " + String.format("%,.0f", minRequiredBid) + " VNĐ", null);
+                }
+            } else {
+                minRequiredBid = auction.getCurrentPrice() + auction.getStepPrice();
+                if (bidAmount < minRequiredBid) {
+                    return new Response(ResponseStatus.BAD_REQUEST,
+                            "Giá đặt tối thiểu phải là " + String.format("%,.0f", minRequiredBid) + " VNĐ (Giá hiện tại + Bước giá tối thiểu " + String.format("%,.0f", auction.getStepPrice()) + " VNĐ)", null);
+                }
             }
             if (bidderId.equals(auction.getCurrentWinnerId())) {
                 return new Response(ResponseStatus.BAD_REQUEST, "Bạn đang là người đặt giá cao nhất, không cần bid thêm!",
@@ -122,7 +136,7 @@ public class BidService {
                 // Nếu AutoBid đẩy giá lên sau khi phiên đã đóng thời gian
                 if (LocalDateTime.now().isAfter(auction.getEndTime())) break;
 
-                applyBid(auction, nextBid.userId, nextBid.bidAmount, true);
+                applyBid(auction, nextBid.userId(), nextBid.bidAmount(), true);
                 rounds++;
             }
 
@@ -154,10 +168,29 @@ public class BidService {
 
         String bidTimeIso = transaction.getBidTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
 
+        // Lấy tên người đặt giá và tên sản phẩm để gửi thông báo đầy đủ
+        String bidderName = bidderId;
+        if (userDAO != null) {
+            try {
+                User bidderUser = userDAO.findById(bidderId);
+                if (bidderUser != null && bidderUser.getUsername() != null) {
+                    bidderName = bidderUser.getUsername();
+                }
+            } catch (Exception ignored) {}
+        }
+
+        String itemName = "một sản phẩm";
+        try {
+            Item item = itemDAO.findById(auction.getItemId());
+            if (item != null && item.getName() != null) {
+                itemName = item.getName();
+            }
+        } catch (Exception ignored) {}
+
         // ANTI-SNIPING
         AuctionUtils.applyAntiSnipe(auction, auctionDAO);
         // OBSERVER
-        AuctionManager.getInstance().notifyBidUpdate(auction.getId(), bidAmount, bidderId, bidTimeIso);
+        AuctionManager.getInstance().notifyBidUpdate(auction.getId(), bidAmount, bidderId, bidderName, itemName, bidTimeIso);
 
         LOGGER.info("{}BID: phiên={} | bidder={} | {} → {} VNĐ",
                 isAutoBid ? "AUTO_" : "PLACE_",

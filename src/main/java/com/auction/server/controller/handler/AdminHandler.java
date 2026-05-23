@@ -17,6 +17,9 @@ public class AdminHandler extends BaseHandler {
 
     @Override
     public Response handle(Request request, String loggedInUserId) {
+        if (loggedInUserId == null || !userService.isAdmin(loggedInUserId)) {
+            return new Response(ResponseStatus.UNAUTHORIZED, "Từ chối truy cập: Bạn không có quyền quản trị viên!", null);
+        }
         switch (request.getType()) {
             case GET_ALL_USERS:
                 return userService.getAllUsers();

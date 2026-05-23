@@ -21,8 +21,8 @@ import org.slf4j.LoggerFactory;
 public class WalletService {
     private static final Logger LOGGER = LoggerFactory.getLogger(WalletService.class);
 
-    /** Phí nền tảng 2% — phải khớp với PaymentService */
-    private static final double PLATFORM_FEE = 0.02;
+    /** Phí nền tảng 2% — tham chiếu từ PaymentService */
+    private static final double PLATFORM_FEE = PaymentService.PLATFORM_FEE_PERCENTAGE;
 
     private final UserDAO userDAO;
     private final AuctionDAO auctionDAO;

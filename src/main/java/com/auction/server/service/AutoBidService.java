@@ -45,7 +45,7 @@ public class AutoBidService {
         List<AutoBidEntry> entries = autoBidDAO.findAll();
         for (AutoBidEntry entry : entries) {
             PriorityQueue<AutoBidEntry> queue = registry.computeIfAbsent(
-                    entry.getAuctionId(), k -> new PriorityQueue<>());
+                    entry.getAuctionId(), ignored -> new PriorityQueue<>());
             queue.add(entry);
         }
         LOGGER.info("Đã load {} auto-bids từ DB.", entries.size());
@@ -62,7 +62,7 @@ public class AutoBidService {
         if (dto == null || dto.getAuctionId() == null) {
             return new Response(ResponseStatus.BAD_REQUEST, "Thiếu thông tin auto-bid", null);
         }
-        
+
         Object lock = com.auction.server.util.LockManager.getAuctionLock(dto.getAuctionId());
         synchronized (lock) {
             if (userId == null) {
@@ -80,6 +80,12 @@ public class AutoBidService {
             if (auction == null) {
                 return new Response(ResponseStatus.NOT_FOUND, "Phiên đấu giá không tồn tại", null);
             }
+            if (dto.getIncrement() < auction.getStepPrice()) {
+                return new Response(ResponseStatus.BAD_REQUEST,
+                        "Bước tăng giá phải lớn hơn hoặc bằng bước giá tối thiểu của phiên: "
+                                + String.format("%,.0f", auction.getStepPrice()) + " VNĐ",
+                        null);
+            }
             if (auction.getStatus() != AuctionStatus.RUNNING) {
                 return new Response(ResponseStatus.BAD_REQUEST,
                         "Chỉ có thể đăng ký auto-bid cho phiên đang mở", null);
@@ -93,7 +99,7 @@ public class AutoBidService {
 
             // Lấy hoặc tạo queue cho phiên này
             PriorityQueue<AutoBidEntry> queue = registry.computeIfAbsent(
-                    dto.getAuctionId(), k -> new PriorityQueue<>());
+                    dto.getAuctionId(), ignored -> new PriorityQueue<>());
 
             // Nếu user đã đăng ký → xóa entry cũ trước (để ghi đè)
             queue.removeIf(e -> e.getUserId().equals(userId));
@@ -130,7 +136,7 @@ public class AutoBidService {
         if (auctionId == null || userId == null) {
             return new Response(ResponseStatus.BAD_REQUEST, "Thiếu thông tin hủy auto-bid", null);
         }
-        
+
         Object lock = com.auction.server.util.LockManager.getAuctionLock(auctionId);
         synchronized (lock) {
             PriorityQueue<AutoBidEntry> queue = registry.get(auctionId);
@@ -164,14 +170,7 @@ public class AutoBidService {
      * Kích hoạt vòng tự động phản giá sau khi có bid mới.
      * Được gọi bởi BidService.placeBid() — đã nằm trong synchronized context.
      */
-    public static class NextAutoBid {
-        public final String userId;
-        public final double bidAmount;
-        public NextAutoBid(String userId, double bidAmount) {
-            this.userId = userId;
-            this.bidAmount = bidAmount;
-        }
-    }
+    public record NextAutoBid(String userId, double bidAmount) {}
 
     /**
      * Tính toán xem ai là người auto-bid tiếp theo và giá là bao nhiêu.
