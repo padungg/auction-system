@@ -17,36 +17,31 @@ import java.util.Base64;
 /**
  * <h2>ProductCardController</h2>
  * <p>
- * Controller quản lý vòng đời hiển thị của một Thẻ sản phẩm tóm tắt (Product Card Component)
- * bên trong mạng lưới lưới hiển thị (FlowPane Grid) của ứng dụng Client.
+ * Bộ điều khiển Thẻ sản phẩm tóm tắt (Product Component Card Controller) phía Client.
+ * Đảm nhiệm vai trò quản lý vòng đời render, ánh xạ dữ liệu và tương tác đồ họa cho từng ô phần tử
+ * hiển thị trong mạng lưới danh sách sản phẩm đấu giá (Grid/ListView Layout).
  * </p>
- *
- * <p><b>Các cơ chế kỹ thuật tích hợp:</b></p>
+ * * <p><b>Các giải pháp kỹ thuật và cơ chế đồ họa JavaFX UI:</b></p>
  * <ul>
- *   <li><b>Đồng bộ dữ liệu (Flyweight Data Binding):</b> Ánh xạ luồng dữ liệu DTO động từ Server lên tập hợp các phần tử nhãn đầu cuối (UI Elements).</li>
- *   <li><b>Giải mã nhị phân ảnh (Base64 Stream Decoding):</b> Chuyển đổi chuỗi ký tự Base64 thành luồng nhị phân `ByteArrayInputStream` để render trực tiếp lên ImageView, tích hợp cơ chế dự phòng sang đồ họa Emoji nếu luồng dữ liệu lỗi hoặc trống.</li>
- *   <li><b>Ma trận phong cách động (Dynamic Styling Matrix):</b> Tự động phân tách và gán/gỡ bỏ lớp class CSS dựa trên trạng thái vòng đời phiên đấu giá và mức độ khẩn cấp của thời gian đếm ngược (Dưới 1 giờ áp dụng lớp khẩn cấp `card-timer-urgent`).</li>
- *   <li><b>Định tuyến tương tác (Deep Link Navigation Trigger):</b> Tiếp nhận hành động nhấp chuột vào phân vùng thẻ để phát tín hiệu định tuyến sang phòng chi tiết phiên đấu giá thông qua cơ chế UI Singleton của MainController.</li>
+ * <li><b>Giải mã luồng ảnh bất đồng bộ (Base64 Byte-Stream Image Rendering):</b> Tiếp nhận chuỗi mã hóa ảnh nhị phân Base64 từ DTO, chuyển dịch qua luồng bộ đệm `ByteArrayInputStream` để dựng thực thể `Image` cấu hình hiển thị lên `ImageView` một cách an toàn.</li>
+ * <li><b>Phân nhánh logic giao diện (Dynamic UI Polling):</b> Tự động tính toán hoán đổi trạng thái hiển thị giữa Emoji ký tự và ImageView đồ họa dựa trên sự tồn tại của dữ liệu tệp ảnh gốc.</li>
+ * <li><b>Kiến trúc Style Class động (Dynamic CSS State Swapping):</b> Gỡ bỏ và tái cấu hình các lớp định dạng CSS (`getStyleClass()`) theo thời gian thực dựa trên trạng thái vòng đời phiên đấu giá (`RUNNING`, `OPEN`, `FINISHED`) và mốc thời gian cảnh báo khẩn cấp dưới 1 giờ.</li>
+ * <li><b>Mẫu thiết kế Mediator điều phối điều hướng (Loose Coupling Navigation):</b> Ủy thác hành vi xử lý nhấn chuột thẻ (`handleCardClick`) thông qua thực thể Singleton của `MainController` để thực hiện chuyển hướng màn hình chi tiết, giảm thiểu liên kết cứng.</li>
  * </ul>
- *
- * @since 1.0
+ * * @since 1.0
  * @see com.auction.model.dto.AuctionSummaryDTO
- * @see com.auction.client.controller.MainController
+ * @see javafx.fxml.Initializable
  */
 public class ProductCardController {
 
-    /**
-     * Bộ ghi nhật ký tập trung (SLF4J Logger) cấu hình theo tiêu chuẩn an toàn đa luồng.
-     * Chịu trách nhiệm lưu vết tiến trình xử lý render thẻ, cô lập các cảnh báo phân tích định dạng ngày giờ và giải mã ảnh.
-     */
+    /** Bộ ghi nhật ký tập trung (SLF4J Logger) cấu hình theo tiêu chuẩn an toàn đa luồng phục vụ công tác giám sát tiến trình render UI. */
     private static final Logger LOGGER = LoggerFactory.getLogger(ProductCardController.class);
 
-    /** Bộ định dạng thời gian tiêu chuẩn để phân tích cú pháp chuỗi Ngày/Tháng/Năm từ máy chủ. */
-    private static final DateTimeFormatter DT_FORMATTER =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    /** Bộ định dạng thời gian tiêu chuẩn hệ thống phục vụ bóc tách chuỗi mốc ngày giờ kết thúc phiên đấu giá. */
+    private static final DateTimeFormatter DT_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     // =========================================================================
-    // THÀNH PHẦN GIAO DIỆN FXML - LIÊN KẾT ĐỒ HỌA THẺ (UI FIELDS BINDING)
+    // PHÂN VÙNG BINDING THÀNH PHẦN ĐỒ HỌA FXML (UI COMPONENT BINDINGS)
     // =========================================================================
     @FXML private Label lblEmoji;
     @FXML private ImageView imgProduct;
@@ -59,29 +54,36 @@ public class ProductCardController {
     @FXML private Label lblStartPrice;
     @FXML private Label lblBidCount;
 
-    /** Mã định danh duy nhất của phiên đấu giá hiện tại, dùng để truyền tham số khi chuyển tiếp view chi tiết. */
+    /** Mã số định danh duy nhất của phiên đấu giá hiện tại đang liên kết với thẻ card đồ họa, phục vụ lệnh điều hướng. */
     private String currentAuctionId;
 
     /**
-     * Phương thức nạp và đồng bộ hóa dữ liệu DTO lên giao diện cấu trúc thẻ sản phẩm.
-     * Tiến hành gán văn bản định dạng tiền tệ tách biệt hàng nghìn, phân bổ Emoji theo danh mục mặt hàng,
-     * thực hiện giải mã luồng văn bản Base64, đồng bộ Badge trạng thái và tính toán biên thời gian khẩn cấp.
-     *
-     * @param auction Đối tượng đối tượng DTO chứa dữ liệu tóm tắt của phiên đấu giá
+     * Đồng bộ và kết xuất dữ liệu từ đối tượng DTO vào các thành phần đồ họa của thẻ (Data Binding Binder).
+     * <p>
+     * Phương thức thực hiện gán văn bản, phân loại danh mục sản phẩm, tính toán giải mã byte ảnh nhị phân
+     * và phát động lời gọi hàm bổ trợ để gán các lớp định dạng CSS động cho Badge trạng thái và khối đếm thời gian.
+     * </p>
+     * * @param auction Thực thể đối tượng tóm tắt thông tin phòng phiên {@link AuctionSummaryDTO} dội về từ Server
      */
     public void setData(AuctionSummaryDTO auction) {
         currentAuctionId = auction.getAuctionId();
 
-        // Đồng bộ hóa các trường thông tin tiêu đề sản phẩm và định danh người đăng bán
+        // -------------------------------------------------------------------------
+        // 1. LIÊN KẾT THÔNG TIN VĂN BẢN (TEXT PROPERTY BINDING)
+        // -------------------------------------------------------------------------
         lblProductName.setText(auction.getItemName() != null ? auction.getItemName() : "—");
         lblSeller.setText("Người bán: " + (auction.getSellerName() != null ? auction.getSellerName() : "N/A"));
 
-        // Định dạng chuỗi văn bản tiền tệ quốc gia VND và kết xuất số lượt đặt giá
+        // -------------------------------------------------------------------------
+        // 2. LIÊN KẾT VÀ ĐỊNH DẠNG SỐ SÀN GIÁ (FINANCIAL NUMBER FORMATTING)
+        // -------------------------------------------------------------------------
         lblCurrentPrice.setText(String.format("%,.0f VNĐ", auction.getCurrentPrice()));
         lblStartPrice.setText("Khởi điểm: " + String.format("%,.0f VNĐ", auction.getStartingPrice()));
         lblBidCount.setText("🔨 " + auction.getBidCount() + " lượt đặt giá");
 
-        // Động cơ phân tích từ khóa danh mục: Ánh xạ mã danh mục sang nhãn chữ tiếng Việt và Emoji đại diện tương thích
+        // -------------------------------------------------------------------------
+        // 3. XỬ LÝ EMOJI VÀ DANH MỤC SẢN PHẨM (CATEGORY TO EMOJI MAPPING)
+        // -------------------------------------------------------------------------
         String type = auction.getItemType();
         if (type != null) {
             switch (type.toUpperCase()) {
@@ -95,41 +97,44 @@ public class ProductCardController {
             lblType.setText("Khác");
         }
 
-        // Tiến trình giải mã luồng văn bản Base64 thành cấu trúc ảnh JavaFX Image hiển thị lên ImageView
+        // -------------------------------------------------------------------------
+        // 4. GIẢI MÃ VÀ HIỂN THỊ HÌNH ẢNH SẢN PHẨM (BASE64 IMAGE RENDERING PIPELINE)
+        // -------------------------------------------------------------------------
         String imageBase64 = auction.getImageBase64();
         if (imageBase64 != null && !imageBase64.isBlank()) {
             try {
+                // Giải mã mảng byte nhị phân từ chuỗi văn bản Base64 an toàn
                 byte[] imageBytes = Base64.getDecoder().decode(imageBase64);
+                // Tạo lập đối tượng đồ họa Image thông qua luồng đọc dòng bộ đệm InputStream
                 Image image = new Image(new ByteArrayInputStream(imageBytes));
+
                 imgProduct.setImage(image);
                 imgProduct.setVisible(true);
-                lblEmoji.setVisible(false); // Ẩn nhãn Emoji dự phòng khi ảnh nạp thành công
+                lblEmoji.setVisible(false); // Ẩn biểu tượng ký tự để ưu tiên hiển thị ảnh thực tế
             } catch (Exception e) {
                 LOGGER.warn("Không thể giải mã ảnh Base64 cho sản phẩm {}", auction.getAuctionId());
                 imgProduct.setVisible(false);
-                lblEmoji.setVisible(true); // Khôi phục hiển thị Emoji đại diện nếu chuỗi mã hóa bị lỗi font/gãy luồng
+                lblEmoji.setVisible(true); // Cơ chế Fallback: Hiện lại Emoji đại diện danh mục nếu ảnh lỗi
             }
         } else {
             imgProduct.setVisible(false);
-            lblEmoji.setVisible(true);
+            lblEmoji.setVisible(true); // Cơ chế Fallback mặc định khi sản phẩm không đính kèm tệp ảnh
         }
 
-        // Kích hoạt công cụ định hình phong cách đồ họa cho khối Badge trạng thái phiên
+        // -------------------------------------------------------------------------
+        // 5. CẤU HÌNH ĐỒ HỌA PHỤ TRỢ DỰA TRÊN TRẠNG THÁI (LIFECYCLE BADGE & TIMER STYLING)
+        // -------------------------------------------------------------------------
         applyBadgeStyle(auction.getStatus());
-
-        // Kích hoạt công cụ phân tích thời lượng đếm ngược biên còn lại của phiên phòng đấu
         applyTimeLeft(auction.getEndTime(), auction.getStatus());
     }
 
     /**
-     * Động cơ cấu hình phong cách đồ họa nhãn trạng thái (Dynamic Badge Styling Core).
-     * Thực hiện dọn sạch mảng các lớp phong cách hoạt động cũ của JavaFX, đối chiếu từ khóa trạng thái vòng đời
-     * để cập nhật nội dung nhãn chữ tiếng Việt và đính kèm class phong cách CSS màu sắc đặc trưng tương thích.
-     *
-     * @param status Chuỗi mã máy biểu thị trạng thái vòng đời phiên đấu giá (RUNNING, OPEN, FINISHED, PAID, CANCELED)
+     * Tái định hình nhãn trạng thái và quản lý lớp giao diện CSS động cho Badge (CSS Class Lifecycle Mutator).
+     * Thực hiện bóc tách toàn bộ các style class cũ để phòng ngừa xung đột kế thừa đồ họa của cấu trúc JavaFX Node.
+     * * @param status Chuỗi mã ký tự trạng thái hiện hành của phòng phiên (ví dụ: RUNNING, OPEN, FINISHED)
      */
     private void applyBadgeStyle(String status) {
-        // Dọn dẹp dọn sạch toàn bộ tập hợp class CSS style cũ trước khi tái cấu trúc
+        // Giải phóng và dọn sạch toàn bộ các bộ lọc CSS Class cũ trên nhãn Node
         lblBadge.getStyleClass().removeAll(
                 "card-badge-running", "card-badge-open",
                 "card-badge-finished", "card-badge-paid", "card-badge-cancelled");
@@ -138,6 +143,8 @@ public class ProductCardController {
             lblBadge.setText("—");
             return;
         }
+
+        // Áp dụng lớp CSS và nội dung bản dịch hiển thị tương ứng với trạng thái nghiệp vụ
         switch (status.toUpperCase()) {
             case "RUNNING":
                 lblBadge.setText("Đang diễn ra");
@@ -167,18 +174,18 @@ public class ProductCardController {
     }
 
     /**
-     * Động cơ tính toán phân tích biên thời gian đếm ngược (Countdown Chrono Engine).
-     * Kiểm tra trạng thái hợp lệ, phân tích chuỗi văn bản ngày kết thúc thành ChronoUnit phút so với mốc thời gian thực hiện tại.
-     * Tự động điều phối kết xuất chuỗi văn bản hiển thị dạng Giờ-Phút, đồng thời bóc tách ranh giới thời gian
-     * để tự động kích hoạt gán lớp CSS cảnh báo nguy cấp đỏ (`card-timer-urgent`) nếu thời lượng phòng phiên còn lại ít hơn 60 phút.
-     *
-     * @param endTimeStr Chuỗi văn bản mốc thời gian kết thúc phiên đấu giá nhận diện từ Server DTO
-     * @param status     Chuỗi trạng thái vòng đời phiên hiện tại
+     * Tính toán khoảng biến động thời gian đếm ngược và gán Style Class khẩn cấp (Asynchronous Countdown Styling Core).
+     * <p>
+     * Sử dụng thư viện `ChronoUnit` để đo lường khoảng cách phút. Nếu thời gian phòng phiên rơi vào trạng thái khẩn cấp
+     * dưới 60 phút, nhãn sẽ tự động được gán thêm lớp CSS `card-timer-urgent` để cảnh báo trực quan cho người dùng.
+     * </p>
+     * * @param endTimeStr Chuỗi ngày giờ kết thúc phiên định dạng chuỗi văn bản nhận về từ Server
+     * @param status     Trạng thái hiện hành của phiên đấu giá dùng để chốt chặn điều kiện hiển thị bộ đếm
      */
     private void applyTimeLeft(String endTimeStr, String status) {
         lblTimeLeft.getStyleClass().removeAll("card-timer", "card-timer-urgent");
 
-        // Chốt chặn loại biên: Không hiển thị đồng hồ đếm ngược nếu phiên không thuộc trạng thái đang chạy hoặc chờ kích hoạt
+        // Bộ đếm ngược thời gian chỉ có ý nghĩa hiển thị đối với phiên đang chạy hoặc sắp mở thưởng
         if (!"RUNNING".equalsIgnoreCase(status) && !"OPEN".equalsIgnoreCase(status)) {
             lblTimeLeft.setText("");
             return;
@@ -193,6 +200,8 @@ public class ProductCardController {
         try {
             LocalDateTime endTime = LocalDateTime.parse(endTimeStr, DT_FORMATTER);
             LocalDateTime now = LocalDateTime.now();
+
+            // Đo đạc khoảng biến động thời gian theo đơn vị phút
             long totalMinutes = ChronoUnit.MINUTES.between(now, endTime);
 
             if (totalMinutes <= 0) {
@@ -203,7 +212,7 @@ public class ProductCardController {
                 long minutes = totalMinutes % 60;
                 lblTimeLeft.setText(String.format("⏱ %dg %dp", hours, minutes));
 
-                // Thuật toán chốt chặn biên khẩn cấp: Tự động gán style đỏ cảnh báo nguy cấp khi thời gian phòng phiên còn lại dưới 1 giờ
+                // CHỐT CHẶN KHẨN CẤP (URGENT STATE TRIGGER): Dưới 1 tiếng, kích hoạt thêm CSS nguy cấp (Ví dụ: Đổi màu chữ đỏ/nhấp nháy)
                 lblTimeLeft.getStyleClass().add(totalMinutes < 60 ? "card-timer-urgent" : "card-timer");
             }
         } catch (Exception e) {
@@ -214,16 +223,17 @@ public class ProductCardController {
     }
 
     /**
-     * Đơn nhận hành động nhấp chuột trực tiếp lên khu vực Thẻ thành phần (Card Component Click Action Handler).
-     * Giải phóng và chuyển tiếp mã định danh phòng phiên `currentAuctionId` tới động cơ điều hướng Singleton của MainController
-     * để thực hiện hoán đổi View mở phòng chi tiết sản phẩm.
+     * Tiếp nhận và phân phối hành động nhấn chuột vào vùng không gian thẻ Card sản phẩm (UI Event Routing Trigger).
+     * Giao tiếp với lớp Trung gian `MainController` thông qua kiến trúc Singleton để kích hoạt mở màn hình chi tiết phòng phiên.
      */
     @FXML
     private void handleCardClick() {
         if (currentAuctionId == null) return;
+
         MainController mainController = MainController.getInstance();
         if (mainController != null) {
-            mainController.openAuctionDetail(currentAuctionId); // Kích hoạt lệnh chuyển view sâu từ xa
+            // Kích hoạt cơ chế định tuyến chuyển đổi Scene hiển thị chi tiết vật phẩm đấu giá
+            mainController.openAuctionDetail(currentAuctionId);
         } else {
             LOGGER.warn("MainController.getInstance() trả về null — không thể mở chi tiết phiên {}", currentAuctionId);
         }
