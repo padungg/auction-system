@@ -1,6 +1,7 @@
 package com.auction.client.controller;
 
 import com.auction.client.network.ClientSocketManager;
+import com.auction.client.util.AlertUtils;
 import com.auction.client.util.SessionManager;
 import com.auction.model.dto.LoginDTO;
 import com.auction.model.dto.RegisterDTO;
@@ -9,8 +10,6 @@ import com.auction.model.protocol.Request;
 import com.auction.model.protocol.RequestType;
 import com.auction.model.protocol.Response;
 import com.auction.model.protocol.ResponseStatus;
-import com.auction.model.util.GsonProvider;
-import com.google.gson.Gson;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
@@ -30,21 +29,35 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 /**
- * Controller chịu trách nhiệm kiểm soát luồng xác thực hệ thống, bao gồm Đăng nhập (Login) và Đăng ký (Register).
- * Quản lý tính toàn vẹn của dữ liệu đầu vào trên các biểu mẫu và đồng bộ hóa trạng thái hiển thị của giao diện người dùng.
+ * <h2>LoginController</h2>
+ * <p>
+ * Controller chịu trách nhiệm kiểm soát toàn bộ luồng xác thực hệ thống (Authentication Core)
+ * bao gồm các nghiệp vụ Đăng nhập (Login) và Đăng ký thành viên mới (Register) trên ứng dụng Client.
+ * </p>
+ *
+ * <p><b>Các cơ chế kỹ thuật tích hợp:</b></p>
+ * <ul>
+ *   <li><b>Kiểm soát giao diện Tab (Tab Toggle Engine):</b> Đồng bộ trạng thái hiển thị, hoán đổi động các container bố cục CSS (`loginForm`, `registerForm`) dựa trên hành động điều hướng.</li>
+ *   <li><b>An toàn đa luồng (Multi-threading Safety):</b> Chuyển giao toàn bộ các tác vụ xử lý mạng IO (Network Requests) sang Worker Thread ngầm và sử dụng `Platform.runLater` để trả kết quả về UI Thread, ngăn chặn hiện tượng treo ứng dụng (UI Freezing).</li>
+ *   <li><b>Quản lý phiên (Session Binding):</b> Đóng gói dữ liệu định danh nhận về từ Server và liên kết trực tiếp vào hệ thống quản lý bộ nhớ đệm tập trung `SessionManager`.</li>
+ * </ul>
+ *
+ * @since 1.0
+ * @see javafx.fxml.Initializable
+ * @see com.auction.client.network.ClientSocketManager
+ * @see com.auction.client.util.SessionManager
  */
 public class LoginController implements Initializable {
 
     /**
-     * Khởi tạo thành phần Logger hệ thống thông qua cấu trúc SLF4J.
-     * Thư viện này cung cấp cơ chế giám sát tập trung, hỗ trợ ghi vết chi tiết cấu trúc lỗi (Stack trace)
-     * và phân loại mức độ nghiêm trọng giúp việc rà soát lỗi mạng trở nên hiệu quả hơn khi ứng dụng vận hành.
+     * Bộ ghi nhật ký tập trung (SLF4J Logger) cấu hình theo tiêu chuẩn an toàn đa luồng.
+     * Lưu vết các hành vi xác thực, cô lập các sự cố ngắt kết nối Socket và giám sát luồng khởi tạo tài nguyên đồ họa.
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(LoginController.class);
 
-    private final Gson GSON = GsonProvider.getInstance();
-
+    // =========================================================================
     // THÀNH PHẦN GIAO DIỆN FXML - KHUNG ĐIỀU HƯỚNG TỔNG (CONTAINERS & TABS)
+    // =========================================================================
     @FXML private Label lblTitle;
     @FXML private Label lblSubtitle;
     @FXML private Button tabLogin;
@@ -52,12 +65,16 @@ public class LoginController implements Initializable {
     @FXML private VBox loginForm;
     @FXML private VBox registerForm;
 
-    // THÀNH PHẦN GIAO DIỆN FXML - FORM ĐĂNG NHẬP (LOGIN FIELDS)
+    // =========================================================================
+    // THÀNH PHẦN GIAO DIỆN FXML - BIỂU MẪU ĐĂNG NHẬP (LOGIN FORM FIELDS)
+    // =========================================================================
     @FXML private TextField loginUsername;
     @FXML private PasswordField loginPassword;
     @FXML private Label loginMessage;
 
-    // THÀNH PHẦN GIAO DIỆN FXML - FORM ĐĂNG KÝ (REGISTER FIELDS)
+    // =========================================================================
+    // THÀNH PHẦN GIAO DIỆN FXML - BIỂU MẪU ĐĂNG KÝ (REGISTER FORM FIELDS)
+    // =========================================================================
     @FXML private TextField regFullName;
     @FXML private TextField regEmail;
     @FXML private TextField regUsername;
@@ -69,8 +86,9 @@ public class LoginController implements Initializable {
     @FXML private Label regMessage;
 
     /**
-     * Phương thức khởi tạo chu kỳ hiển thị giao diện JavaFX (Lifecycle Hook).
-     * Thiết lập mặc định tập trung hiển thị biểu mẫu Đăng nhập ngay khi màn hình xác thực được tải lên.
+     * Phương thức vòng đời khởi tạo JavaFX View (Lifecycle Hook).
+     * Tự động thực thi sau khi kiến trúc tệp tin FXML được tải thành công.
+     * Thiết lập trạng thái mặc định ban đầu là hiển thị phân hệ Đăng nhập.
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -78,37 +96,46 @@ public class LoginController implements Initializable {
     }
 
     /**
-     * Chuyển đổi trạng thái hiển thị của giao diện sang biểu mẫu Đăng nhập.
-     * Thực hiện cập nhật các tập lệnh CSS Style và đóng/mở quản lý các Layout Container tương ứng.
+     * Chuyển đổi giao diện sang Tab Đăng nhập (Switch to Login Mode).
+     * Thực hiện làm mới danh sách lớp CSS định dạng để thay đổi đồ họa các nút tab,
+     * đồng thời cấu hình ẩn hiện (Visible & Managed) các Layout Container tương ứng.
+     *
+     * @param event Sự kiện tương tác từ hệ thống JavaFX (Có thể truyền null nếu gọi nội bộ)
      */
     @FXML
     public void switchToLoginTab(Event event) {
+        // Cập nhật cấu trúc lớp hiệu ứng phong cách CSS hoạt động cho Tab Đăng nhập
         tabLogin.getStyleClass().removeAll("auth-tab");
         tabLogin.getStyleClass().add("auth-tab-active");
         tabRegister.getStyleClass().removeAll("auth-tab-active");
         tabRegister.getStyleClass().add("auth-tab");
 
+        // Quản lý trạng thái không gian phân bổ hiển thị của các Form biểu mẫu
         loginForm.setVisible(true);
         loginForm.setManaged(true);
         registerForm.setVisible(false);
         registerForm.setManaged(false);
 
-        // Chuẩn hóa văn bản hiển thị giao diện thuần sạch sẽ để bảo vệ font chữ hệ thống
+        // Đặt nội dung tiêu đề chuẩn hóa hướng dẫn người dùng
         lblTitle.setText("Chào mừng trở lại");
         lblSubtitle.setText("Đăng nhập để tham gia đấu giá ngay hôm nay");
     }
 
     /**
-     * Chuyển đổi trạng thái hiển thị của giao diện sang biểu mẫu Đăng ký thành viên mới.
-     * Thực hiện cập nhật các tập lệnh CSS Style và đóng/mở quản lý các Layout Container tương ứng.
+     * Chuyển đổi giao diện sang Tab Đăng ký thành viên mới (Switch to Register Mode).
+     * Cập nhật các thuộc tính CSS nhận diện trạng thái và hoán đổi cấu trúc hiển thị biểu mẫu.
+     *
+     * @param event Sự kiện tương tác từ hệ thống JavaFX
      */
     @FXML
     public void switchToRegisterTab(Event event) {
+        // Cập nhật cấu trúc lớp hiệu ứng phong cách CSS hoạt động cho Tab Đăng ký
         tabRegister.getStyleClass().removeAll("auth-tab");
         tabRegister.getStyleClass().add("auth-tab-active");
         tabLogin.getStyleClass().removeAll("auth-tab-active");
         tabLogin.getStyleClass().add("auth-tab");
 
+        // Thay đổi kiến trúc phân bổ không gian Layout Container trên View
         registerForm.setVisible(true);
         registerForm.setManaged(true);
         loginForm.setVisible(false);
@@ -119,14 +146,18 @@ public class LoginController implements Initializable {
     }
 
     /**
-     * Tiếp nhận và xử lý sự kiện yêu cầu Đăng nhập tài khoản của người dùng.
-     * Kiểm tra tính hợp lệ của dữ liệu biểu mẫu và khởi chạy luồng bất đồng bộ để truyền tải gói tin mạng tới Server.
+     * Đón nhận hành động xử lý Đăng nhập tài khoản (Login Action Handler).
+     * Tiến hành xác thực nghiệp vụ cơ bản (Validation) tại chỗ, đóng gói cấu trúc LoginDTO
+     * và chuyển giao mạng luồng ngầm để đối chiếu thông tin tài khoản mật khẩu từ Server.
+     *
+     * @param event Sự kiện kích hoạt Action từ nút bấm Đăng nhập FXML
      */
     @FXML
     public void handleLogin(ActionEvent event) {
         String username = loginUsername.getText().trim();
         String password = loginPassword.getText().trim();
 
+        // Kiểm tra ràng buộc dữ liệu đầu vào không được phép để trống
         if (username.isEmpty() || password.isEmpty()) {
             loginMessage.setText("Vui lòng nhập đầy đủ thông tin");
             return;
@@ -134,32 +165,37 @@ public class LoginController implements Initializable {
 
         loginMessage.setText("Đang đăng nhập...");
 
-        // Cô lập tác vụ I/O mạng trên tiểu trình nền tách biệt nhằm bảo vệ luồng tương tác chính (UI Thread) khỏi hiện tượng nghẽn mạch
-        new Thread(() -> {
+        // Khởi chạy nhiệm vụ bất đồng bộ trên Worker Thread ngầm để tránh gây nghẽn luồng đồ họa chính
+        ClientSocketManager.getInstance().execute(() -> {
             LoginDTO dto = new LoginDTO(username, password);
             Request req = new Request(RequestType.LOGIN, dto);
             try {
                 Response res = ClientSocketManager.getInstance().sendRequest(req);
+
+                // Đồng bộ luồng phản hồi kết quả về JavaFX Application Thread an toàn
                 Platform.runLater(() -> {
-                    if (res.getStatus() == ResponseStatus.SUCCESS) {
-                        UserResponseDTO user = GSON.fromJson(GSON.toJson(res.getPayload()), UserResponseDTO.class);
-                        SessionManager.getInstance().setCurrentUser(user);
-                        navigateToMain();
+                    if (res != null && res.getStatus() == ResponseStatus.SUCCESS) {
+                        UserResponseDTO user = res.getPayloadAs(UserResponseDTO.class);
+                        SessionManager.getInstance().setCurrentUser(user); // Gán thông tin người dùng vào Session Bộ nhớ đệm
+                        navigateToMain(); // Kích hoạt điều hướng màn hình
                     } else {
-                        loginMessage.setText(res.getMessage());
+                        String errorMsg = (res != null) ? res.getMessage() : "Lỗi kết nối server!";
+                        loginMessage.setText(errorMsg);
                     }
                 });
             } catch (IOException e) {
-                // Đăng ký vết lỗi ngoại lệ I/O Socket mạng vào bộ giám sát Logger chuyên dụng bằng cấu trúc chuyên nghiệp của SLF4J
                 LOGGER.error("Xảy ra ngoại lệ ngắt kết nối mạng khi đang thực thi tiến trình Đăng nhập", e);
                 Platform.runLater(() -> loginMessage.setText("Lỗi kết nối server!"));
             }
-        }).start();
+        });
     }
 
     /**
-     * Tiếp nhận và xử lý sự kiện yêu cầu Đăng ký thành viên mới của người dùng.
-     * Đánh giá tính toàn vẹn của các trường dữ liệu bắt buộc, so khớp mật khẩu và chuyển tiếp cấu trúc DTO lên máy chủ.
+     * Đón nhận hành động xử lý Đăng ký thành viên mới (Register Action Handler).
+     * Xác thực các trường thuộc tính bắt buộc, đối sánh kiểm tra tính đồng nhất của mật khẩu,
+     * đóng gói cấu trúc dữ liệu RegisterDTO và truyền dẫn mạng để khởi tạo tài khoản trên cơ sở dữ liệu.
+     *
+     * @param event Sự kiện kích hoạt Action từ nút bấm Đăng ký FXML
      */
     @FXML
     public void handleRegister(ActionEvent event) {
@@ -169,11 +205,13 @@ public class LoginController implements Initializable {
         String password = regPassword.getText().trim();
         String confirm = regConfirm.getText().trim();
 
+        // Kiểm tra tính toàn vẹn của tập dữ liệu có đính kèm ký hiệu bắt buộc (*)
         if (fullName.isEmpty() || email.isEmpty() || username.isEmpty() || password.isEmpty()) {
             regMessage.setText("Vui lòng nhập các trường có dấu *");
             return;
         }
 
+        // Kiểm tra logic khớp chuỗi mật khẩu xác nhận
         if (!password.equals(confirm)) {
             regMessage.setText("Mật khẩu xác nhận không khớp");
             return;
@@ -181,8 +219,8 @@ public class LoginController implements Initializable {
 
         regMessage.setText("Đang xử lý đăng ký...");
 
-        // Phân phối luồng mạng xử lý độc lập để duy trì tính mượt mà cho trải nghiệm tương tác lớp giao diện
-        new Thread(() -> {
+        // Khởi chạy tác vụ IO kết nối mạng ngầm ngắt biệt độc lập với Main UI Thread
+        ClientSocketManager.getInstance().execute(() -> {
             RegisterDTO dto = new RegisterDTO(
                     username, password, email, fullName,
                     regPhone.getText().trim(), regAddress.getText().trim(),
@@ -191,39 +229,37 @@ public class LoginController implements Initializable {
             Request req = new Request(RequestType.REGISTER, dto);
             try {
                 Response res = ClientSocketManager.getInstance().sendRequest(req);
+
+                // Trả chuỗi điều khiển hiển thị kết quả về luồng đồ họa JavaFX chính
                 Platform.runLater(() -> {
-                    if (res.getStatus() == ResponseStatus.SUCCESS) {
-                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                        alert.setTitle("Thành công");
-                        alert.setHeaderText(null);
-                        alert.setContentText("Đăng ký thành công! Vui lòng đăng nhập.");
-                        alert.showAndWait();
-                        switchToLoginTab(null);
+                    if (res != null && res.getStatus() == ResponseStatus.SUCCESS) {
+                        AlertUtils.showInfo("Thành công", "Đăng ký thành công! Vui lòng đăng nhập.");
+                        switchToLoginTab(null); // Tự động quay lại giao diện tab đăng nhập ngay khi hoàn thành
                     } else {
-                        regMessage.setText(res.getMessage());
+                        String errorMsg = (res != null) ? res.getMessage() : "Lỗi kết nối server!";
+                        regMessage.setText(errorMsg);
                     }
                 });
             } catch (IOException e) {
-                // Đồng bộ hóa cấu trúc lưu vết sự cố kết nối Socket thông qua Logger hệ thống SLF4J
                 LOGGER.error("Xảy ra ngoại lệ ngắt kết nối mạng khi đang thực thi tiến trình Đăng ký", e);
                 Platform.runLater(() -> regMessage.setText("Lỗi kết nối server!"));
             }
-        }).start();
+        });
     }
 
     /**
-     * Thay đổi cấu trúc Scene hiện hành để chuyển tiếp luồng làm việc của người dùng vào phân hệ màn hình ứng dụng chính (Main UI).
+     * Thực hiện thay đổi cấu trúc cây phân cấp Scene để định tuyến người dùng vào không gian làm việc chính.
+     * Nạp tệp tin tài nguyên thiết kế giao diện `/Main.fxml` và cấu hình thuộc tính cửa sổ Stage.
      */
     private void navigateToMain() {
         try {
-            Parent root = FXMLLoader.load(getClass().getResource("/main.fxml"));
-            Stage stage = (Stage) loginForm.getScene().getWindow();
+            Parent root = FXMLLoader.load(getClass().getResource("/Main.fxml"));
+            Stage stage = (Stage) loginForm.getScene().getWindow(); // Trích xuất Stage hiện hành từ phần tử Node đồ họa
             stage.setScene(new Scene(root));
-            stage.setResizable(true);
-            stage.centerOnScreen();
+            stage.setResizable(true); // Bật quyền co giãn kích thước cửa sổ linh hoạt cho Dashboard chính
+            stage.centerOnScreen(); // Đưa vị trí hiển thị cửa sổ về trung tâm màn hình thiết bị
         } catch (IOException e) {
-            // Đăng ký thông báo lỗi nghiêm trọng khi cấu trúc cây tài nguyên tệp tin fxml không thể khởi tạo thành công
-            LOGGER.error("Hệ thống gặp lỗi nghiêm trọng trong tiến trình nạp tài nguyên tệp tin giao diện /main.fxml", e);
+            LOGGER.error("Hệ thống gặp lỗi nghiêm trọng trong tiến trình nạp tài nguyên tệp tin giao diện /Main.fxml", e);
         }
     }
 }
