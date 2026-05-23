@@ -1,0 +1,42 @@
+/* ══════════════════════════════════════════════════════
+   UET Auction - Login/Register Stylesheet
+   ══════════════════════════════════════════════════════ */
+
+/* ── AUTH PANEL ── */
+.auth-left {
+    -fx-background-color: linear-gradient(to bottom right, #1d4ed8, #2563eb, #0ea5e9);
+}
+
+.auth-btn {
+    -fx-background-color: #2563eb;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 14.5px;
+    -fx-background-radius: 10;
+    -fx-cursor: hand;
+    -fx-padding: 12;
+}
+
+.auth-btn:hover {
+    -fx-background-color: #1d4ed8;
+}
+
+.auth-tab {
+    -fx-background-color: transparent;
+    -fx-text-fill: #64748b;
+    -fx-font-size: 13.5px;
+    -fx-cursor: hand;
+    -fx-padding: 8;
+    -fx-background-radius: 8;
+}
+
+.auth-tab-active {
+    -fx-background-color: white;
+    -fx-text-fill: #0f172a;
+    -fx-font-weight: bold;
+    -fx-font-size: 13.5px;
+    -fx-cursor: hand;
+    -fx-padding: 8;
+    -fx-background-radius: 8;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.1), 3, 0, 0, 1);
+}

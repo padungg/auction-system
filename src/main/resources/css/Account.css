@@ -1,0 +1,48 @@
+/* ══════════════════════════════════════════════════════
+   UET Auction - Account Stylesheet
+   ══════════════════════════════════════════════════════ */
+
+/* ── ACCOUNT ── */
+.account-header {
+    -fx-background-color: white;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 16;
+    -fx-background-radius: 16;
+    -fx-padding: 24;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.08), 3, 0, 0, 1);
+}
+
+.account-avatar {
+    -fx-background-color: #2563eb;
+    -fx-text-fill: white;
+    -fx-background-radius: 50;
+    -fx-alignment: center;
+    -fx-font-weight: bold;
+    -fx-font-size: 24px;
+    -fx-pref-width: 64;
+    -fx-pref-height: 64;
+    -fx-min-width: 64;
+    -fx-min-height: 64;
+}
+
+/* Dialog Fields */
+.edit-profile-input {
+    -fx-background-color: #f8fafc;
+    -fx-border-color: #cbd5e1;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-padding: 8;
+    -fx-pref-width: 260;
+}
+.edit-profile-save-btn {
+    -fx-background-color: #2563eb;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6;
+}
+
+/* ── DARK MODE OVERRIDES ── */
+.dark-mode .account-header {
+    -fx-background-color: #1e293b;
+    -fx-border-color: #334155;
+}
