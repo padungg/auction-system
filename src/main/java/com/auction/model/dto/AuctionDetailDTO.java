@@ -110,4 +110,23 @@ public class AuctionDetailDTO {
     public void setStatus(String status) {
         this.status = status;
     }
+
+    private double stepPrice;
+    private String imageBase64;
+
+    public double getStepPrice() {
+        return stepPrice;
+    }
+
+    public void setStepPrice(double stepPrice) {
+        this.stepPrice = stepPrice;
+    }
+
+    public String getImageBase64() {
+        return imageBase64;
+    }
+
+    public void setImageBase64(String imageBase64) {
+        this.imageBase64 = imageBase64;
+    }
 }

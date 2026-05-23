@@ -7,6 +7,7 @@ public class Request {
 
     private RequestType type;
     private Object payload; // Chứa DTO tùy theo type (vd: LoginDTO, BidRequestDTO)
+    private String requestId;
 
 
     public Request() {
@@ -15,6 +16,20 @@ public class Request {
     public Request(RequestType type, Object payload) {
         this.type = type;
         this.payload = payload;
+    }
+
+    public Request(RequestType type, Object payload, String requestId) {
+        this.type = type;
+        this.payload = payload;
+        this.requestId = requestId;
+    }
+
+    public String getRequestId() {
+        return requestId;
+    }
+
+    public void setRequestId(String requestId) {
+        this.requestId = requestId;
     }
 
     public RequestType getType() {

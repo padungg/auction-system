@@ -38,7 +38,7 @@ public class Art extends Item{
 
     @Override
     public String getDetailInfo(){
-        return "Nghệ thuât: " + this.getName() + " Tác giả: " + artistName + " Chất liêu: " + material + " Tình trạng: " + this.getCondition();
+        return "Nghệ thuật: " + this.getName() + "\nTác giả: " + artistName + "\nChất liệu: " + material + "\nTình trạng: " + this.getCondition();
     }
 
     public String getArtistName() {

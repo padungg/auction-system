@@ -41,7 +41,7 @@ public class Vehicle extends Item{
 
     @Override
     public String getDetailInfo(){
-        return "Phương tiện: " + this.brand + " " + model + " " + year + " Đã đi: " + km + "km Tình trạng: " + this.getCondition();
+        return "Phương tiện: " + this.getName() + "\nHãng xe: " + this.brand + "\nMẫu xe: " + model + "\nNăm sản xuất: " + year + "\nSố km đã đi: " + km + " km\nTình trạng: " + this.getCondition();
     }
 
     public String getBrand() {

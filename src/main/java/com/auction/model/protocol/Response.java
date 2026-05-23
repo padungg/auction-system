@@ -8,6 +8,7 @@ public class Response {
     private ResponseStatus status;
     private String message;
     private Object payload; // Dữ liệu trả về (VD: danh sách UserResponseDTO)
+    private String requestId;
 
 
     public Response() {
@@ -17,6 +18,21 @@ public class Response {
         this.status = status;
         this.message = message;
         this.payload = payload;
+    }
+
+    public Response(ResponseStatus status, String message, Object payload, String requestId) {
+        this.status = status;
+        this.message = message;
+        this.payload = payload;
+        this.requestId = requestId;
+    }
+
+    public String getRequestId() {
+        return requestId;
+    }
+
+    public void setRequestId(String requestId) {
+        this.requestId = requestId;
     }
 
     public ResponseStatus getStatus() {
@@ -41,5 +57,17 @@ public class Response {
 
     public void setPayload(Object payload) {
         this.payload = payload;
+    }
+
+    public <T> T getPayloadAs(Class<T> clazz) {
+        if (payload == null) return null;
+        com.google.gson.Gson gson = com.auction.model.util.GsonProvider.getInstance();
+        return gson.fromJson(gson.toJsonTree(payload), clazz);
+    }
+
+    public <T> T getPayloadAs(com.google.gson.reflect.TypeToken<T> typeToken) {
+        if (payload == null) return null;
+        com.google.gson.Gson gson = com.auction.model.util.GsonProvider.getInstance();
+        return gson.fromJson(gson.toJsonTree(payload), typeToken.getType());
     }
 }

@@ -141,4 +141,41 @@ public class CreateAuctionDTO {
     public void setKm(int km) {
         this.km = km;
     }
+
+    private int durationHours;
+    private double stepPrice;
+    private String startTimeStr;
+    private String imageBase64;
+
+    public int getDurationHours() {
+        return durationHours;
+    }
+
+    public void setDurationHours(int durationHours) {
+        this.durationHours = durationHours;
+    }
+
+    public double getStepPrice() {
+        return stepPrice;
+    }
+
+    public void setStepPrice(double stepPrice) {
+        this.stepPrice = stepPrice;
+    }
+
+    public String getStartTimeStr() {
+        return startTimeStr;
+    }
+
+    public void setStartTimeStr(String startTimeStr) {
+        this.startTimeStr = startTimeStr;
+    }
+
+    public String getImageBase64() {
+        return imageBase64;
+    }
+
+    public void setImageBase64(String imageBase64) {
+        this.imageBase64 = imageBase64;
+    }
 }
