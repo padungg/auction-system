@@ -83,4 +83,14 @@ public class Auction extends Entity{
         if (seconds <= 0) throw new IllegalArgumentException("Thời gian gia hạn phải > 0");
         this.endTime = this.endTime.plusSeconds(seconds);
     }
+
+    private double stepPrice;
+
+    public double getStepPrice() {
+        return stepPrice;
+    }
+
+    public void setStepPrice(double stepPrice) {
+        this.stepPrice = stepPrice;
+    }
 }

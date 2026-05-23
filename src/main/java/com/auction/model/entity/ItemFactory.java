@@ -1,29 +1,34 @@
 package com.auction.model.entity;
 
+import com.auction.model.dto.CreateAuctionDTO;
+import com.auction.server.util.ValidationException;
+
 public class ItemFactory {
 
-    public static final String TYPE_ELECTRONICS = "ELECTRONICS";
-    public static final String TYPE_ART = "ART";
-    public static final String TYPE_VEHICLE = "VEHICLE";
+    public static Item createItemFromDTO(String id, String sellerId, String condition, CreateAuctionDTO dto) throws ValidationException {
+        if (dto.getItemType() == null) {
+            throw new ValidationException("Thiếu loại sản phẩm");
+        }
 
-    public static Electronics createElectronics(String id, String name, String description, String condition,
-            String sellerId, double startingPrice,
-            String brand, int warrantyMonths) {
+        ItemType type;
+        try {
+            type = ItemType.valueOf(dto.getItemType().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new ValidationException("Loại sản phẩm không hợp lệ. Chỉ chấp nhận: " + java.util.Arrays.toString(ItemType.values()));
+        }
 
-        return new Electronics(id, name, description, condition, sellerId, startingPrice, brand, warrantyMonths);
-    }
-
-    public static Art createArt(String id, String name, String description, String condition,
-            String sellerId, double startingPrice,
-            String artistName, String material, int creationYear) {
-
-        return new Art(id, name, description, condition, sellerId, startingPrice, artistName, material, creationYear);
-    }
-
-    public static Vehicle createVehicle(String id, String name, String description, String condition,
-            String sellerId, double startingPrice,
-            String brand, String model, int year, int km) {
-
-        return new Vehicle(id, name, description, condition, sellerId, startingPrice, brand, model, year, km);
+        switch (type) {
+            case ELECTRONICS:
+                return new Electronics(id, dto.getName(), dto.getDescription(), condition, sellerId,
+                        dto.getStartingPrice(), dto.getBrand(), dto.getWarrantyMonths());
+            case ART:
+                return new Art(id, dto.getName(), dto.getDescription(), condition, sellerId,
+                        dto.getStartingPrice(), dto.getArtistName(), dto.getMaterial(), dto.getCreationYear());
+            case VEHICLE:
+                return new Vehicle(id, dto.getName(), dto.getDescription(), condition, sellerId,
+                        dto.getStartingPrice(), dto.getBrand(), dto.getModel(), dto.getYear(), dto.getKm());
+            default:
+                throw new ValidationException("Loại sản phẩm không hợp lệ.");
+        }
     }
 }

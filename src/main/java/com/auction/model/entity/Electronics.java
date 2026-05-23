@@ -22,8 +22,8 @@ public class Electronics extends Item {
     }
 
     @Override
-    public String getItemType() {
-        return "ELECTRONICS";
+    public ItemType getItemType() {
+        return ItemType.ELECTRONICS;
     }
 
     @Override
@@ -36,8 +36,8 @@ public class Electronics extends Item {
 
     @Override
     public String getDetailInfo() {
-        return "Đồ điện tử: " + this.getName() + " Hãng: " + brand + " Bảo hành: " + warrantyMonths
-                + "tháng Tình trạng: " + this.getCondition();
+        return "Đồ điện tử: " + this.getName() + "\nHãng: " + brand + "\nBảo hành: " + warrantyMonths
+                + " tháng\nTình trạng: " + this.getCondition();
     }
 
     public String getBrand() {

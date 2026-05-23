@@ -1,7 +1,10 @@
 package com.auction.server.network;
 
+import com.auction.model.dto.AuctionClosedNotificationDTO;
+import com.auction.model.dto.BidUpdateNotificationDTO;
 import com.auction.model.dto.UserResponseDTO;
 import com.auction.model.protocol.Request;
+import com.auction.model.protocol.RequestType;
 import com.auction.model.protocol.Response;
 import com.auction.model.protocol.ResponseStatus;
 import com.auction.model.util.GsonProvider;
@@ -9,7 +12,6 @@ import com.auction.server.controller.RequestController;
 import com.auction.server.observer.AuctionManager;
 import com.auction.server.observer.AuctionObserver;
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +49,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
 
         try {
             in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
-            out = new PrintWriter(socket.getOutputStream(), true);
+            out = new PrintWriter(new java.io.OutputStreamWriter(socket.getOutputStream(), java.nio.charset.StandardCharsets.UTF_8), true);
 
             String line;
             while ((line = in.readLine()) != null) {
@@ -82,32 +84,16 @@ public class ClientHandler implements Runnable, AuctionObserver {
             return;
         }
 
-        switch (request.getType()) {
-            case SUBSCRIBE_AUCTION: {
-                String auctionId = GSON.fromJson(GSON.toJson(request.getPayload()), String.class);
-                if (auctionId == null || auctionId.isBlank()) {
-                    sendResponse(new Response(ResponseStatus.BAD_REQUEST, "Thiếu auctionId", null));
-                } else {
-                    AuctionManager.getInstance().subscribe(auctionId, this);
-                    sendResponse(new Response(ResponseStatus.SUCCESS, "Đã đăng ký nhận cập nhật cho phiên " + auctionId, null));
-                }
-                return;
-            }
-            case UNSUBSCRIBE_AUCTION: {
-                String auctionId = GSON.fromJson(GSON.toJson(request.getPayload()), String.class);
-                if (auctionId != null && !auctionId.isBlank()) {
-                    AuctionManager.getInstance().unsubscribe(auctionId, this);
-                }
-                sendResponse(new Response(ResponseStatus.SUCCESS, "Đã hủy đăng ký", null));
-                return;
-            }
-            default:
-                break;
+        // Tách riêng logic xử lý đăng ký nhận realtime
+        if (handleSubscriptionRequest(request)) {
+            return;
         }
 
+        // Chuyển Request còn lại cho Controller xử lý (Core Logic)
         Response response = controller.handle(request, loggedInUserId);
 
-        if (request.getType() == com.auction.model.protocol.RequestType.LOGIN && response.getStatus() == ResponseStatus.SUCCESS) {
+        // Lưu trạng thái đăng nhập
+        if (request.getType() == RequestType.LOGIN && response.getStatus() == ResponseStatus.SUCCESS) {
             UserResponseDTO userDTO = GSON.fromJson(GSON.toJson(response.getPayload()), UserResponseDTO.class);
             if (userDTO != null) {
                 loggedInUserId = userDTO.getId();
@@ -115,21 +101,55 @@ public class ClientHandler implements Runnable, AuctionObserver {
             }
         }
 
+        if (response != null && request.getRequestId() != null) {
+            response.setRequestId(request.getRequestId());
+        }
+
         sendResponse(response);
+    }
+
+    /**
+     * Xử lý riêng các Request liên quan đến kết nối Realtime (Observer)
+     */
+    private boolean handleSubscriptionRequest(Request request) {
+        if (request.getType() == RequestType.SUBSCRIBE_AUCTION) {
+            String auctionId = GSON.fromJson(GSON.toJson(request.getPayload()), String.class);
+            Response response;
+            if (auctionId == null || auctionId.isBlank()) {
+                response = new Response(ResponseStatus.BAD_REQUEST, "Thiếu auctionId", null);
+            } else {
+                AuctionManager.getInstance().subscribe(auctionId, this);
+                response = new Response(ResponseStatus.SUCCESS, "Đã đăng ký nhận cập nhật cho phiên " + auctionId, null);
+            }
+            if (request.getRequestId() != null) {
+                response.setRequestId(request.getRequestId());
+            }
+            sendResponse(response);
+            return true;
+        } else if (request.getType() == RequestType.UNSUBSCRIBE_AUCTION) {
+            String auctionId = GSON.fromJson(GSON.toJson(request.getPayload()), String.class);
+            if (auctionId != null && !auctionId.isBlank()) {
+                AuctionManager.getInstance().unsubscribe(auctionId, this);
+            }
+            Response response = new Response(ResponseStatus.SUCCESS, "Đã hủy đăng ký", null);
+            if (request.getRequestId() != null) {
+                response.setRequestId(request.getRequestId());
+            }
+            sendResponse(response);
+            return true;
+        }
+        return false;
     }
 
     /**
      * Cập nhật realtime khi có bid mới.
      */
     @Override
-    public void onBidUpdated(String auctionId, double newPrice, String bidderId, String bidTime) {
-        JsonObject push = new JsonObject();
-        push.addProperty("event", "BID_UPDATE");
-        push.addProperty("auctionId", auctionId);
-        push.addProperty("newPrice", newPrice);
-        push.addProperty("bidderId", bidderId);
-        push.addProperty("bidTime", bidTime);
-        sendPush(push.toString());
+    public void onBidUpdated(String auctionId, double newPrice, String bidderId,
+                             String bidderName, String itemName, String bidTime) {
+        BidUpdateNotificationDTO notification = new BidUpdateNotificationDTO(
+                auctionId, newPrice, bidderId, bidderName, itemName, bidTime);
+        sendPush(GSON.toJson(notification));
     }
 
     /**
@@ -137,14 +157,8 @@ public class ClientHandler implements Runnable, AuctionObserver {
      */
     @Override
     public void onAuctionClosed(String auctionId, double finalPrice, String winnerId) {
-        JsonObject push = new JsonObject();
-        push.addProperty("event", "AUCTION_CLOSED");
-        push.addProperty("auctionId", auctionId);
-        push.addProperty("finalPrice", finalPrice);
-        if (winnerId != null) {
-            push.addProperty("winnerId", winnerId);
-        }
-        sendPush(push.toString());
+        AuctionClosedNotificationDTO notification = new AuctionClosedNotificationDTO(auctionId, finalPrice, winnerId);
+        sendPush(GSON.toJson(notification));
     }
 
     private void sendResponse(Response response) {
@@ -164,6 +178,12 @@ public class ClientHandler implements Runnable, AuctionObserver {
      */
     private void cleanup(String clientAddr) {
         AuctionManager.getInstance().unsubscribeAll(this);
+        try {
+            if (in != null) in.close();
+        } catch (IOException e) {
+            LOGGER.error("IN_CLOSE_ERROR: {}", e.getMessage());
+        }
+        if (out != null) out.close();
         try {
             if (socket != null && !socket.isClosed()) {
                 socket.close();

@@ -3,7 +3,6 @@ package com.auction.server.service;
 import com.auction.model.entity.Auction;
 import com.auction.model.entity.AuctionStatus;
 import com.auction.server.dao.AuctionDAO;
-import com.auction.server.observer.AuctionManager;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,10 +21,12 @@ public class AuctionScheduler {
     private static final int INTERVAL_SECONDS = 30;
 
     private final AuctionDAO auctionDAO;
+    private final AuctionService auctionService;
     private ScheduledExecutorService scheduler;
 
-    public AuctionScheduler(AuctionDAO auctionDAO) {
+    public AuctionScheduler(AuctionDAO auctionDAO, AuctionService auctionService) {
         this.auctionDAO = auctionDAO;
+        this.auctionService = auctionService;
     }
 
     // VÒNG ĐỜI
@@ -70,19 +71,46 @@ public class AuctionScheduler {
 
     // LOGIC KIỂM TRA
 
-    /**
-     * Quét các phiên đang chạy và đóng phiên đã hết hạn.
-     */
     private void checkExpiredAuctions() {
         try {
             LocalDateTime now = LocalDateTime.now();
-            List<Auction> openingAuctions = auctionDAO.findAllByStatus(AuctionStatus.RUNNING);
 
+            // 1. Kích hoạt các phiên OPEN đã đến giờ bắt đầu
+            List<Auction> openAuctions = auctionDAO.findAllByStatus(AuctionStatus.OPEN);
+            int startedCount = 0;
+            for (Auction auction : openAuctions) {
+                if (!now.isBefore(auction.getStartTime())) {
+                    Object lock = com.auction.server.util.LockManager.getAuctionLock(auction.getId());
+                    synchronized (lock) {
+                        try {
+                            Auction currentAuction = auctionDAO.findById(auction.getId());
+                            if (currentAuction != null && currentAuction.getStatus() == AuctionStatus.OPEN) {
+                                currentAuction.setStatus(AuctionStatus.RUNNING);
+                                auctionDAO.update(currentAuction);
+                                startedCount++;
+                                LOGGER.info("SCHEDULER: Phiên đấu giá {} bắt đầu hoạt động (RUNNING).", currentAuction.getId());
+                            }
+                        } catch (Exception e) {
+                            LOGGER.error("Lỗi khi chuyển trạng thái phiên đấu giá sang RUNNING: {}", auction.getId(), e);
+                        }
+                    }
+                }
+            }
+            if (startedCount > 0) {
+                LOGGER.info("CHECK: Đã kích hoạt {} phiên đấu giá mới", startedCount);
+            }
+
+            // 2. Đóng các phiên RUNNING đã hết hạn
+            List<Auction> runningAuctions = auctionDAO.findAllByStatus(AuctionStatus.RUNNING);
             int closedCount = 0;
-            for (Auction auction : openingAuctions) {
+            for (Auction auction : runningAuctions) {
                 if (now.isAfter(auction.getEndTime())) {
-                    closeExpiredAuction(auction);
-                    closedCount++;
+                    try {
+                        auctionService.closeAuction(auction.getId());
+                        closedCount++;
+                    } catch (Exception e) {
+                        LOGGER.error("Lỗi khi đóng phiên hết hạn: {}", auction.getId(), e);
+                    }
                 }
             }
 
@@ -91,27 +119,7 @@ public class AuctionScheduler {
             }
 
         } catch (Exception e) {
-            LOGGER.error("ERROR khi kiểm tra phiên hết hạn", e);
+            LOGGER.error("ERROR khi kiểm tra phiên đấu giá", e);
         }
-    }
-
-    /**
-     * Đóng phiên đấu giá hết hạn và thông báo cho client.
-     */
-    private void closeExpiredAuction(Auction auction) {
-        auction.setStatus(AuctionStatus.FINISHED);
-        auctionDAO.update(auction);
-
-        AuctionManager.getInstance().notifyAuctionClosed(
-                auction.getId(),
-                auction.getCurrentPrice(),
-                auction.getCurrentWinnerId()
-        );
-
-        LOGGER.info("CLOSE: auctionId={} | end={} | finalPrice={} VNĐ | winner={}",
-                auction.getId(),
-                auction.getEndTime(),
-                String.format("%,.0f", auction.getCurrentPrice()),
-                auction.getCurrentWinnerId() != null ? auction.getCurrentWinnerId() : "Không có");
     }
 }

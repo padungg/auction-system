@@ -1,7 +1,6 @@
 package com.auction.server;
 
-import com.auction.server.dao.AuctionDAO;
-import com.auction.server.dao.AuctionDAOImpl;
+import com.auction.server.config.AppConfig;
 import com.auction.server.network.SocketServer;
 import com.auction.server.service.AuctionScheduler;
 import com.auction.server.database.DatabaseInitializer;
@@ -9,24 +8,39 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Điểm khởi động Server: Nạp DB, chạy Scheduler và mở SocketServer.
+ * Điểm khởi động Server: Nạp DB, khởi tạo DI, chạy Scheduler và mở SocketServer.
  */
 public class ServerApp {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ServerApp.class);
-    private static final int PORT = 8080;
-    private static final int MAX_CLIENTS = 20;
+    // Cấu hình từ biến môi trường (Environment Variables) hoặc dùng giá trị mặc định
+    private static final int PORT = getEnv("SERVER_PORT", 8080);
+    private static final int MAX_CLIENTS = getEnv("MAX_CLIENTS", 20);
+
+    private static int getEnv(String key, int defaultValue) {
+        String val = System.getenv(key);
+        if (val != null && !val.trim().isEmpty()) {
+            try {
+                return Integer.parseInt(val.trim());
+            } catch (NumberFormatException e) {
+                LOGGER.warn("Cấu hình {} = {} không hợp lệ, dùng mặc định: {}", key, val, defaultValue);
+            }
+        }
+        return defaultValue;
+    }
 
     public static void main(String[] args) {
         // Khởi tạo Database (tạo bảng nếu chưa có)
         DatabaseInitializer.initialize();
 
+        // Khởi tạo Dependency Injection container
+        AppConfig appConfig = AppConfig.getInstance();
+
         // Khởi tạo Scheduler (dùng để đóng các phiên hết hạn)
-        AuctionDAO auctionDAO = new AuctionDAOImpl();
-        AuctionScheduler scheduler = new AuctionScheduler(auctionDAO);
+        AuctionScheduler scheduler = new AuctionScheduler(appConfig.getAuctionDAO(), appConfig.getAuctionService());
 
         // Khởi tạo SocketServer
-        SocketServer socketServer = new SocketServer(PORT, MAX_CLIENTS);
+        SocketServer socketServer = new SocketServer(PORT, MAX_CLIENTS, appConfig.getRequestController());
 
         // Shutdown Hook: Đảm bảo dừng an toàn Scheduler và SocketServer khi tắt
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {

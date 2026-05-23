@@ -10,7 +10,7 @@ import java.sql.SQLException;
 /**
  * Cung cấp kết nối đến MySQL.
  * Khởi tạo một kết nối mới mỗi khi được gọi để đảm bảo an toàn cho đa luồng
- * và tương thích với cú pháp try-with-resources trong các lớp DAO.
+ * và tương thích với cú pháp try-with-resources trong các lớp DAO. Nhatdogy2007
  */
 public class DatabaseConnection {
     private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseConnection.class);
@@ -18,7 +18,7 @@ public class DatabaseConnection {
     // Thông tin kết nối MySQL
     private static final String URL = "jdbc:mysql://localhost:3306/auction_system?createDatabaseIfNotExist=true";
     private static final String USER = "root";
-    private static final String PASSWORD = "Nhatdogy2007";
+    private static final String PASSWORD = "Dung2007@";
 
     static {
         try {
@@ -32,7 +32,6 @@ public class DatabaseConnection {
      * Trả về một Connection mới mỗi lần gọi.
      */
     public static Connection getConnection() throws SQLException {
-        Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
-        return conn;
+        return DriverManager.getConnection(URL, USER, PASSWORD);
     }
 }
