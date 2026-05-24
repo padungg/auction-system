@@ -12,7 +12,6 @@ import com.auction.model.protocol.ResponseStatus;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -28,112 +27,44 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * <h2>AccountController</h2>
- * <p>
- * Controller chịu trách nhiệm điều khiển toàn bộ phân hệ Quản lý hồ sơ cá nhân (Account Profile)
- * và Lịch sử đấu giá trên giao diện Client ứng dụng đấu giá trực tuyến.
- * </p>
- *
- * <p><b>Chức năng cốt lõi:</b></p>
- * <ul>
- *   <li>Hiển thị chi tiết thông tin cá nhân và định dạng huy hiệu thành viên độc lập.</li>
- *   <li>Quản lý danh sách lịch sử tham gia đặt giá tích hợp thuật toán phân trang phía Client (Client-side Pagination).</li>
- *   <li>Khởi tạo biểu mẫu động (Dynamic Dialog Grid) hỗ trợ cập nhật thông tin bảo mật tài khoản.</li>
- *   <li>Xử lý đồng bộ hóa các giao dịch tài chính (Nạp/Rút tiền) thời gian thực thông qua kết nối Socket ngầm.</li>
- * </ul>
- *
- * @since 1.0
- * @see com.auction.client.network.ClientSocketManager
- * @see com.auction.client.util.SessionManager
+ * Controller quản lý thông tin cá nhân và lịch sử đấu giá của người dùng.
  */
 public class AccountController {
 
-    /**
-     * Bộ ghi log tập trung (SLF4J Logger) dùng để giám sát và ghi vết (trace)
-     * luồng thực thi, phục vụ công tác gỡ lỗi và quản trị vận hành hệ thống.
-     */
     private static final Logger LOGGER = LoggerFactory.getLogger(AccountController.class);
 
-    // =========================================================================
-    // THÀNH PHẦN GIAO DIỆN FXML - HỒ SƠ CÁ NHÂN (PROFILE LABELS & INPUTS)
-    // =========================================================================
-    @FXML
-    private Label lblAvatar;
-    @FXML
-    private Label lblName;
-    @FXML
-    private Label lblUsername;
-    @FXML
-    private Label lblEmail;
-    @FXML
-    private Label lblRole;
-    @FXML
-    private Label lblPhone;
-    @FXML
-    private Label lblAddress;
-    @FXML
-    private Label lblStore;
-    @FXML
-    private Label lblRating;
-    @FXML
-    private Label lblBalance;
-    @FXML
-    private HBox boxStore;
-    @FXML
-    private TextField txtAmount;
+    @FXML private Label lblAvatar;
+    @FXML private Label lblName;
+    @FXML private Label lblUsername;
+    @FXML private Label lblEmail;
+    @FXML private Label lblRole;
+    @FXML private Label lblPhone;
+    @FXML private Label lblAddress;
+    @FXML private Label lblStore;
+    @FXML private Label lblRating;
+    @FXML private Label lblBalance;
+    @FXML private HBox boxStore;
+    @FXML private TextField txtAmount;
 
-    // =========================================================================
-    // THÀNH PHẦN GIAO DIỆN FXML - BẢNG LỊCH SỬ ĐẶT GIÁ (BID HISTORY TABLE)
-    // =========================================================================
-    @FXML
-    private TableView<MyBidHistoryDTO> tableHistory;
-    @FXML
-    private TableColumn<MyBidHistoryDTO, String> colAuctionId;
-    @FXML
-    private TableColumn<MyBidHistoryDTO, String> colItemName;
-    @FXML
-    private TableColumn<MyBidHistoryDTO, Double> colPrice;
-    @FXML
-    private TableColumn<MyBidHistoryDTO, LocalDateTime> colTime;
-    @FXML
-    private TableColumn<MyBidHistoryDTO, String> colResult;
+    @FXML private TableView<MyBidHistoryDTO> tableHistory;
+    @FXML private TableColumn<MyBidHistoryDTO, String> colAuctionId;
+    @FXML private TableColumn<MyBidHistoryDTO, String> colItemName;
+    @FXML private TableColumn<MyBidHistoryDTO, Double> colPrice;
+    @FXML private TableColumn<MyBidHistoryDTO, LocalDateTime> colTime;
+    @FXML private TableColumn<MyBidHistoryDTO, String> colResult;
 
-    // =========================================================================
-    // THÀNH PHẦN GIAO DIỆN FXML - ĐIỀU KHIỂN PHÂN TRANG (PAGINATION CONTROLS)
-    // =========================================================================
-    @FXML
-    private HBox histPageBox;
-    @FXML
-    private Label histPageInfo;
-    @FXML
-    private Button histBtnFirst;
-    @FXML
-    private Button histBtnPrev;
-    @FXML
-    private Button histBtnNext;
-    @FXML
-    private Button histBtnLast;
+    @FXML private HBox histPageBox;
+    @FXML private Label histPageInfo;
+    @FXML private Button histBtnFirst;
+    @FXML private Button histBtnPrev;
+    @FXML private Button histBtnNext;
+    @FXML private Button histBtnLast;
 
-    // =========================================================================
-    // BIẾN QUẢN LÝ DỮ LIỆU NỘI BỘ (INTERNAL DATA MANAGEMENTS)
-    // =========================================================================
-    /** Số lượng bản ghi tối đa hiển thị trên một trang lịch sử. */
     private static final int HIST_PAGE_SIZE = 5;
-
-    /** Chỉ mục trang hiện tại trong cấu trúc phân trang (bắt đầu từ 0). */
     private int histCurrentPage = 0;
+    private final List<MyBidHistoryDTO> allHistory = new ArrayList<>();
+    private final ObservableList<MyBidHistoryDTO> bidHistory = FXCollections.observableArrayList();
 
-    /** Bộ nhớ đệm lưu trữ toàn bộ danh sách lịch sử đặt giá nhận về từ Server. */
-    private List<MyBidHistoryDTO> allHistory = new ArrayList<>();
-
-    /** Danh sách quan sát (ObservableList) liên kết trực tiếp để hiển thị dữ liệu lên TableView. */
-    private ObservableList<MyBidHistoryDTO> bidHistory = FXCollections.observableArrayList();
-
-    /**
-     * Phương thức khởi tạo vòng đời của JavaFX View (Lifecycle Hook).
-     * Được tự động kích hoạt sau khi file FXML liên kết được nạp thành công.
-     * Thực hiện thiết lập cấu trúc bảng, kết xuất thông tin phiên hiện hành và kéo dữ liệu từ mạng.
-     */
     @FXML
     public void initialize() {
         setupTable();
@@ -142,16 +73,13 @@ public class AccountController {
     }
 
     /**
-     * Cấu hình cấu trúc TableView và định nghĩa quy tắc render dữ liệu (Cell Factory).
-     * Áp dụng các định dạng hiển thị đặc thù cho tiền tệ (VNĐ), thời gian (HH:mm dd/MM/yyyy)
-     * và phân cấp đồ họa CSS cho các trạng thái kết quả đấu giá dưới dạng Badge trực quan.
+     * Cấu hình TableView và định dạng các cột hiển thị.
      */
     private void setupTable() {
         colAuctionId.setCellValueFactory(new PropertyValueFactory<>("auctionId"));
 
-        // Định cấu hình hiển thị cột tên sản phẩm và đính kèm class CSS chuyên biệt
         colItemName.setCellValueFactory(new PropertyValueFactory<>("itemName"));
-        colItemName.setCellFactory(tc -> new TableCell<MyBidHistoryDTO, String>() {
+        colItemName.setCellFactory(_ -> new TableCell<>() {
             @Override
             protected void updateItem(String name, boolean empty) {
                 super.updateItem(name, empty);
@@ -167,9 +95,8 @@ public class AccountController {
             }
         });
 
-        // Định dạng cột hiển thị giá trị đặt: Thêm dấu phân cách phần nghìn và đơn vị tiền tệ
         colPrice.setCellValueFactory(new PropertyValueFactory<>("bidAmount"));
-        colPrice.setCellFactory(tc -> new TableCell<MyBidHistoryDTO, Double>() {
+        colPrice.setCellFactory(_ -> new TableCell<>() {
             @Override
             protected void updateItem(Double price, boolean empty) {
                 super.updateItem(price, empty);
@@ -185,9 +112,8 @@ public class AccountController {
             }
         });
 
-        // Định dạng hiển thị ngày giờ chuẩn hóa: Giờ:Phút Ngày/Tháng/Năm
         colTime.setCellValueFactory(new PropertyValueFactory<>("bidTime"));
-        colTime.setCellFactory(tc -> new TableCell<MyBidHistoryDTO, LocalDateTime>() {
+        colTime.setCellFactory(_ -> new TableCell<>() {
             @Override
             protected void updateItem(LocalDateTime time, boolean empty) {
                 super.updateItem(time, empty);
@@ -199,9 +125,8 @@ public class AccountController {
             }
         });
 
-        // Ánh xạ trạng thái kết quả sang các Badge đồ họa màu sắc tương ứng
         colResult.setCellValueFactory(new PropertyValueFactory<>("result"));
-        colResult.setCellFactory(tc -> new TableCell<MyBidHistoryDTO, String>() {
+        colResult.setCellFactory(_ -> new TableCell<>() {
             private final Label badge = new Label();
             {
                 badge.getStyleClass().add("badge-base");
@@ -216,7 +141,6 @@ public class AccountController {
                 }
 
                 badge.getStyleClass().setAll("badge-base");
-
                 switch (result) {
                     case "Thắng":
                         badge.setText("🏆 Thắng");
@@ -234,7 +158,6 @@ public class AccountController {
                         badge.setText(result);
                         badge.getStyleClass().add("badge-default");
                 }
-
                 setGraphic(badge);
                 setAlignment(Pos.CENTER);
                 setText(null);
@@ -242,12 +165,11 @@ public class AccountController {
         });
 
         tableHistory.setItems(bidHistory);
-        tableHistory.setFixedCellSize(48); // Khống chế chiều cao dòng cố định để tối ưu hóa hiệu năng render
+        tableHistory.setFixedCellSize(48);
     }
 
     /**
-     * Tải và đồng bộ thông tin tài khoản người dùng hiện tại từ Session bộ nhớ đệm (Memory Cache).
-     * Thực hiện gán dữ liệu động lên toàn bộ các thành phần hiển thị đầu cuối (UI Labels).
+     * Tải thông tin người dùng từ session.
      */
     private void loadUserProfile() {
         UserResponseDTO user = SessionManager.getInstance().getCurrentUser();
@@ -263,7 +185,6 @@ public class AccountController {
             lblAddress.setText(
                     user.getAddress() != null && !user.getAddress().isEmpty() ? user.getAddress() : "Chưa cập nhật");
 
-            // Hiển thị và phân bổ không gian cho khối cửa hàng nếu tài khoản đăng ký là chủ shop
             if (user.getStoreName() != null && !user.getStoreName().isEmpty()) {
                 boxStore.setVisible(true);
                 boxStore.setManaged(true);
@@ -275,11 +196,6 @@ public class AccountController {
         }
     }
 
-    /**
-     * Cập nhật số dư tài khoản trên View cục bộ và đồng bộ hóa hiển thị lên Header của MainController.
-     *
-     * @param balance Số dư tài khoản mới cần cập nhật
-     */
     private void updateBalanceUI(double balance) {
         lblBalance.setText(String.format("%,.0f VNĐ", balance));
         if (MainController.getInstance() != null) {
@@ -288,8 +204,7 @@ public class AccountController {
     }
 
     /**
-     * Kích hoạt luồng xử lý bất đồng bộ (Worker Thread) gửi yêu cầu mạng truy vấn
-     * toàn bộ lịch sử đấu giá của người dùng hiện hành từ Server, sau đó đẩy dữ liệu về UI Thread.
+     * Tải lịch sử thầu từ server.
      */
     private void loadBidHistory() {
         ClientSocketManager.getInstance().execute(() -> {
@@ -298,10 +213,9 @@ public class AccountController {
                 Response res = ClientSocketManager.getInstance().sendRequest(req);
                 if (res != null && res.getStatus() == ResponseStatus.SUCCESS) {
                     List<MyBidHistoryDTO> history = res
-                            .getPayloadAs(new com.google.gson.reflect.TypeToken<List<MyBidHistoryDTO>>() {
+                            .getPayloadAs(new com.google.gson.reflect.TypeToken<>() {
                             });
 
-                    // Chuyển tiếp tiến trình cập nhật giao diện về JavaFX Application Thread tránh xung đột luồng
                     Platform.runLater(() -> {
                         allHistory.clear();
                         if (history != null)
@@ -309,19 +223,15 @@ public class AccountController {
                         histCurrentPage = 0;
                         renderHistPage();
                     });
-                } else if (res == null) {
-                    LOGGER.error("Mất kết nối mạng hoặc không nhận được phản hồi từ Server.");
                 }
             } catch (Exception e) {
-                LOGGER.error("Lỗi xảy ra trong tiến trình tải danh sách lịch sử đặt giá từ Server", e);
+                LOGGER.error("Lỗi tải lịch sử thầu từ Server", e);
             }
         });
     }
 
     /**
-     * Thuật toán phân trang dữ liệu (Pagination Engine) tại thiết bị Client.
-     * Tính toán lát cắt chỉ mục (Sub-list Slice) tương ứng với số trang hiện tại, kiểm soát
-     * trạng thái kích hoạt của các nút điều hướng nhanh và sinh các nút chọn trang số động.
+     * Phân trang hiển thị lịch sử đấu giá.
      */
     private void renderHistPage() {
         int total = allHistory.size();
@@ -336,17 +246,11 @@ public class AccountController {
             histPageInfo.setText("Trang " + (histCurrentPage + 1) + " / " + totalPages + "  (" + total + " lượt)");
         }
 
-        // Bật/Tắt trạng thái điều hướng dựa trên biên chỉ mục trang
-        if (histBtnFirst != null)
-            histBtnFirst.setDisable(histCurrentPage == 0);
-        if (histBtnPrev != null)
-            histBtnPrev.setDisable(histCurrentPage == 0);
-        if (histBtnNext != null)
-            histBtnNext.setDisable(histCurrentPage >= totalPages - 1);
-        if (histBtnLast != null)
-            histBtnLast.setDisable(histCurrentPage >= totalPages - 1);
+        if (histBtnFirst != null) histBtnFirst.setDisable(histCurrentPage == 0);
+        if (histBtnPrev != null) histBtnPrev.setDisable(histCurrentPage == 0);
+        if (histBtnNext != null) histBtnNext.setDisable(histCurrentPage >= totalPages - 1);
+        if (histBtnLast != null) histBtnLast.setDisable(histCurrentPage >= totalPages - 1);
 
-        // Khởi tạo thanh chỉ mục số trang động (Hiển thị tối đa dạng Slider 5 nút liền kề)
         if (histPageBox != null) {
             histPageBox.getChildren().clear();
             int maxBtn = 5, startP = Math.max(0, histCurrentPage - 2);
@@ -357,7 +261,7 @@ public class AccountController {
                 final int pg = p;
                 Button btn = new Button(String.valueOf(p + 1));
                 btn.getStyleClass().setAll("button", pg == histCurrentPage ? "page-btn-active" : "page-btn-normal");
-                btn.setOnAction(e -> {
+                btn.setOnAction(_ -> {
                     histCurrentPage = pg;
                     renderHistPage();
                 });
@@ -366,34 +270,22 @@ public class AccountController {
         }
     }
 
-    /**
-     * Điều hướng về trang lịch sử đầu tiên.
-     * @param e Sự kiện kích hoạt Action từ giao diện.
-     */
     @FXML
-    public void histGoFirst(ActionEvent e) {
+    public void histGoFirst() {
         histCurrentPage = 0;
         renderHistPage();
     }
 
-    /**
-     * Lùi lại một trang lịch sử (nếu có thể).
-     * @param e Sự kiện kích hoạt Action từ giao diện.
-     */
     @FXML
-    public void histGoPrev(ActionEvent e) {
+    public void histGoPrev() {
         if (histCurrentPage > 0) {
             histCurrentPage--;
             renderHistPage();
         }
     }
 
-    /**
-     * Tiến lên một trang lịch sử tiếp theo (nếu có thể).
-     * @param e Sự kiện kích hoạt Action từ giao diện.
-     */
     @FXML
-    public void histGoNext(ActionEvent e) {
+    public void histGoNext() {
         int t = Math.max(1, (int) Math.ceil((double) allHistory.size() / HIST_PAGE_SIZE));
         if (histCurrentPage < t - 1) {
             histCurrentPage++;
@@ -401,25 +293,17 @@ public class AccountController {
         }
     }
 
-    /**
-     * Điều hướng thẳng đến trang lịch sử cuối cùng.
-     * @param e Sự kiện kích hoạt Action từ giao diện.
-     */
     @FXML
-    public void histGoLast(ActionEvent e) {
+    public void histGoLast() {
         histCurrentPage = Math.max(0, (int) Math.ceil((double) allHistory.size() / HIST_PAGE_SIZE) - 1);
         renderHistPage();
     }
 
     /**
-     * Kích hoạt và hiển thị cửa sổ hộp thoại điều hướng (JavaFX Custom Dialog Layout)
-     * cho phép chỉnh sửa thông tin hồ sơ bảo mật cá nhân của người dùng hiện hành.
-     * Thực hiện kiểm tra dữ liệu đầu vào (Validation) trước khi đóng gói và gửi payload qua Socket.
-     *
-     * @param event Sự kiện nhấp nút "Chỉnh sửa hồ sơ" từ UI.
+     * Mở dialog chỉnh sửa thông tin hồ sơ cá nhân.
      */
     @FXML
-    void handleEditProfile(ActionEvent event) {
+    void handleEditProfile() {
         UserResponseDTO user = SessionManager.getInstance().getCurrentUser();
 
         Dialog<ButtonType> dialog = new Dialog<>();
@@ -429,7 +313,6 @@ public class AccountController {
         ButtonType saveBtn = new ButtonType("Lưu thay đổi", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(saveBtn, ButtonType.CANCEL);
 
-        // Khởi tạo layout lưới phân bố các trường nhập liệu trên biểu mẫu popup
         GridPane grid = new GridPane();
         grid.setHgap(12);
         grid.setVgap(14);
@@ -469,11 +352,10 @@ public class AccountController {
         javafx.scene.Node okNode = dialog.getDialogPane().lookupButton(saveBtn);
         okNode.getStyleClass().add("edit-profile-save-btn");
 
-        // Sử dụng EventFilter chặn hành vi đóng cửa sổ nếu kiểm tra dữ liệu bắt buộc bị lỗi
         okNode.addEventFilter(javafx.event.ActionEvent.ACTION, filterEvent -> {
             if (tfName.getText().trim().isEmpty()) {
                 lblMsg.setText("Họ và tên không được để trống!");
-                filterEvent.consume(); // Tiêu thụ sự kiện nhằm ngăn cản Dialog đóng lại
+                filterEvent.consume();
             }
         });
 
@@ -493,7 +375,6 @@ public class AccountController {
             payload.put("storeName", storeName);
             if (!password.isEmpty()) payload.put("password", password);
 
-            // Gửi dữ liệu cập nhật không đồng bộ thông qua kênh truyền Network
             ClientSocketManager.getInstance().execute(() -> {
                 try {
                     Request req = new Request(RequestType.UPDATE_PROFILE, payload);
@@ -506,7 +387,7 @@ public class AccountController {
                                     UserResponseDTO updatedUser = res.getPayloadAs(UserResponseDTO.class);
                                     SessionManager.getInstance().setCurrentUser(updatedUser);
                                 } catch (Exception ex) {
-                                    LOGGER.error("Không thể cập nhật thông tin thực thể vào Session bộ nhớ đệm", ex);
+                                    LOGGER.error("Không thể cập nhật session người dùng", ex);
                                 }
                                 AlertUtils.showInfo("Thành công", "Cập nhật hồ sơ thành công!");
                                 if (MainController.getInstance() != null) MainController.getInstance().loadPage("Account.fxml");
@@ -518,37 +399,25 @@ public class AccountController {
                         }
                     });
                 } catch (Exception ex) {
-                    LOGGER.error("Gặp sự cố ngắt kết nối mạng", ex);
+                    LOGGER.error("Lỗi cập nhật hồ sơ cá nhân", ex);
                     Platform.runLater(() -> AlertUtils.showError("Lỗi kết nối", ex.getMessage()));
                 }
             });
         });
     }
 
-    /**
-     * Tiếp nhận lệnh nạp tiền từ giao diện UI.
-     * @param event Sự kiện nhấp chuột kích hoạt xử lý.
-     */
     @FXML
-    void handleDeposit(ActionEvent event) {
+    void handleDeposit() {
         processTransaction(RequestType.DEPOSIT, "Nạp tiền");
     }
 
-    /**
-     * Tiếp nhận lệnh rút tiền từ giao diện UI.
-     * @param event Sự kiện nhấp chuột kích hoạt xử lý.
-     */
     @FXML
-    void handleWithdraw(ActionEvent event) {
+    void handleWithdraw() {
         processTransaction(RequestType.WITHDRAW, "Rút tiền");
     }
 
     /**
-     * Xử lý giao dịch tài chính tập trung (Hợp nhất xử lý Nạp tiền / Rút tiền).
-     * Tiến hành xác thực định dạng số thực nhập vào từ textfield trước khi truyền tải gói tin.
-     *
-     * @param type       Loại chỉ thị yêu cầu mạng (DEPOSIT hoặc WITHDRAW)
-     * @param actionName Tên chuỗi hành động phục vụ hiển thị thông báo kết quả (Nạp tiền / Rút tiền)
+     * Xử lý nạp/rút tiền tài khoản.
      */
     private void processTransaction(RequestType type, String actionName) {
         String amountStr = txtAmount.getText().trim();
@@ -563,7 +432,6 @@ public class AccountController {
                 return;
             }
 
-            // Giao tiếp luồng IO luồng ngầm gửi lệnh giao dịch tài chính
             ClientSocketManager.getInstance().execute(() -> {
                 try {
                     Request req = new Request(type, amount);
@@ -575,7 +443,6 @@ public class AccountController {
                                 txtAmount.clear();
                                 if (MainController.getInstance() != null) MainController.getInstance().refreshBalanceFromServer();
                                 AlertUtils.showInfo("Thành công", actionName + " thành công!");
-                                // Tải lại view hiện hành để làm mới toàn bộ trường thông tin số dư tài khoản
                                 if (MainController.getInstance() != null) MainController.getInstance().loadPage("Account.fxml");
                             } else {
                                 AlertUtils.showWarning("Lỗi", res.getMessage() != null ? res.getMessage() : "Giao dịch thất bại");
@@ -585,7 +452,7 @@ public class AccountController {
                         }
                     });
                 } catch (Exception e) {
-                    LOGGER.error("Lỗi giao dịch tài chính: {}", actionName, e);
+                    LOGGER.error("Lỗi giao dịch tài chính: " + actionName, e);
                     Platform.runLater(() -> AlertUtils.showError("Lỗi kết nối", e.getMessage()));
                 }
             });

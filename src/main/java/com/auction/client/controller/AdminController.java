@@ -9,44 +9,34 @@ import com.auction.model.protocol.RequestType;
 import com.auction.model.protocol.Response;
 import com.auction.model.protocol.ResponseStatus;
 import javafx.application.Platform;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
- * <h2>AdminController</h2>
- * <p>
- * Controller trung tâm điều phối toàn bộ phân hệ giao diện Quản trị hệ thống (Admin Dashboard).
- * </p>
- *
- * <p><b>Các nghiệp vụ quản trị cốt lõi bao gồm:</b></p>
- * <ul>
- *   <li><b>Quản lý người dùng:</b> Giám sát danh sách thành viên, cập nhật trạng thái bảo mật thông qua cơ chế khóa (Lock) và mở khóa (Unlock) tài khoản hàng loạt (Batch Processing).</li>
- *   <li><b>Quản lý phiên đấu giá:</b> Giám sát trạng thái thời gian thực của các phiên, thực thi các đặc quyền can thiệp cấp cao như cưỡng chế đóng (Force Close), hủy bỏ (Cancel) hoặc xác nhận tất toán tài chính (Mark Paid).</li>
- *   <li><b>Kiểm soát UI:</b> Tích hợp thuật toán phân trang độc lập cho cả danh sách thực thể người dùng và phiên đấu giá, đồng thời tính toán số liệu thống kê định lượng trực quan.</li>
- * </ul>
- *
- * @since 1.0
- * @see com.auction.client.network.ClientSocketManager
- * @see com.auction.model.protocol.Request
+ * Controller trung tâm quản lý giao diện Admin Dashboard.
  */
 public class AdminController {
 
-    /**
-     * Bộ ghi nhật ký tập trung (SLF4J Logger) cấu hình theo cơ chế an toàn đa luồng (Thread-safe).
-     * Phục vụ mục đích theo dõi dấu vết luồng IO mạng, cô lập ngoại lệ vận hành và lưu vết tệp tin nhật ký hệ thống.
-     */
     private static final Logger LOGGER = LoggerFactory.getLogger(AdminController.class);
 
-
-    // =========================================================================
-    // THÀNH PHẦN GIAO DIỆN FXML - QUẢN LÝ NGƯỜI DÙNG (USERS MANAGEMENT)
-    // =========================================================================
+    // USERS MANAGEMENT FXML
     @FXML private TableView<UserResponseDTO> tableUsers;
     @FXML private TableColumn<UserResponseDTO, Boolean> colSelect;
     @FXML private TableColumn<UserResponseDTO, String> colUserId;
@@ -57,33 +47,25 @@ public class AdminController {
     @FXML private TableColumn<UserResponseDTO, Double> colUserBalance;
     @FXML private TableColumn<UserResponseDTO, Boolean> colUserStatus;
 
-    // Nhãn hiển thị chỉ số tổng hợp định lượng trạng thái tài khoản người dùng
-    @FXML private javafx.scene.control.Label statTotalUsers;
-    @FXML private javafx.scene.control.Label statActiveUsers;
-    @FXML private javafx.scene.control.Label statLockedUsers;
-    @FXML private javafx.scene.control.Label statAdminUsers;
+    @FXML private Label statTotalUsers;
+    @FXML private Label statActiveUsers;
+    @FXML private Label statLockedUsers;
+    @FXML private Label statAdminUsers;
 
-    // Thành phần điều khiển luồng hiển thị phân trang người dùng
-    @FXML private javafx.scene.layout.HBox pageButtonBox;
-    @FXML private javafx.scene.control.Label lblPageInfo;
-    @FXML private javafx.scene.control.Button btnFirstPage;
-    @FXML private javafx.scene.control.Button btnPrevPage;
-    @FXML private javafx.scene.control.Button btnNextPage;
-    @FXML private javafx.scene.control.Button btnLastPage;
+    @FXML private HBox pageButtonBox;
+    @FXML private Label lblPageInfo;
+    @FXML private Button btnFirstPage;
+    @FXML private Button btnPrevPage;
+    @FXML private Button btnNextPage;
+    @FXML private Button btnLastPage;
 
-    // Cấu hình tham số phân trang và cấu trúc bộ nhớ đệm danh sách người dùng
     private static final int PAGE_SIZE = 15;
-    private int currentPage = 0; // Chỉ mục trang hiện tại dựa trên gốc 0 (0-indexed)
-    private java.util.List<UserResponseDTO> allUsersList = new java.util.ArrayList<>();
+    private int currentPage = 0;
+    private final List<UserResponseDTO> allUsersList = new ArrayList<>();
+    private final ObservableList<UserResponseDTO> usersList = FXCollections.observableArrayList();
+    private final Map<String, BooleanProperty> selectedUsersMap = new HashMap<>();
 
-    private ObservableList<UserResponseDTO> usersList = FXCollections.observableArrayList();
-
-    /** Ánh xạ bộ nhớ duy trì trạng thái của các checkbox hàng chọn, độc lập với chu kỳ nạp lại dữ liệu grid. */
-    private java.util.Map<String, javafx.beans.property.BooleanProperty> selectedUsersMap = new java.util.HashMap<>();
-
-    // =========================================================================
-    // THÀNH PHẦN GIAO DIỆN FXML - QUẢN LÝ PHIÊN ĐẤU GIÁ (AUCTIONS MANAGEMENT)
-    // =========================================================================
+    // AUCTIONS MANAGEMENT FXML
     @FXML private TableView<AuctionSummaryDTO> tableAuctions;
     @FXML private TableColumn<AuctionSummaryDTO, String> colAucProduct;
     @FXML private TableColumn<AuctionSummaryDTO, Double> colAucPrice;
@@ -95,34 +77,25 @@ public class AdminController {
     @FXML private TableColumn<AuctionSummaryDTO, String> colAucStatus;
     @FXML private TableColumn<AuctionSummaryDTO, Void> colAucAction;
 
-    // Nhãn hiển thị chỉ số đo lường định lượng trạng thái các phiên đấu giá toàn cục
-    @FXML private javafx.scene.control.Label aucStatTotal;
-    @FXML private javafx.scene.control.Label aucStatRunning;
-    @FXML private javafx.scene.control.Label aucStatOpen;
-    @FXML private javafx.scene.control.Label aucStatFinished;
-    @FXML private javafx.scene.control.Label aucStatPaid;
-    @FXML private javafx.scene.control.Label aucStatCanceled;
+    @FXML private Label aucStatTotal;
+    @FXML private Label aucStatRunning;
+    @FXML private Label aucStatOpen;
+    @FXML private Label aucStatFinished;
+    @FXML private Label aucStatPaid;
+    @FXML private Label aucStatCanceled;
 
-    // Thành phần điều khiển luồng hiển thị phân trang danh sách đấu giá
-    @FXML private javafx.scene.layout.HBox aucPageButtonBox;
-    @FXML private javafx.scene.control.Label aucLblPageInfo;
-    @FXML private javafx.scene.control.Button aucBtnFirst;
-    @FXML private javafx.scene.control.Button aucBtnPrev;
-    @FXML private javafx.scene.control.Button aucBtnNext;
-    @FXML private javafx.scene.control.Button aucBtnLast;
+    @FXML private HBox aucPageButtonBox;
+    @FXML private Label aucLblPageInfo;
+    @FXML private Button aucBtnFirst;
+    @FXML private Button aucBtnPrev;
+    @FXML private Button aucBtnNext;
+    @FXML private Button aucBtnLast;
 
-    // Cấu hình tham số phân trang và cấu trúc bộ nhớ đệm danh sách đấu giá
     private static final int AUC_PAGE_SIZE = 5;
     private int aucCurrentPage = 0;
-    private java.util.List<AuctionSummaryDTO> allAuctionsList = new java.util.ArrayList<>();
+    private final List<AuctionSummaryDTO> allAuctionsList = new ArrayList<>();
+    private final ObservableList<AuctionSummaryDTO> auctionsList = FXCollections.observableArrayList();
 
-    private ObservableList<AuctionSummaryDTO> auctionsList = FXCollections.observableArrayList();
-
-    /**
-     * Phương thức khởi tạo cấu hình vòng đời của phân hệ JavaFX (Lifecycle Hook).
-     * Được tự động kích hoạt sau khi kiến trúc tệp tin thiết kế FXML được nạp thành công vào hệ thống.
-     * Kiểm tra tính sẵn sàng của cấu trúc giao diện và phát lệnh kéo dữ liệu ban đầu từ mạng.
-     */
     @FXML
     public void initialize() {
         if (tableUsers != null) {
@@ -136,17 +109,16 @@ public class AdminController {
     }
 
     /**
-     * Định hình quy tắc liên kết thuộc tính đối tượng (Property Binding) và logic render tùy biến giao diện cho bảng Người dùng.
-     * Bao gồm cấu hình cột Checkbox chọn hàng loạt, định dạng tiền tệ VND, Badge phân quyền và nhãn hiển thị trạng thái bảo mật.
+     * Cấu hình TableView người dùng.
      */
     private void setupUsersTable() {
         if (colSelect != null) {
             colSelect.setCellValueFactory(cellData -> {
                 String id = cellData.getValue().getId();
-                selectedUsersMap.putIfAbsent(id, new javafx.beans.property.SimpleBooleanProperty(false));
+                selectedUsersMap.putIfAbsent(id, new SimpleBooleanProperty(false));
                 return selectedUsersMap.get(id);
             });
-            colSelect.setCellFactory(javafx.scene.control.cell.CheckBoxTableCell.forTableColumn(colSelect));
+            colSelect.setCellFactory(CheckBoxTableCell.forTableColumn(colSelect));
         }
 
         colUserId.setCellValueFactory(new PropertyValueFactory<>("id"));
@@ -154,9 +126,8 @@ public class AdminController {
         colUserFullName.setCellValueFactory(new PropertyValueFactory<>("fullName"));
         colUserEmail.setCellValueFactory(new PropertyValueFactory<>("email"));
 
-        // Định dạng cột hiển thị vai trò: Áp dụng Badge đồ họa phân cấp màu tương ứng với quyền hạn quản trị
         colUserRole.setCellValueFactory(new PropertyValueFactory<>("role"));
-        colUserRole.setCellFactory(tc -> new TableCell<UserResponseDTO, Object>() {
+        colUserRole.setCellFactory(_ -> new TableCell<>() {
             private final Label badge = new Label();
             @Override
             protected void updateItem(Object roleObj, boolean empty) {
@@ -179,9 +150,8 @@ public class AdminController {
             }
         });
 
-        // Định dạng cột hiển thị số dư tài khoản: Áp dụng quy chuẩn cấu trúc phân tách hàng nghìn cho tiền tệ quốc gia
         colUserBalance.setCellValueFactory(new PropertyValueFactory<>("balance"));
-        colUserBalance.setCellFactory(tc -> new TableCell<UserResponseDTO, Double>() {
+        colUserBalance.setCellFactory(_ -> new TableCell<>() {
             @Override
             protected void updateItem(Double balance, boolean empty) {
                 super.updateItem(balance, empty);
@@ -190,9 +160,8 @@ public class AdminController {
             }
         });
 
-        // Định dạng cột trạng thái: Tạo nhãn text trực quan kèm biểu tượng emoji tương ứng với trạng thái kích hoạt tài khoản
         colUserStatus.setCellValueFactory(new PropertyValueFactory<>("active"));
-        colUserStatus.setCellFactory(tc -> new TableCell<UserResponseDTO, Boolean>() {
+        colUserStatus.setCellFactory(_ -> new TableCell<>() {
             private final Label lbl = new Label();
             @Override
             protected void updateItem(Boolean isActive, boolean empty) {
@@ -210,21 +179,20 @@ public class AdminController {
         });
 
         tableUsers.setItems(usersList);
-        tableUsers.setEditable(true); // Bật quyền chỉnh sửa để CheckBoxTableCell tiếp nhận trực tiếp và cập nhật tương tác click chuột từ quản trị viên
+        tableUsers.setEditable(true);
     }
 
     /**
-     * Xây dựng kiến trúc Cell đồ họa phức hợp (VBox/HBox) hiển thị đa trường thông tin cho cột Sản phẩm,
-     * đồng thời thực hiện định dạng Badge trạng thái và gán tập hợp các bộ lắng nghe hành động (Action Buttons) cho mỗi dòng.
+     * Cấu hình TableView phiên đấu giá.
      */
     private void setupAuctionsTable() {
         colAucProduct.setCellValueFactory(new PropertyValueFactory<>("itemName"));
-        colAucProduct.setCellFactory(tc -> new TableCell<AuctionSummaryDTO, String>() {
+        colAucProduct.setCellFactory(_ -> new TableCell<>() {
             private final Label nameLbl = new Label();
             private final Label idLbl = new Label();
             private final Label typeLbl = new Label();
-            private final javafx.scene.layout.HBox infoBox = new javafx.scene.layout.HBox(6);
-            private final javafx.scene.layout.VBox box = new javafx.scene.layout.VBox(4);
+            private final HBox infoBox = new HBox(6);
+            private final VBox box = new VBox(4);
 
             {
                 nameLbl.getStyleClass().add("prod-title-lbl");
@@ -246,7 +214,6 @@ public class AdminController {
                         nameLbl.setText(itemName);
                         idLbl.setText("#" + dto.getAuctionId());
 
-                        // Phân tách màu sắc nhãn đại diện dựa theo danh mục phân loại mặt hàng đấu giá
                         String type = dto.getItemType();
                         typeLbl.getStyleClass().clear();
                         if ("ELECTRONICS".equalsIgnoreCase(type)) {
@@ -273,9 +240,8 @@ public class AdminController {
             }
         });
 
-        // Định dạng hiển thị cột giá tiền hiện hành: Làm nổi bật font chữ kèm đơn vị tiền tệ tiêu chuẩn
         colAucPrice.setCellValueFactory(new PropertyValueFactory<>("currentPrice"));
-        colAucPrice.setCellFactory(tc -> new TableCell<AuctionSummaryDTO, Double>() {
+        colAucPrice.setCellFactory(_ -> new TableCell<>() {
             @Override
             protected void updateItem(Double price, boolean empty) {
                 super.updateItem(price, empty);
@@ -294,7 +260,6 @@ public class AdminController {
         colAucBids.setCellValueFactory(new PropertyValueFactory<>("bidCount"));
         colAucBids.setStyle("-fx-alignment: CENTER;");
 
-        // Sử dụng thuật toán băm tất định (Deterministic Hash) để giả lập số lượt xem dựa vào ID và số lượt đặt giá hiện tại
         colAucViews.setCellValueFactory(cellData -> {
             int bids = cellData.getValue().getBidCount();
             int hash = cellData.getValue().getAuctionId() != null ? Math.abs(cellData.getValue().getAuctionId().hashCode()) : 0;
@@ -303,9 +268,8 @@ public class AdminController {
         });
         colAucViews.setStyle("-fx-alignment: CENTER; -fx-text-fill: #64748b;");
 
-        // Tùy biến hiển thị cho cột định danh tài khoản người chiến thắng phiên
         colAucWinner.setCellValueFactory(new PropertyValueFactory<>("currentWinnerId"));
-        colAucWinner.setCellFactory(tc -> new TableCell<AuctionSummaryDTO, String>() {
+        colAucWinner.setCellFactory(_ -> new TableCell<>() {
             @Override
             protected void updateItem(String winner, boolean empty) {
                 super.updateItem(winner, empty);
@@ -328,9 +292,8 @@ public class AdminController {
             }
         });
 
-        // Tùy biến hiển thị cho cột định danh tài khoản người đăng bán sản phẩm
         colAucSeller.setCellValueFactory(new PropertyValueFactory<>("sellerName"));
-        colAucSeller.setCellFactory(tc -> new TableCell<AuctionSummaryDTO, String>() {
+        colAucSeller.setCellFactory(_ -> new TableCell<>() {
             @Override
             protected void updateItem(String seller, boolean empty) {
                 super.updateItem(seller, empty);
@@ -353,9 +316,8 @@ public class AdminController {
             }
         });
 
-        // Tách biệt trường thời gian kết thúc thành 2 dòng (Giờ và Ngày) nhằm mục đích tối ưu hóa không gian hiển thị cột
         colAucEnd.setCellValueFactory(new PropertyValueFactory<>("endTime"));
-        colAucEnd.setCellFactory(tc -> new TableCell<AuctionSummaryDTO, String>() {
+        colAucEnd.setCellFactory(_ -> new TableCell<>() {
             @Override
             protected void updateItem(String end, boolean empty) {
                 super.updateItem(end, empty);
@@ -376,9 +338,8 @@ public class AdminController {
             }
         });
 
-        // Khởi tạo hệ thống màu sắc nhận diện đặc trưng cho từng trạng thái thực thi phiên đấu giá
         colAucStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
-        colAucStatus.setCellFactory(tc -> new TableCell<AuctionSummaryDTO, String>() {
+        colAucStatus.setCellFactory(_ -> new TableCell<>() {
             private final Label badge = new Label();
             @Override
             protected void updateItem(String status, boolean empty) {
@@ -414,21 +375,20 @@ public class AdminController {
             }
         });
 
-        // Thiết lập bộ chứa tổ hợp nút chức năng quản trị, tự động ẩn/hiện linh hoạt dựa theo trạng thái của phiên
         if (colAucAction != null) {
-            colAucAction.setCellFactory(tc -> new TableCell<AuctionSummaryDTO, Void>() {
+            colAucAction.setCellFactory(_ -> new TableCell<>() {
                 private final Button btnView = new Button("👁 Xem");
                 private final Button btnClose = new Button("Đóng");
                 private final Button btnCancel = new Button("Hủy");
                 private final Button btnPaid = new Button("Thanh toán");
-                private final javafx.scene.layout.HBox box = new javafx.scene.layout.HBox(6);
+                private final HBox box = new HBox(6);
 
                 {
                     btnView.getStyleClass().add("btn-action-view");
                     btnClose.getStyleClass().add("btn-action-close");
                     btnCancel.getStyleClass().add("btn-action-cancel");
                     btnPaid.getStyleClass().add("btn-action-paid");
-                    box.setAlignment(javafx.geometry.Pos.CENTER);
+                    box.setAlignment(Pos.CENTER);
                 }
 
                 @Override
@@ -442,10 +402,10 @@ public class AdminController {
                         if (index >= 0 && index < getTableView().getItems().size()) {
                             AuctionSummaryDTO row = getTableView().getItems().get(index);
 
-                            btnView.setOnAction(e -> MainController.getInstance().openAuctionDetail(row.getAuctionId()));
-                            btnClose.setOnAction(e -> forceCloseAuction(row.getAuctionId()));
-                            btnCancel.setOnAction(e -> cancelAuctionAdmin(row.getAuctionId()));
-                            btnPaid.setOnAction(e -> markPaidAdmin(row.getAuctionId()));
+                            btnView.setOnAction(_ -> MainController.getInstance().openAuctionDetail(row.getAuctionId()));
+                            btnClose.setOnAction(_ -> forceCloseAuction(row.getAuctionId()));
+                            btnCancel.setOnAction(_ -> cancelAuctionAdmin(row.getAuctionId()));
+                            btnPaid.setOnAction(_ -> markPaidAdmin(row.getAuctionId()));
 
                             box.getChildren().clear();
                             String status = row.getStatus();
@@ -468,12 +428,12 @@ public class AdminController {
             });
         }
 
-        tableAuctions.setFixedCellSize(60); // Khống chế chiều cao dòng cố định để đảm bảo bố cục hiển thị đồng đều cấu trúc bảng
+        tableAuctions.setFixedCellSize(60);
         tableAuctions.setItems(auctionsList);
     }
 
     /**
-     * Kích hoạt luồng Worker Thread ngầm gửi chỉ thị mạng đồng bộ danh sách toàn bộ người dùng từ máy chủ về thiết bị Client.
+     * Tải danh sách người dùng từ server.
      */
     private void loadUsers() {
         ClientSocketManager.getInstance().execute(() -> {
@@ -485,7 +445,7 @@ public class AdminController {
                     UserResponseDTO[] arr = response.getPayloadAs(UserResponseDTO[].class);
                     Platform.runLater(() -> {
                         allUsersList.clear();
-                        if (arr != null) java.util.Collections.addAll(allUsersList, arr);
+                        if (arr != null) Collections.addAll(allUsersList, arr);
                         currentPage = 0;
                         updateStats();
                         renderPage();
@@ -501,11 +461,11 @@ public class AdminController {
     }
 
     /**
-     * Phân tích, tổng hợp dữ liệu danh sách người dùng trong RAM để kết xuất các chỉ số định lượng lên nhóm nhãn thống kê.
+     * Cập nhật nhãn thống kê người dùng.
      */
     private void updateStats() {
         int total = allUsersList.size();
-        long active = allUsersList.stream().filter(u -> u.isActive()).count();
+        long active = allUsersList.stream().filter(UserResponseDTO::isActive).count();
         long locked = total - active;
         long admins = allUsersList.stream()
                 .filter(u -> u.getRole() != null && "ADMIN".equalsIgnoreCase(u.getRole().toString()))
@@ -517,8 +477,7 @@ public class AdminController {
     }
 
     /**
-     * Trích xuất phân mảnh dữ liệu (Sub-list) tương ứng với chỉ mục trang hiện tại để kết xuất lên giao diện người dùng,
-     * đồng thời thực hiện kiểm soát tính vô hiệu hóa nút bấm và sinh mã thanh chọn trang số động.
+     * Hiển thị trang người dùng hiện hành.
      */
     private void renderPage() {
         int totalPages = Math.max(1, (int) Math.ceil((double) allUsersList.size() / PAGE_SIZE));
@@ -538,7 +497,6 @@ public class AdminController {
         if (btnNextPage != null)  btnNextPage.setDisable(currentPage >= totalPages - 1);
         if (btnLastPage != null)  btnLastPage.setDisable(currentPage >= totalPages - 1);
 
-        // Khởi tạo thanh chỉ mục trang số động dạng trượt (Hiển thị tối đa cố định 5 nút liền kề)
         if (pageButtonBox != null) {
             pageButtonBox.getChildren().clear();
             int maxBtn = 5;
@@ -547,49 +505,33 @@ public class AdminController {
             if (endP - startP < maxBtn) startP = Math.max(0, endP - maxBtn);
             for (int p = startP; p < endP; p++) {
                 final int pg = p;
-                javafx.scene.control.Button btn = new javafx.scene.control.Button(String.valueOf(p + 1));
+                Button btn = new Button(String.valueOf(p + 1));
                 btn.getStyleClass().setAll("button", p == currentPage ? "page-btn-active" : "page-btn-normal");
-                btn.setOnAction(e -> { currentPage = pg; renderPage(); });
+                btn.setOnAction(_ -> { currentPage = pg; renderPage(); });
                 pageButtonBox.getChildren().add(btn);
             }
         }
     }
 
-    /**
-     * Quay về trang đầu tiên của danh sách người dùng.
-     * @param e Sự kiện Action được gửi từ UI
-     */
-    @FXML public void goFirstPage(javafx.event.ActionEvent e) { currentPage = 0; renderPage(); }
+    @FXML public void goFirstPage() { currentPage = 0; renderPage(); }
 
-    /**
-     * Lùi về trang trước của danh sách người dùng.
-     * @param e Sự kiện Action được gửi từ UI
-     */
-    @FXML public void goPrevPage(javafx.event.ActionEvent e) {
+    @FXML public void goPrevPage() {
         if (currentPage > 0) { currentPage--; renderPage(); }
     }
 
-    /**
-     * Tiến tới trang sau của danh sách người dùng.
-     * @param e Sự kiện Action được gửi từ UI
-     */
-    @FXML public void goNextPage(javafx.event.ActionEvent e) {
+    @FXML public void goNextPage() {
         int totalPages = (int) Math.ceil((double) allUsersList.size() / PAGE_SIZE);
         if (currentPage < totalPages - 1) { currentPage++; renderPage(); }
     }
 
-    /**
-     * Nhảy thẳng tới trang cuối cùng của danh sách người dùng.
-     * @param e Sự kiện Action được gửi từ UI
-     */
-    @FXML public void goLastPage(javafx.event.ActionEvent e) {
+    @FXML public void goLastPage() {
         int totalPages = Math.max(1, (int) Math.ceil((double) allUsersList.size() / PAGE_SIZE));
         currentPage = totalPages - 1;
         renderPage();
     }
 
     /**
-     * Kích hoạt luồng gửi chỉ thị mạng đồng bộ thông tin danh sách toàn bộ các phiên đấu giá đang lưu vết tại Server.
+     * Tải danh sách phiên đấu giá từ server.
      */
     private void loadAuctions() {
         ClientSocketManager.getInstance().execute(() -> {
@@ -601,7 +543,7 @@ public class AdminController {
                     AuctionSummaryDTO[] arr = response.getPayloadAs(AuctionSummaryDTO[].class);
                     Platform.runLater(() -> {
                         allAuctionsList.clear();
-                        if (arr != null) java.util.Collections.addAll(allAuctionsList, arr);
+                        if (arr != null) Collections.addAll(allAuctionsList, arr);
                         aucCurrentPage = 0;
                         updateAucStats();
                         renderAucPage();
@@ -617,7 +559,7 @@ public class AdminController {
     }
 
     /**
-     * Phân tích cấu trúc danh sách bộ nhớ đệm để tính toán và kết xuất các chỉ số trạng thái phiên đấu giá lên UI labels.
+     * Cập nhật nhãn thống kê phiên đấu giá.
      */
     private void updateAucStats() {
         long total    = allAuctionsList.size();
@@ -635,7 +577,7 @@ public class AdminController {
     }
 
     /**
-     * Bóc tách phân mảnh dữ liệu danh sách phiên đấu giá tương ứng chỉ mục hiện hành phục vụ kết xuất giao diện bảng.
+     * Hiển thị trang phiên đấu giá hiện hành.
      */
     private void renderAucPage() {
         int totalPages = Math.max(1, (int) Math.ceil((double) allAuctionsList.size() / AUC_PAGE_SIZE));
@@ -654,7 +596,6 @@ public class AdminController {
         if (aucBtnNext  != null) aucBtnNext.setDisable(aucCurrentPage >= totalPages - 1);
         if (aucBtnLast  != null) aucBtnLast.setDisable(aucCurrentPage >= totalPages - 1);
 
-        // Sinh cấu trúc các nút bấm số trang tương tác động cho danh mục quản lý phiên đấu giá
         if (aucPageButtonBox != null) {
             aucPageButtonBox.getChildren().clear();
             int maxBtn = 5;
@@ -663,56 +604,37 @@ public class AdminController {
             if (endP - startP < maxBtn) startP = Math.max(0, endP - maxBtn);
             for (int p = startP; p < endP; p++) {
                 final int pg = p;
-                javafx.scene.control.Button btn = new javafx.scene.control.Button(String.valueOf(p + 1));
+                Button btn = new Button(String.valueOf(p + 1));
                 btn.getStyleClass().setAll("button", p == aucCurrentPage ? "page-btn-active" : "page-btn-normal");
-                btn.setOnAction(e -> { aucCurrentPage = pg; renderAucPage(); });
+                btn.setOnAction(_ -> { aucCurrentPage = pg; renderAucPage(); });
                 aucPageButtonBox.getChildren().add(btn);
             }
         }
     }
 
-    /**
-     * Điều hướng về trang đầu tiên của bảng danh sách phiên đấu giá.
-     * @param e Sự kiện Action được gửi từ UI
-     */
-    @FXML public void aucGoFirstPage(javafx.event.ActionEvent e) { aucCurrentPage = 0; renderAucPage(); }
+    @FXML public void aucGoFirstPage() { aucCurrentPage = 0; renderAucPage(); }
 
-    /**
-     * Lùi về trang trước của bảng danh sách phiên đấu giá.
-     * @param e Sự kiện Action được gửi từ UI
-     */
-    @FXML public void aucGoPrevPage(javafx.event.ActionEvent e) {
+    @FXML public void aucGoPrevPage() {
         if (aucCurrentPage > 0) { aucCurrentPage--; renderAucPage(); }
     }
 
-    /**
-     * Tiến tới trang tiếp theo của bảng danh sách phiên đấu giá.
-     * @param e Sự kiện Action được gửi từ UI
-     */
-    @FXML public void aucGoNextPage(javafx.event.ActionEvent e) {
+    @FXML public void aucGoNextPage() {
         int totalPages = (int) Math.ceil((double) allAuctionsList.size() / AUC_PAGE_SIZE);
         if (aucCurrentPage < totalPages - 1) { aucCurrentPage++; renderAucPage(); }
     }
 
-    /**
-     * Nhảy thẳng tới trang cuối cùng của bảng danh sách phiên đấu giá.
-     * @param e Sự kiện Action được gửi từ UI
-     */
-    @FXML public void aucGoLastPage(javafx.event.ActionEvent e) {
+    @FXML public void aucGoLastPage() {
         int totalPages = Math.max(1, (int) Math.ceil((double) allAuctionsList.size() / AUC_PAGE_SIZE));
         aucCurrentPage = totalPages - 1;
         renderAucPage();
     }
 
     /**
-     * Tiếp nhận lệnh xử lý khóa tài khoản người dùng từ thanh công cụ.
-     * Quét tập hợp các tài khoản được chọn, gửi tuần tự lệnh LOCK_USER lên Server luồng ngầm và làm mới cấu trúc bảng dữ liệu.
-     *
-     * @param event Sự kiện Action nhấn nút từ giao diện UI
+     * Khóa tài khoản các người dùng đã chọn.
      */
     @FXML
-    void handleLockUser(ActionEvent event) {
-        java.util.List<UserResponseDTO> selectedUsers = getSelectedUsers();
+    void handleLockUser() {
+        List<UserResponseDTO> selectedUsers = getSelectedUsers();
         if (selectedUsers.isEmpty()) {
             AlertUtils.showWarning("Lỗi", "Vui lòng tick chọn ít nhất một người dùng để khóa!");
             return;
@@ -751,14 +673,11 @@ public class AdminController {
     }
 
     /**
-     * Tiếp nhận lệnh xử lý mở khóa tài khoản người dùng từ thanh công cụ ngoại vi.
-     * Gửi tuần tự các gói tin yêu cầu mạng UNLOCK_USER và trả kết quả phản hồi hiển thị lên lớp giao diện.
-     *
-     * @param event Sự kiện Action nhấn nút từ giao diện UI
+     * Mở khóa tài khoản các người dùng đã chọn.
      */
     @FXML
-    void handleUnlockUser(ActionEvent event) {
-        java.util.List<UserResponseDTO> selectedUsers = getSelectedUsers();
+    void handleUnlockUser() {
+        List<UserResponseDTO> selectedUsers = getSelectedUsers();
         if (selectedUsers.isEmpty()) {
             AlertUtils.showWarning("Lỗi", "Vui lòng tick chọn ít nhất một người dùng để mở khóa!");
             return;
@@ -796,25 +715,13 @@ public class AdminController {
         });
     }
 
-    /**
-     * Phương thức phân tích trích xuất danh sách đối tượng người dùng đang được nhắm tới để thực thi xử lý nghiệp vụ.
-     * Chiến lược quét ưu tiên:
-     * 1. Thu thập toàn bộ các bản ghi mang giá trị Checkbox = TRUE lưu tại selectedUsersMap.
-     * 2. Nếu tập hợp trống, tiến hành lấy thực thể dòng đơn lẻ đang được nhấp chuột bôi đậm highlight tại TableView.
-     *
-     * @return {@link java.util.List} Danh sách các đối tượng UserResponseDTO được chọn.
-     */
-    private java.util.List<UserResponseDTO> getSelectedUsers() {
-        java.util.List<UserResponseDTO> list = new java.util.ArrayList<>();
-
-        // 1. Quét tìm kiếm dữ liệu theo trạng thái cờ Checkbox trên toàn bộ danh sách nguồn lưu trong RAM
+    private List<UserResponseDTO> getSelectedUsers() {
+        List<UserResponseDTO> list = new ArrayList<>();
         for (UserResponseDTO user : allUsersList) {
             if (selectedUsersMap.containsKey(user.getId()) && selectedUsersMap.get(user.getId()).get()) {
                 list.add(user);
             }
         }
-
-        // 2. Kế hoạch dự phòng: Trích xuất bản ghi dòng đơn lẻ đang được click chọn trực tiếp trên bảng
         if (list.isEmpty()) {
             UserResponseDTO selectedRow = tableUsers.getSelectionModel().getSelectedItem();
             if (selectedRow != null) {
@@ -824,13 +731,8 @@ public class AdminController {
         return list;
     }
 
-    /**
-     * Tiếp nhận hành động xử lý cưỡng chế dừng khẩn cấp phiên đấu giá chỉ định từ thanh công cụ.
-     *
-     * @param event Sự kiện kích hoạt Action từ giao diện UI
-     */
     @FXML
-    void handleForceClose(ActionEvent event) {
+    void handleForceClose() {
         AuctionSummaryDTO selected = tableAuctions.getSelectionModel().getSelectedItem();
         if (selected == null) {
             AlertUtils.showWarning("Lỗi", "Vui lòng chọn một phiên đấu giá để đóng!");
@@ -839,11 +741,6 @@ public class AdminController {
         forceCloseAuction(selected.getAuctionId());
     }
 
-    /**
-     * Đóng gói mã yêu cầu mạng CLOSE_AUCTION và đẩy dữ liệu lên máy chủ để cưỡng chế đóng phiên đấu giá.
-     *
-     * @param auctionId Mã định danh duy nhất của phiên đấu giá mục tiêu cần can thiệp đóng
-     */
     private void forceCloseAuction(String auctionId) {
         ClientSocketManager.getInstance().execute(() -> {
             try {
@@ -865,11 +762,6 @@ public class AdminController {
         });
     }
 
-    /**
-     * Đóng gói mã chỉ thị xử lý ADMIN_CANCEL_AUCTION đẩy dữ liệu lên máy chủ từ xa nhằm hủy bỏ hoàn toàn phiên đấu giá mục tiêu.
-     *
-     * @param auctionId Mã định danh duy nhất của phiên đấu giá cần can thiệp hủy bỏ
-     */
     private void cancelAuctionAdmin(String auctionId) {
         ClientSocketManager.getInstance().execute(() -> {
             try {
@@ -891,11 +783,6 @@ public class AdminController {
         });
     }
 
-    /**
-     * Đóng gói yêu cầu mạng ADMIN_MARK_PAID gửi lên máy chủ để ghi nhận trạng thái hóa đơn phiên đấu giá đã hoàn tất tất toán tài chính.
-     *
-     * @param auctionId Mã định danh duy nhất của phiên đấu giá mục tiêu cần cập nhật hóa đơn
-     */
     private void markPaidAdmin(String auctionId) {
         ClientSocketManager.getInstance().execute(() -> {
             try {

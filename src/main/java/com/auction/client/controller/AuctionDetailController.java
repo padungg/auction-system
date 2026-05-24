@@ -14,7 +14,6 @@ import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.LineChart;
@@ -38,106 +37,43 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * <h2>AuctionDetailController</h2>
- * <p>
- * Controller điều phối phân hệ Chi tiết phiên đấu giá (Auction Detail View) trên ứng dụng Client.
- * </p>
- *
- * <p><b>Các chức năng nghiệp vụ cốt lõi:</b></p>
- * <ul>
- *   <li><b>Đồng bộ thời gian thực:</b> Tích hợp mẫu thiết kế Observer Pattern tiếp nhận gói tin đẩy (Push Notifications) về biến động giá (Bid Update), thời gian bù chống bắn tỉa (Anti-Snipe) và đóng phiên.</li>
- *   <li><b>Kiểm soát luồng Timeline:</b> Vận hành cơ chế đếm ngược (Countdown Engine) chính xác theo giây và tự động giải phóng tài nguyên luồng khi chuyển view.</li>
- *   <li><b>Trực quan hóa dữ liệu:</b> Kết xuất biểu đồ tuyến tính LineChart mô tả tiến trình nhảy giá sản phẩm và phân bổ lưới thông số kỹ thuật động.</li>
- *   <li><b>Quản lý giao dịch:</b> Kiểm soát quy trình xác thực hạn mức đặt giá thủ công và đăng ký/hủy bỏ cấu hình đấu giá tự động (Auto-Bid Engine).</li>
- * </ul>
- *
- * @since 1.0
- * @see com.auction.client.observer.AuctionEventObserver
- * @see com.auction.client.network.ClientSocketManager
+ * Controller quản lý chi tiết phiên đấu giá trực tuyến.
  */
 public class AuctionDetailController implements AuctionEventObserver {
 
-    /**
-     * Bộ ghi nhật ký tập trung (SLF4J Logger) cấu hình theo cơ chế an toàn đa luồng (Thread-safe).
-     * Phục vụ ghi vết vòng đời kết nối WebSocket, cô lập ngoại lệ mạng IO và theo dõi lịch sử đặt giá.
-     */
     private static final Logger LOGGER = LoggerFactory.getLogger(AuctionDetailController.class);
 
-    // =========================================================================
-    // THÀNH PHẦN GIAO DIỆN FXML - THÔNG TIN CHI TIẾT SẢN PHẨM (LEFT PANEL)
-    // =========================================================================
-    @FXML
-    private Label lblBreadcrumbName, lblDetailName, lblDetailStatus, lblDetailEmoji, lblDetailDesc;
-    @FXML
-    private javafx.scene.image.ImageView imgProduct;
-    @FXML
-    private GridPane gridSpecs;
+    // PRODUCT INFO FXML (LEFT PANEL)
+    @FXML private Label lblBreadcrumbName, lblDetailName, lblDetailStatus, lblDetailEmoji, lblDetailDesc;
+    @FXML private javafx.scene.image.ImageView imgProduct;
+    @FXML private GridPane gridSpecs;
 
-    // =========================================================================
-    // THÀNH PHẦN GIAO DIỆN FXML - GIÁ CẢ & ĐẾM NGƯỢC THỜI GIAN (RIGHT PANEL)
-    // =========================================================================
-    @FXML
-    private Label lblCurrentPrice, lblStartPrice, lblBidStep;
-    @FXML
-    private Label lblCdH, lblCdM, lblCdS;
+    // PRICE & COUNTDOWN FXML (RIGHT PANEL)
+    @FXML private Label lblCurrentPrice, lblStartPrice, lblBidStep;
+    @FXML private Label lblCdH, lblCdM, lblCdS;
 
-    // =========================================================================
-    // THÀNH PHẦN GIAO DIỆN FXML - KHỐI CHỨC NĂNG ĐIỀU KHIỂN (CONTROLS PANEL)
-    // =========================================================================
-    @FXML
-    private HBox paneAntiSnipe;
-    @FXML
-    private VBox paneWinner, paneBidForm, paneAutoBidStatus, paneAutoBidForm;
-    @FXML
-    private Label lblWinnerName, lblAutoBidDetail;
+    // CONTROLS PANEL FXML
+    @FXML private HBox paneAntiSnipe;
+    @FXML private VBox paneWinner, paneBidForm, paneAutoBidStatus, paneAutoBidForm;
+    @FXML private Label lblWinnerName, lblAutoBidDetail;
+    @FXML private TextField txtBidAmount, txtAutoMax, txtAutoInc;
 
-    // Các trường nhập liệu thông tin biểu mẫu đặt giá
-    @FXML
-    private TextField txtBidAmount, txtAutoMax, txtAutoInc;
+    // BID HISTORY TABLE FXML
+    @FXML private TableView<BidTransaction> tableHistory;
+    @FXML private TableColumn<BidTransaction, String> colUser;
+    @FXML private TableColumn<BidTransaction, Double> colAmount;
+    @FXML private TableColumn<BidTransaction, LocalDateTime> colTime;
 
-    // Bảng dữ liệu lịch sử các lượt đặt giá (Bid History Table)
-    @FXML
-    private TableView<BidTransaction> tableHistory;
-    @FXML
-    private TableColumn<BidTransaction, String> colUser;
-    @FXML
-    private TableColumn<BidTransaction, Double> colAmount;
-    @FXML
-    private TableColumn<BidTransaction, LocalDateTime> colTime;
+    // LINE CHART FXML
+    @FXML private LineChart<String, Number> bidChart;
+    @FXML private CategoryAxis chartXAxis;
+    @FXML private NumberAxis chartYAxis;
 
-    // Thành phần đồ họa trực quan hóa biến động giá (LineChart)
-    @FXML
-    private LineChart<String, Number> bidChart;
-    @FXML
-    private CategoryAxis chartXAxis;
-    @FXML
-    private NumberAxis chartYAxis;
-
-    // =========================================================================
-    // CẤU TRÚC LƯU TRỮ VÀ THAM SỐ NỘI BỘ (INTERNAL DATA STATES)
-    // =========================================================================
-    /** Mã định danh duy nhất của phiên đấu giá hiện hành. */
     private String auctionId;
-
-    /** Đối tượng DTO chứa toàn bộ dữ liệu chi tiết của phiên đấu giá được đồng bộ. */
     private AuctionDetailDTO currentAuction;
-
-    /** Trình quản lý luồng thời gian (JavaFX Timeline) kiểm soát tác vụ đếm ngược. */
     private Timeline countdownTimeline;
-
-    /** Danh sách quan sát (ObservableList) liên kết dữ liệu lịch sử đặt giá trực tiếp lên bảng. */
     private final ObservableList<BidTransaction> bidHistory = FXCollections.observableArrayList();
 
-    // =========================================================================
-    // KHỞI TẠO CẤU HÌNH BAN ĐẦU (INITIALIZATION METHODS)
-    // =========================================================================
-
-    /**
-     * Phương thức thiết lập và nạp dữ liệu ban đầu cho phân hệ chi tiết phiên đấu giá.
-     * Được kích hoạt thủ công từ Controller chuyển tiếp khi truyền định danh phiên.
-     *
-     * @param auctionId Mã định danh duy nhất của phiên đấu giá mục tiêu
-     */
     public void initData(String auctionId) {
         this.auctionId = auctionId;
         setupTable();
@@ -147,14 +83,11 @@ public class AuctionDetailController implements AuctionEventObserver {
     }
 
     /**
-     * Định hình cấu trúc phân mảnh dữ liệu bảng Lịch sử đặt giá và định nghĩa quy tắc render cell.
-     * Tự động đính kèm Badge đồ họa đại diện cho các lượt đặt giá sinh ra từ hệ thống tự động (Auto-Bid Engine)
-     * và áp dụng class CSS làm nổi bật giá đặt cao nhất tại dòng đầu tiên.
+     * Cấu hình TableView lịch sử đặt giá.
      */
     private void setupTable() {
-        // Cấu hình Cell hiển thị cột định danh tài khoản người đặt kèm ký hiệu AUTO nếu có
         colUser.setCellValueFactory(new PropertyValueFactory<>("bidderId"));
-        colUser.setCellFactory(tc -> new TableCell<>() {
+        colUser.setCellFactory(_ -> new TableCell<>() {
             private final VBox box = new VBox(2);
             private final Label nameLbl = new Label();
             private final Label autoLbl = new Label("⚡ AUTO");
@@ -184,9 +117,8 @@ public class AuctionDetailController implements AuctionEventObserver {
             }
         });
 
-        // Cấu hình Cell hiển thị số tiền đặt giá: Thêm dấu phân cách phần nghìn và highlight dòng dẫn đầu
         colAmount.setCellValueFactory(new PropertyValueFactory<>("bidAmount"));
-        colAmount.setCellFactory(tc -> new TableCell<>() {
+        colAmount.setCellFactory(_ -> new TableCell<>() {
             @Override
             protected void updateItem(Double price, boolean empty) {
                 super.updateItem(price, empty);
@@ -195,7 +127,6 @@ public class AuctionDetailController implements AuctionEventObserver {
                     getStyleClass().remove("auc-detail-first-row-price");
                 } else {
                     setText(String.format("%,.0f VNĐ", price));
-                    // Áp dụng lớp CSS đặc thù làm nổi bật mức giá cao nhất hiện tại (dòng chỉ mục số 0)
                     if (getIndex() == 0) {
                         if (!getStyleClass().contains("auc-detail-first-row-price")) {
                             getStyleClass().add("auc-detail-first-row-price");
@@ -207,9 +138,8 @@ public class AuctionDetailController implements AuctionEventObserver {
             }
         });
 
-        // Cấu hình Cell hiển thị mốc thời gian: Định dạng phân tách dòng giữa Giờ và Ngày
         colTime.setCellValueFactory(new PropertyValueFactory<>("bidTime"));
-        colTime.setCellFactory(tc -> new TableCell<>() {
+        colTime.setCellFactory(_ -> new TableCell<>() {
             private final DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm:ss\ndd/MM/yyyy");
 
             @Override
@@ -227,26 +157,21 @@ public class AuctionDetailController implements AuctionEventObserver {
     }
 
     /**
-     * Cấu hình thiết lập đồ họa nền tảng và gán các thuộc tính tối ưu hiệu năng hiển thị cho LineChart.
+     * Cấu hình LineChart biểu diễn tiến độ bước giá.
      */
     private void setupChart() {
         bidChart.setCreateSymbols(true);
-        bidChart.setAnimated(false); // Vô hiệu hóa hiệu ứng chuyển động để tăng tốc độ vẽ đồ thị thời gian thực
+        bidChart.setAnimated(false);
         bidChart.setLegendVisible(false);
         bidChart.getStyleClass().add("auc-detail-chart-bg");
         chartXAxis.setLabel("");
         chartXAxis.setTickLabelRotation(0);
         chartYAxis.setLabel("");
-        chartYAxis.setForceZeroInRange(false); // Cho phép trục tung tự động co giãn biên độ linh hoạt theo giá trị tiền tệ
+        chartYAxis.setForceZeroInRange(false);
     }
 
-    // =========================================================================
-    // ĐỒNG BỘ VÀ TẢI DỮ LIỆU TỪ MẠNG (NETWORK IO OPERATIONS)
-    // =========================================================================
-
     /**
-     * Kích hoạt một nhiệm vụ luồng ngầm (Worker Thread) gửi yêu cầu truy vấn cấu trúc
-     * dữ liệu chi tiết của phiên đấu giá hiện tại từ máy chủ về thiết bị Client.
+     * Tải thông tin chi tiết phiên đấu giá từ server.
      */
     private void loadAuctionDetail() {
         ClientSocketManager.getInstance().execute(() -> {
@@ -256,22 +181,21 @@ public class AuctionDetailController implements AuctionEventObserver {
                 if (res != null && res.getStatus() == ResponseStatus.SUCCESS) {
                     currentAuction = res.getPayloadAs(AuctionDetailDTO.class);
                     Platform.runLater(this::updateUI);
-                    loadBidHistory(); // Chuyển tiếp tiến trình kéo lịch sử đặt giá liên đới
+                    loadBidHistory();
                 } else {
-                    Platform.runLater(() -> com.auction.client.util.AlertUtils.showError("Lỗi kết nối",
+                    Platform.runLater(() -> AlertUtils.showError("Lỗi kết nối",
                             "Không thể nạp chi tiết phiên đấu giá từ server."));
                 }
             } catch (Exception e) {
                 LOGGER.error("Gặp sự cố khi nạp thông tin chi tiết phiên đấu giá từ máy chủ", e);
-                Platform.runLater(() -> com.auction.client.util.AlertUtils.showError("Lỗi hệ thống",
+                Platform.runLater(() -> AlertUtils.showError("Lỗi hệ thống",
                         "Lỗi kết nối máy chủ: " + e.getMessage()));
             }
         });
     }
 
     /**
-     * Gửi yêu cầu mạng truy vấn toàn bộ tập hợp các bản ghi lịch sử giao dịch đặt giá đã thực thi của phiên đấu giá.
-     * Cập nhật danh sách quan sát TableView và tái tạo đường tuyến tính biến động trên đồ thị biểu đồ.
+     * Tải lịch sử đấu giá từ server.
      */
     private void loadBidHistory() {
         ClientSocketManager.getInstance().execute(() -> {
@@ -279,11 +203,11 @@ public class AuctionDetailController implements AuctionEventObserver {
                 Request req = new Request(RequestType.GET_BID_HISTORY, auctionId);
                 Response res = ClientSocketManager.getInstance().sendRequest(req);
                 if (res != null && res.getStatus() == ResponseStatus.SUCCESS) {
-                    List<BidTransaction> history = res.getPayloadAs(new TypeToken<List<BidTransaction>>() {
+                    List<BidTransaction> history = res.getPayloadAs(new TypeToken<>() {
                     });
                     Platform.runLater(() -> {
                         bidHistory.setAll(history);
-                        updateChart(history); // Đẩy tập dữ liệu sang công cụ vẽ đồ thị
+                        updateChart(history);
                     });
                 }
             } catch (Exception e) {
@@ -292,25 +216,18 @@ public class AuctionDetailController implements AuctionEventObserver {
         });
     }
 
-    // =========================================================================
-    // CẬP NHẬT THÀNH PHẦN GIAO DIỆN (UI RENDERING OPERATIONS)
-    // =========================================================================
-
     /**
-     * Phân phối toàn bộ thuộc tính dữ liệu từ đối tượng DTO nguồn lên hệ thống các nút nhãn hiển thị JavaFX đầu cuối.
-     * Thực hiện bóc tách luồng ảnh Base64, đồng bộ Badge trạng thái, kiểm soát ẩn hiện khối người chiến thắng và khởi tạo bảng lưới.
+     * Cập nhật các trường hiển thị UI.
      */
     private void updateUI() {
         if (currentAuction == null)
             return;
 
-        // Đồng bộ dữ liệu tiêu đề và khối văn bản mô tả sản phẩm
         lblDetailName.setText(currentAuction.getItemName());
         lblBreadcrumbName.setText(currentAuction.getItemName());
         lblDetailDesc
                 .setText(currentAuction.getDescription() != null ? currentAuction.getDescription() : "Không có mô tả.");
 
-        // Tiến trình giải mã luồng văn bản Base64 thành cấu trúc ảnh nhị phân hiển thị lên ImageView
         if (currentAuction.getImageBase64() != null && !currentAuction.getImageBase64().trim().isEmpty()) {
             try {
                 byte[] imageBytes = java.util.Base64.getDecoder().decode(currentAuction.getImageBase64().trim());
@@ -329,19 +246,14 @@ public class AuctionDetailController implements AuctionEventObserver {
             lblDetailEmoji.setVisible(true);
         }
 
-        // Định dạng text tiền tệ hiển thị cho các nhãn thông số tài chính
         lblCurrentPrice.setText(String.format("%,.0f VNĐ", currentAuction.getCurrentPrice()));
         lblStartPrice.setText(String.format("Giá khởi điểm: %,.0f VNĐ", currentAuction.getStartingPrice()));
         lblBidStep.setText(String.format("Bước giá tối thiểu: %,.0f VNĐ", currentAuction.getStepPrice()));
 
-        // Tái xác định lớp CSS phong cách riêng cho Badge trạng thái phiên
         String status = currentAuction.getStatus();
         updateStatusBadge(status);
-
-        // Ánh xạ từ khóa danh mục mặt hàng sang biểu tượng Emoji dự phòng trực quan
         updateEmoji(currentAuction.getItemDetails());
 
-        // Kiểm soát cơ chế quản lý không gian hiển thị của các khối chức năng theo trạng thái vòng đời
         boolean isRunning = "RUNNING".equalsIgnoreCase(status);
         boolean isFinished = "FINISHED".equalsIgnoreCase(status) || "PAID".equalsIgnoreCase(status);
 
@@ -354,20 +266,15 @@ public class AuctionDetailController implements AuctionEventObserver {
             lblWinnerName.setText(currentAuction.getCurrentWinnerName());
         }
 
-        // Kiểm soát điều khiển kích hoạt hoặc dừng khẩn cấp bộ đếm ngược
         if (isRunning) {
             startCountdown();
         } else {
             stopCountdown();
         }
 
-        // Tách cấu trúc văn bản để xây dựng lưới thông số kỹ thuật sản phẩm
         buildSpecsGrid();
     }
 
-    /**
-     * Cập nhật nhãn chữ hiển thị và dọn dẹp, tái cấu trúc class định dạng màu sắc CSS đặc trưng cho từng trạng thái.
-     */
     private void updateStatusBadge(String status) {
         lblDetailStatus.getStyleClass().removeAll("status-running", "status-open", "status-finished", "status-paid", "status-canceled");
         switch (status.toUpperCase()) {
@@ -397,9 +304,6 @@ public class AuctionDetailController implements AuctionEventObserver {
         }
     }
 
-    /**
-     * Phân tích ngữ nghĩa từ khóa có trong chi tiết thuộc tính sản phẩm nhằm gán mã đồ họa Emoji phù hợp.
-     */
     private void updateEmoji(String itemDetails) {
         if (itemDetails == null) {
             lblDetailEmoji.setText("📦");
@@ -423,10 +327,6 @@ public class AuctionDetailController implements AuctionEventObserver {
         }
     }
 
-    /**
-     * Thuật toán phân tích và bóc tách cấu trúc văn bản định dạng cặp khóa-giá trị phân tách bởi dấu hai chấm (Key:Value).
-     * Sinh tự động các cặp Label và phân bổ không gian vào lưới GridPane một cách có hệ thống.
-     */
     private void buildSpecsGrid() {
         gridSpecs.getChildren().clear();
         if (currentAuction.getItemDetails() == null)
@@ -448,10 +348,6 @@ public class AuctionDetailController implements AuctionEventObserver {
         }
     }
 
-    /**
-     * Tái tạo tập dữ liệu đồ thị đại diện (XYChart.Series) từ mảng danh sách lịch sử nhằm mô tả trực quan
-     * tuyến tính xu hướng biến động bước giá đấu, gán nhãn mốc thời gian trục hoành.
-     */
     private void updateChart(List<BidTransaction> history) {
         bidChart.getData().clear();
         if (history == null || history.isEmpty())
@@ -461,32 +357,24 @@ public class AuctionDetailController implements AuctionEventObserver {
         series.setName("Giá đấu");
 
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm:ss");
-        for (int i = 0; i < history.size(); i++) {
-            BidTransaction bid = history.get(i);
+        for (BidTransaction bid : history) {
             String timeLabel = bid.getBidTime() != null ? bid.getBidTime().format(fmt) : "?";
             series.getData().add(new XYChart.Data<>(timeLabel, bid.getBidAmount()));
         }
 
         bidChart.getData().add(series);
 
-        // Gán bộ định dạng lớp CSS tùy biến cho nút liên kết đồ thị tuyến tính
         if (series.getNode() != null) {
             series.getNode().getStyleClass().add("bid-chart-series");
         }
     }
 
-    // =========================================================================
-    // CƠ CHẾ ĐẾM NGƯỢC THỜI GIAN (COUNTDOWN ENGINE)
-    // =========================================================================
-
     /**
-     * Khởi tạo và kích hoạt bộ quản lý thời gian JavaFX Timeline thực hiện chu kỳ lặp vô hạn tần suất 1 giây.
-     * Tính toán khoảng cách ChronoUnit để cập nhật đồng hồ hiển thị, đồng thời tự động kích hoạt cảnh báo
-     * trạng thái bù giờ chống bắn tỉa giá (Anti-Snipe) khi thời lượng còn lại ít hơn 60 giây.
+     * Kích hoạt đếm ngược thời gian phiên.
      */
     private void startCountdown() {
         stopCountdown();
-        countdownTimeline = new Timeline(new KeyFrame(Duration.seconds(1), event -> {
+        countdownTimeline = new Timeline(new KeyFrame(Duration.seconds(1), _ -> {
             if (currentAuction == null || currentAuction.getEndTime() == null)
                 return;
             long seconds = ChronoUnit.SECONDS.between(LocalDateTime.now(), currentAuction.getEndTime());
@@ -495,14 +383,13 @@ public class AuctionDetailController implements AuctionEventObserver {
                 lblCdM.setText("00");
                 lblCdS.setText("00");
                 stopCountdown();
-                loadAuctionDetail(); // Phát tín hiệu tải lại để đồng bộ trạng thái đóng phiên từ Server
+                loadAuctionDetail();
                 return;
             }
             lblCdH.setText(String.format("%02d", seconds / 3600));
             lblCdM.setText(String.format("%02d", (seconds % 3600) / 60));
             lblCdS.setText(String.format("%02d", seconds % 60));
 
-            // Hiển thị panel thông báo trạng thái Anti-Snipe nếu thời gian đếm ngược chạm biên dưới 1 phút
             if (seconds < 60) {
                 paneAntiSnipe.setVisible(true);
                 paneAntiSnipe.setManaged(true);
@@ -512,10 +399,6 @@ public class AuctionDetailController implements AuctionEventObserver {
         countdownTimeline.play();
     }
 
-    /**
-     * Hủy bỏ luồng Timeline đếm ngược hiện hành nhằm mục đích giải phóng tài nguyên CPU
-     * và ngăn chặn triệt để hiện tượng rò rỉ bộ nhớ (Memory Leak) hệ thống Client.
-     */
     private void stopCountdown() {
         if (countdownTimeline != null) {
             countdownTimeline.stop();
@@ -523,34 +406,18 @@ public class AuctionDetailController implements AuctionEventObserver {
         }
     }
 
-    // =========================================================================
-    // XỬ LÝ SỰ KIỆN ĐẨY THỜI GIAN THỰC (OBSERVER PATTERN IMPLEMENTATION)
-    // =========================================================================
-
-    /**
-     * Đóng gói mã chỉ thị SUBSCRIBE_AUCTION gửi lên phía hệ thống Server nhằm ghi nhận tài khoản hiện tại
-     * đăng ký vào hàng đợi lắng nghe các sự kiện phát sinh bên trong phòng phiên đấu giá cụ thể này.
-     */
     private void subscribeToUpdates() {
         ClientSocketManager.getInstance().execute(() -> {
             try {
                 Request subReq = new Request(RequestType.SUBSCRIBE_AUCTION, auctionId);
                 ClientSocketManager.getInstance().sendRequest(subReq);
-                ClientSocketManager.getInstance().addObserver(this); // Đăng ký thực thể hiện hành làm Observer
+                ClientSocketManager.getInstance().addObserver(this);
             } catch (Exception e) {
                 LOGGER.error("Gặp sự cố ngắt kết nối mạng khi gửi yêu cầu SUBSCRIBE_AUCTION", e);
             }
         });
     }
 
-    /**
-     * Phương thức phản hồi sự kiện đẩy mạng (Callback Method) nhận diện từ thiết kế mẫu Observer Pattern.
-     * Chuyển tiếp tiến trình thực thi bất đồng bộ an toàn về JavaFX Application Thread để cập nhật giao diện.
-     *
-     * @param event          Tên mã định danh sự kiện (BID_UPDATE, ANTI_SNIPE, AUCTION_CLOSED)
-     * @param eventAuctionId Mã định danh phiên phát sinh sự kiện
-     * @param payload        Đối tượng dữ liệu Json chứa thông số chi tiết đính kèm từ Server
-     */
     @Override
     public void onAuctionEvent(String event, String eventAuctionId, JsonObject payload) {
         if (!auctionId.equals(eventAuctionId))
@@ -578,22 +445,14 @@ public class AuctionDetailController implements AuctionEventObserver {
         }
     }
 
-    // =========================================================================
-    // ĐÓN NHẬN SỰ KIỆN TƯƠNG TÁC (UI ACTION HANDLERS)
-    // =========================================================================
-
     /**
-     * Đón nhận hành động xử lý Đặt giá thủ công (Manual Place Bid) từ giao diện người dùng.
-     * Thực hiện bóc tách định dạng ký tự số, xác thực biên độ kiểm tra bước giá tối thiểu bắt buộc
-     * dựa theo vị thế lượt đấu (Lượt đầu tiên so với giá sàn hoặc lượt kế thừa so với giá hiện tại + bước giá).
-     *
-     * @param event Sự kiện kích hoạt hành động nút bấm từ giao diện UI
+     * Thực hiện đặt giá thủ công.
      */
     @FXML
-    void handlePlaceBid(ActionEvent event) {
+    void handlePlaceBid() {
         String amountStr = txtBidAmount.getText().trim();
         if (amountStr.isEmpty()) {
-            com.auction.client.util.AlertUtils.showWarning("Lỗi", "Vui lòng nhập số tiền muốn đặt.");
+            AlertUtils.showWarning("Lỗi", "Vui lòng nhập số tiền muốn đặt.");
             return;
         }
         try {
@@ -604,7 +463,7 @@ public class AuctionDetailController implements AuctionEventObserver {
             if (isFirstBid) {
                 minRequiredBid = currentAuction.getStartingPrice();
                 if (amount < minRequiredBid) {
-                    com.auction.client.util.AlertUtils.showWarning("Lỗi đặt giá",
+                    AlertUtils.showWarning("Lỗi đặt giá",
                             "Giá đặt phải lớn hơn hoặc bằng giá khởi điểm: "
                                     + String.format("%,.0f VNĐ", minRequiredBid));
                     return;
@@ -612,7 +471,7 @@ public class AuctionDetailController implements AuctionEventObserver {
             } else {
                 minRequiredBid = currentAuction.getCurrentPrice() + currentAuction.getStepPrice();
                 if (amount < minRequiredBid) {
-                    com.auction.client.util.AlertUtils.showWarning("Lỗi đặt giá",
+                    AlertUtils.showWarning("Lỗi đặt giá",
                             "Giá đặt tối thiểu phải là " + String.format("%,.0f VNĐ", minRequiredBid)
                                     + " (Giá hiện tại + Bước giá tối thiểu "
                                     + String.format("%,.0f VNĐ", currentAuction.getStepPrice()) + ")");
@@ -629,33 +488,29 @@ public class AuctionDetailController implements AuctionEventObserver {
                         if (res != null && res.getStatus() == ResponseStatus.SUCCESS) {
                             txtBidAmount.clear();
                         } else {
-                            com.auction.client.util.AlertUtils.showWarning("Đặt giá thất bại",
+                            AlertUtils.showWarning("Đặt giá thất bại",
                                     res != null ? res.getMessage() : "Lỗi kết nối");
                         }
                     });
                 } catch (Exception e) {
                     LOGGER.error("Gặp sự cố hệ thống khi thực hiện hành động đặt giá", e);
-                    Platform.runLater(() -> com.auction.client.util.AlertUtils.showError("Lỗi", e.getMessage()));
+                    Platform.runLater(() -> AlertUtils.showError("Lỗi", e.getMessage()));
                 }
             });
         } catch (NumberFormatException e) {
-            com.auction.client.util.AlertUtils.showWarning("Lỗi", "Số tiền không hợp lệ. Chỉ nhập số.");
+            AlertUtils.showWarning("Lỗi", "Số tiền không hợp lệ. Chỉ nhập số.");
         }
     }
 
     /**
-     * Đón nhận hành động đăng ký cấu hình Đấu giá tự động (Register Auto-Bid) từ giao diện UI.
-     * Thu thập thông tin hạn mức trần tối đa (Max Bid) và bước giá tăng lũy tiến (Increment),
-     * gửi gói tin REGISTER_AUTO_BID ngầm và chuyển đổi trạng thái hiển thị giao diện sang khối giám sát.
-     *
-     * @param event Sự kiện kích hoạt hành động nút bấm từ giao diện UI
+     * Đăng ký đấu giá tự động.
      */
     @FXML
-    void handleRegisterAutoBid(ActionEvent event) {
+    void handleRegisterAutoBid() {
         String maxStr = txtAutoMax.getText().trim();
         String incStr = txtAutoInc.getText().trim();
         if (maxStr.isEmpty() || incStr.isEmpty()) {
-            com.auction.client.util.AlertUtils.showWarning("Lỗi", "Vui lòng nhập đủ giá tối đa và bước tăng.");
+            AlertUtils.showWarning("Lỗi", "Vui lòng nhập đủ giá tối đa và bước tăng.");
             return;
         }
         try {
@@ -676,30 +531,27 @@ public class AuctionDetailController implements AuctionEventObserver {
                             lblAutoBidDetail.setText(
                                     String.format("Max: %,.0fđ | Inc: %,.0fđ", dto.getMaxBid(), dto.getIncrement()));
                         } else {
-                            com.auction.client.util.AlertUtils.showWarning("Lỗi Tự động đặt giá",
+                            AlertUtils.showWarning("Lỗi Tự động đặt giá",
                                     res != null ? res.getMessage() : "Lỗi kết nối");
                         }
                     });
                 } catch (Exception e) {
                     LOGGER.error("Gặp sự cố lỗi nghiệp vụ khi đăng ký tự động đặt giá", e);
-                    Platform.runLater(() -> com.auction.client.util.AlertUtils.showError("Lỗi",
+                    Platform.runLater(() -> AlertUtils.showError("Lỗi",
                             String.format("Đã xảy ra lỗi: %s", e.getMessage())));
                 }
             });
         } catch (NumberFormatException e) {
-            com.auction.client.util.AlertUtils.showWarning("Lỗi",
+            AlertUtils.showWarning("Lỗi",
                     "Số tiền không hợp lệ. Vui lòng chỉ nhập số (có thể dùng dấu phẩy hoặc chấm).");
         }
     }
 
     /**
-     * Đón nhận hành động Hủy bỏ chế độ đấu giá tự động (Cancel Auto-Bid) từ giao diện người dùng.
-     * Gửi gói tin chỉ thị CANCEL_AUTO_BID lên Server và khôi phục lại form cấu hình nhập liệu ban đầu.
-     *
-     * @param event Sự kiện kích hoạt hành động nút bấm từ giao diện UI
+     * Hủy bỏ cơ chế đấu giá tự động.
      */
     @FXML
-    void handleCancelAutoBid(ActionEvent event) {
+    void handleCancelAutoBid() {
         ClientSocketManager.getInstance().execute(() -> {
             try {
                 Response res = ClientSocketManager.getInstance()
@@ -718,17 +570,12 @@ public class AuctionDetailController implements AuctionEventObserver {
         });
     }
 
-    /**
-     * Thực hiện chuỗi tác vụ đóng cửa sổ quay lại màn hình danh mục chính.
-     * Ngắt Timeline đếm ngược và xóa thực thể khỏi danh sách đăng ký Observer Pattern
-     * nhằm bảo vệ tài nguyên hệ thống Client trước khi kích hoạt chuyển đổi trang.
-     */
     @FXML
     public void goBack() {
         stopCountdown();
-        ClientSocketManager.getInstance().removeObserver(this); // Hủy đăng ký cấu trúc để giải phóng bộ nhớ RAM
+        ClientSocketManager.getInstance().removeObserver(this);
         if (MainController.getInstance() != null) {
-            MainController.getInstance().showPageList(null);
+            MainController.getInstance().showPageList();
         }
     }
 }
