@@ -13,6 +13,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
+import java.util.concurrent.CompletableFuture;
+import javafx.application.Platform;
+import com.auction.client.util.ImageCache;
 
 /**
  * Lớp điều khiển Thẻ sản phẩm (Product Card Controller).
@@ -65,23 +68,49 @@ public class ProductCardController {
             lblType.setText("Khác");
         }
 
-        // 4. Giải mã và hiển thị hình ảnh từ chuỗi Base64 (nếu có)
+        // -------------------------------------------------------------------------
+        // 4. GIẢI MÃ VÀ HIỂN THỊ HÌNH ẢNH SẢN PHẨM TỐI ƯU (ASYNC BASE64 & CACHING PIPELINE)
+        // -------------------------------------------------------------------------
         String imageBase64 = auction.getImageBase64();
         if (imageBase64 != null && !imageBase64.isBlank()) {
-            try {
-                byte[] imageBytes = Base64.getDecoder().decode(imageBase64);
-                Image image = new Image(new ByteArrayInputStream(imageBytes));
-                imgProduct.setImage(image);
+            // Bước 1: Kiểm tra Memory Cache xem hình ảnh này đã từng được giải mã chưa
+            Image cachedImage = ImageCache.getInstance().getImage(currentAuctionId);
+            if (cachedImage != null) {
+                // Hit Cache: Lấy trực tiếp từ RAM, không cần tính toán lại
+                imgProduct.setImage(cachedImage);
                 imgProduct.setVisible(true);
-                lblEmoji.setVisible(false); // Ẩn emoji khi có ảnh thực tế
-            } catch (Exception e) {
-                LOGGER.warn("Không thể giải mã ảnh Base64 cho sản phẩm {}", auction.getAuctionId());
+                lblEmoji.setVisible(false);
+            } else {
+                // Miss Cache: Tạm thời hiện Emoji trong lúc chờ giải mã
                 imgProduct.setVisible(false);
-                lblEmoji.setVisible(true); // Fallback về emoji nếu giải mã lỗi
+                lblEmoji.setVisible(true);
+                
+                // Đẩy tiến trình giải mã nặng nề xuống một Background Thread (Đa luồng)
+                CompletableFuture.supplyAsync(() -> {
+                    try {
+                        byte[] imageBytes = Base64.getDecoder().decode(imageBase64);
+                        return new Image(new ByteArrayInputStream(imageBytes));
+                    } catch (Exception e) {
+                        LOGGER.warn("Lỗi luồng ngầm khi giải mã ảnh Base64 cho {}", currentAuctionId);
+                        return null;
+                    }
+                }).thenAccept(image -> {
+                    if (image != null) {
+                        // Lưu ảnh vừa giải mã vào Cache
+                        ImageCache.getInstance().putImage(currentAuctionId, image);
+                        
+                        // Đẩy kết quả hiển thị ngược lên Main UI Thread (Platform.runLater)
+                        Platform.runLater(() -> {
+                            imgProduct.setImage(image);
+                            imgProduct.setVisible(true);
+                            lblEmoji.setVisible(false);
+                        });
+                    }
+                });
             }
         } else {
             imgProduct.setVisible(false);
-            lblEmoji.setVisible(true);
+            lblEmoji.setVisible(true); // Cơ chế Fallback mặc định
         }
 
         // 5. Áp dụng style class cho Badge trạng thái và bộ đếm thời gian
