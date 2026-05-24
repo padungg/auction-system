@@ -150,9 +150,9 @@ public class ClientHandler implements Runnable, AuctionObserver {
      */
     @Override
     public void onBidUpdated(String auctionId, double newPrice, String bidderId,
-            String bidderName, String itemName, String bidTime) {
+            String bidderName, String itemName, String bidTime, String newEndTime) {
         BidUpdateNotificationDTO notification = new BidUpdateNotificationDTO(
-                auctionId, newPrice, bidderId, bidderName, itemName, bidTime);
+                auctionId, newPrice, bidderId, bidderName, itemName, bidTime, newEndTime);
         sendPush(GSON.toJson(notification));
     }
 

@@ -70,7 +70,7 @@ public class AuctionManager {
      * Thông báo cho TẤT CẢ observer đang xem phiên này rằng có bid mới.
      */
     public void notifyBidUpdate(String auctionId, double newPrice, String bidderId,
-            String bidderName, String itemName, String bidTime) {
+            String bidderName, String itemName, String bidTime, String newEndTime) {
         List<AuctionObserver> observers = observerMap.get(auctionId);
         if (observers == null || observers.isEmpty())
             return;
@@ -78,7 +78,7 @@ public class AuctionManager {
         int count = 0;
         for (AuctionObserver observer : observers) {
             try {
-                observer.onBidUpdated(auctionId, newPrice, bidderId, bidderName, itemName, bidTime);
+                observer.onBidUpdated(auctionId, newPrice, bidderId, bidderName, itemName, bidTime, newEndTime);
                 count++;
             } catch (Exception e) {
                 LOGGER.error("NOTIFY_ERROR: {}", e.getMessage(), e);

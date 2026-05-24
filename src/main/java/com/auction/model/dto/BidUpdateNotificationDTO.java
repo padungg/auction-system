@@ -8,16 +8,19 @@ public class BidUpdateNotificationDTO {
     private String bidderName;
     private String itemName;
     private String bidTime;
+    private String newEndTime;
 
     public BidUpdateNotificationDTO(String auctionId, double newPrice,
                                     String bidderId, String bidderName,
-                                    String itemName, String bidTime) {
+                                    String itemName, String bidTime,
+                                    String newEndTime) {
         this.auctionId = auctionId;
         this.newPrice = newPrice;
         this.bidderId = bidderId;
         this.bidderName = bidderName;
         this.itemName = itemName;
         this.bidTime = bidTime;
+        this.newEndTime = newEndTime;
     }
 
     public String getEvent() { return event; }
@@ -27,4 +30,5 @@ public class BidUpdateNotificationDTO {
     public String getBidderName() { return bidderName; }
     public String getItemName() { return itemName; }
     public String getBidTime() { return bidTime; }
+    public String getNewEndTime() { return newEndTime; }
 }

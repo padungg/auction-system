@@ -430,8 +430,16 @@ public class AuctionDetailController implements AuctionEventObserver {
                 double newPrice = payload.has("newPrice") ? payload.get("newPrice").getAsDouble() : 0;
                 // Cập nhật lên nhãn hiển thị giá hiện tại trên UI
                 lblCurrentPrice.setText(String.format("%,.0f VNĐ", newPrice));
-                if (currentAuction != null)
+                if (currentAuction != null) {
                     currentAuction.setCurrentPrice(newPrice);
+                    // Cập nhật đồng hồ đếm ngược nếu bị gia hạn (Anti-sniping)
+                    if (payload.has("newEndTime") && !payload.get("newEndTime").isJsonNull()) {
+                        currentAuction.setEndTime(LocalDateTime.parse(payload.get("newEndTime").getAsString()));
+                        startCountdown(); // Restart countdown
+                        paneAntiSnipe.setVisible(true);
+                        paneAntiSnipe.setManaged(true);
+                    }
+                }
                 // Nạp lại danh sách lịch sử đặt giá để hiển thị dòng mới nhất lên bảng
                 loadBidHistory();
             }

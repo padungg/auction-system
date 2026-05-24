@@ -189,8 +189,10 @@ public class BidService {
 
         // ANTI-SNIPING
         AuctionUtils.applyAntiSnipe(auction, auctionDAO);
+        
+        String newEndTimeStr = auction.getEndTime() != null ? auction.getEndTime().toString() : null;
         // OBSERVER
-        AuctionManager.getInstance().notifyBidUpdate(auction.getId(), bidAmount, bidderId, bidderName, itemName, bidTimeIso);
+        AuctionManager.getInstance().notifyBidUpdate(auction.getId(), bidAmount, bidderId, bidderName, itemName, bidTimeIso, newEndTimeStr);
 
         LOGGER.info("{}BID: phiên={} | bidder={} | {} → {} VNĐ",
                 isAutoBid ? "AUTO_" : "PLACE_",
