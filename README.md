@@ -103,7 +103,7 @@ copy/
 
 ## 4. Vị trí các file .jar
 
-Dự án sử dụng hệ thống CI/CD (GitHub Actions) để tự động đóng gói mã nguồn thành một file **Fat JAR** duy nhất (đã tích hợp sẵn driver PostgreSQL, Gson, HikariCP...). Để lấy file thực thi **`auction-system-1.0-SNAPSHOT.jar`** mà không cần biên dịch thủ công, bạn làm như sau:
+Dự án sử dụng hệ thống CI/CD (GitHub Actions) để tự động đóng gói mã nguồn thành một file **Cross-Platform Fat JAR** duy nhất (đã tích hợp sẵn driver PostgreSQL, Gson, HikariCP và thư viện đồ họa JavaFX cho cả Windows, Linux, macOS). Để lấy file thực thi **`auction-system-1.0-SNAPSHOT.jar`** mà không cần biên dịch thủ công, thực hiện theo các bước sau:
 
 1. **Truy cập**: Mục [Actions trên GitHub](https://github.com/padungg/auction-system/actions).
 2. **Chọn bản build**: Bấm vào lần chạy (Workflow Run) gần nhất ở trên cùng có dấu tích xanh `✓`.
