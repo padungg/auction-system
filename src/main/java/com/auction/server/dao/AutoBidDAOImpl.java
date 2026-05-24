@@ -44,7 +44,8 @@ public class AutoBidDAOImpl implements AutoBidDAO {
     public boolean save(AutoBidEntry entry) {
         String sql = "INSERT INTO auto_bids (user_id, auction_id, max_bid, increment, registered_at) " +
                      "VALUES (?, ?, ?, ?, ?) " +
-                     "ON DUPLICATE KEY UPDATE max_bid = VALUES(max_bid), increment = VALUES(increment), registered_at = VALUES(registered_at)";
+                     "ON CONFLICT (user_id, auction_id) DO UPDATE SET " +
+                     "max_bid = EXCLUDED.max_bid, increment = EXCLUDED.increment, registered_at = EXCLUDED.registered_at";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
