@@ -38,7 +38,7 @@ public class ProductCardController {
     private static final Logger LOGGER = LoggerFactory.getLogger(ProductCardController.class);
 
     /** Bộ định dạng thời gian tiêu chuẩn hệ thống phục vụ bóc tách chuỗi mốc ngày giờ kết thúc phiên đấu giá. */
-    private static final DateTimeFormatter DT_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter DT_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     // =========================================================================
     // PHÂN VÙNG BINDING THÀNH PHẦN ĐỒ HỌA FXML (UI COMPONENT BINDINGS)

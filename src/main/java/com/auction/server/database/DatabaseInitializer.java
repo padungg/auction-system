@@ -8,7 +8,7 @@ import java.sql.Statement;
 import java.sql.SQLException;
 
 public class DatabaseInitializer {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseInitializer.class);
+        private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseInitializer.class);
 
         public static void initialize() {
 
