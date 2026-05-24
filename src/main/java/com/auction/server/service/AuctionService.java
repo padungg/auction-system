@@ -19,6 +19,7 @@ import com.auction.server.util.ValidationUtils;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +29,17 @@ import org.slf4j.LoggerFactory;
  */
 public class AuctionService {
     private static final Logger LOGGER = LoggerFactory.getLogger(AuctionService.class);
+
+    // --- SERVER-SIDE IN-MEMORY CACHE ---
+    private static final ConcurrentHashMap<String, AuctionSummaryDTO> CACHE = new ConcurrentHashMap<>();
+    private static boolean isCacheLoaded = false;
+    private static final Object cacheLock = new Object();
+
+    public static void updateCachedPrice(String auctionId, double newPrice) {
+        if (isCacheLoaded && CACHE.containsKey(auctionId)) {
+            CACHE.get(auctionId).setCurrentPrice(newPrice);
+        }
+    }
     private final AuctionDAO auctionDAO;
     private final UserDAO userDAO;
     private final ItemService itemService;
@@ -44,12 +56,20 @@ public class AuctionService {
     }
 
     public Response getAllAuctions() {
-        List<Auction> auctions = auctionDAO.findAll();
-        List<AuctionSummaryDTO> summaryList = new ArrayList<>();
-        for (Auction auction : auctions) {
-            summaryList.add(auctionMapper.toSummaryDTO(auction));
+        synchronized (cacheLock) {
+            if (!isCacheLoaded) {
+                List<Auction> auctions = auctionDAO.findAll();
+                CACHE.clear();
+                for (Auction auction : auctions) {
+                    CACHE.put(auction.getId(), auctionMapper.toSummaryDTO(auction));
+                }
+                isCacheLoaded = true;
+                LOGGER.info("DB_FETCH: Đã tải {} phiên đấu giá vào RAM Cache", CACHE.size());
+            }
         }
-        LOGGER.info("GET_ALL: {} phiên đang mở", summaryList.size());
+        
+        List<AuctionSummaryDTO> summaryList = new ArrayList<>(CACHE.values());
+        LOGGER.info("GET_ALL: {} phiên đang mở (Từ Cache)", summaryList.size());
         return new Response(ResponseStatus.SUCCESS, "Lấy danh sách thành công", summaryList);
     }
 
@@ -121,6 +141,12 @@ public class AuctionService {
         auctionDAO.save(auction);
 
         AuctionSummaryDTO result = auctionMapper.toSummaryDTO(auction);
+        synchronized (cacheLock) {
+            if (isCacheLoaded) {
+                CACHE.put(auction.getId(), result);
+            }
+        }
+        
         LOGGER.info("CREATE: item={} | loại={} | giá khởi={} VNĐ | auctionId={}",
                 item.getName(), dto.getItemType(), String.format("%,.0f", dto.getStartingPrice()), auction.getId());
         return new Response(ResponseStatus.SUCCESS, "Tạo phiên đấu giá thành công!", result);
@@ -144,6 +170,12 @@ public class AuctionService {
 
             auction.setStatus(AuctionStatus.FINISHED);
             auctionDAO.update(auction);
+
+            synchronized (cacheLock) {
+                if (isCacheLoaded && CACHE.containsKey(auctionId)) {
+                    CACHE.get(auctionId).setStatus(AuctionStatus.FINISHED.name());
+                }
+            }
 
             // Dọn dẹp AutoBid queue để tránh Memory Leak
             autoBidService.clearAuction(auctionId);
@@ -190,6 +222,12 @@ public class AuctionService {
             }
             auctionDAO.update(auction);
 
+            synchronized (cacheLock) {
+                if (isCacheLoaded) {
+                    CACHE.put(auction.getId(), auctionMapper.toSummaryDTO(auction));
+                }
+            }
+
             LOGGER.info("UPDATE: auctionId={} by seller={}", auction.getId(), sellerId);
             return new Response(ResponseStatus.SUCCESS, "Cập nhật sản phẩm thành công!", null);
         }
@@ -204,6 +242,12 @@ public class AuctionService {
         itemService.deleteItem(auction.getItemId(), sellerId);
         auctionDAO.delete(auction.getId());
 
+        synchronized (cacheLock) {
+            if (isCacheLoaded) {
+                CACHE.remove(auction.getId());
+            }
+        }
+
         // Tránh memory leak
         com.auction.server.util.LockManager.removeAuctionLock(auctionId);
 
@@ -217,6 +261,11 @@ public class AuctionService {
         Auction auction = validateAndGetAuction(auctionId);
         auction.setStatus(AuctionStatus.CANCELED);
         auctionDAO.update(auction);
+        synchronized (cacheLock) {
+            if (isCacheLoaded && CACHE.containsKey(auctionId)) {
+                CACHE.get(auctionId).setStatus(AuctionStatus.CANCELED.name());
+            }
+        }
         LOGGER.info("ADMIN_CANCEL_AUCTION: auctionId={}", auctionId);
         return new Response(ResponseStatus.SUCCESS, "Đã hủy phiên đấu giá thành công!", null);
     }
@@ -228,6 +277,11 @@ public class AuctionService {
         }
         auction.setStatus(AuctionStatus.PAID);
         auctionDAO.update(auction);
+        synchronized (cacheLock) {
+            if (isCacheLoaded && CACHE.containsKey(auctionId)) {
+                CACHE.get(auctionId).setStatus(AuctionStatus.PAID.name());
+            }
+        }
         LOGGER.info("ADMIN_MARK_PAID: auctionId={}", auctionId);
         return new Response(ResponseStatus.SUCCESS, "Đã đánh dấu phiên thành PAID thành công!", null);
     }

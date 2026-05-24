@@ -155,6 +155,9 @@ public class BidService {
         auction.setCurrentPrice(bidAmount);
         auction.setCurrentWinnerId(bidderId);
         auctionDAO.update(auction);
+        
+        // Cập nhật giá mới vào RAM Cache của Server để giảm tải CSDL
+        AuctionService.updateCachedPrice(auction.getId(), bidAmount);
 
         // Lịch sử giao dịch
         BidTransaction transaction = new BidTransaction(
