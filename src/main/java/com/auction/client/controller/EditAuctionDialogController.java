@@ -25,24 +25,24 @@ public class EditAuctionDialogController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EditAuctionDialogController.class);
 
-    // BASE FIELDS FXML
+    // CÁC TRƯỜNG THÔNG TIN CƠ BẢN FXML
     @FXML private TextField txtName;
     @FXML private ComboBox<String> cbCondition;
     @FXML private TextField txtPrice;
     @FXML private TextArea txtDesc;
 
-    // ELECTRONICS FXML
+    // THÔNG TIN THIẾT BỊ ĐIỆN TỬ FXML
     @FXML private VBox paneElectronics;
     @FXML private TextField txtElecBrand;
     @FXML private TextField txtElecWarranty;
 
-    // ART FXML
+    // THÔNG TIN TÁC PHẨM NGHỆ THUẬT FXML
     @FXML private VBox paneArt;
     @FXML private TextField txtArtArtist;
     @FXML private TextField txtArtMaterial;
     @FXML private TextField txtArtYear;
 
-    // VEHICLE FXML
+    // THÔNG TIN PHƯƠNG TIỆN GIAO THÔNG FXML
     @FXML private VBox paneVehicle;
     @FXML private TextField txtVehBrand;
     @FXML private TextField txtVehModel;

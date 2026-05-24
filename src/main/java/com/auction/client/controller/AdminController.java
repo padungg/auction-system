@@ -36,7 +36,7 @@ public class AdminController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AdminController.class);
 
-    // USERS MANAGEMENT FXML
+    // QUẢN LÝ NGƯỜI DÙNG FXML
     @FXML private TableView<UserResponseDTO> tableUsers;
     @FXML private TableColumn<UserResponseDTO, Boolean> colSelect;
     @FXML private TableColumn<UserResponseDTO, String> colUserId;
@@ -65,7 +65,7 @@ public class AdminController {
     private final ObservableList<UserResponseDTO> usersList = FXCollections.observableArrayList();
     private final Map<String, BooleanProperty> selectedUsersMap = new HashMap<>();
 
-    // AUCTIONS MANAGEMENT FXML
+    // QUẢN LÝ PHIÊN ĐẤU GIÁ FXML
     @FXML private TableView<AuctionSummaryDTO> tableAuctions;
     @FXML private TableColumn<AuctionSummaryDTO, String> colAucProduct;
     @FXML private TableColumn<AuctionSummaryDTO, Double> colAucPrice;

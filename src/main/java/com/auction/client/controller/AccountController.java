@@ -33,6 +33,7 @@ public class AccountController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AccountController.class);
 
+    // CÁC THÀNH PHẦN HIỂN THỊ THÔNG TIN HỒ SƠ FXML
     @FXML private Label lblAvatar;
     @FXML private Label lblName;
     @FXML private Label lblUsername;
@@ -46,6 +47,7 @@ public class AccountController {
     @FXML private HBox boxStore;
     @FXML private TextField txtAmount;
 
+    // BẢNG LỊCH SỬ ĐẤU GIÁ CỦA TÔI FXML
     @FXML private TableView<MyBidHistoryDTO> tableHistory;
     @FXML private TableColumn<MyBidHistoryDTO, String> colAuctionId;
     @FXML private TableColumn<MyBidHistoryDTO, String> colItemName;
@@ -53,6 +55,7 @@ public class AccountController {
     @FXML private TableColumn<MyBidHistoryDTO, LocalDateTime> colTime;
     @FXML private TableColumn<MyBidHistoryDTO, String> colResult;
 
+    // NÚT ĐIỀU HƯỚNG PHÂN TRANG LỊCH SỬ FXML
     @FXML private HBox histPageBox;
     @FXML private Label histPageInfo;
     @FXML private Button histBtnFirst;

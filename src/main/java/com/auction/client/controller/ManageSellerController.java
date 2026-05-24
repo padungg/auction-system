@@ -27,7 +27,7 @@ public class ManageSellerController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ManageSellerController.class);
 
-    // PRODUCTS TABLE FXML
+    // BẢNG DANH SÁCH SẢN PHẨM CỦA NGƯỜI BÁN FXML
     @FXML private TableView<AuctionSummaryDTO> tableProducts;
     @FXML private TableColumn<AuctionSummaryDTO, String> colId;
     @FXML private TableColumn<AuctionSummaryDTO, String> colName;
@@ -37,7 +37,7 @@ public class ManageSellerController {
     @FXML private TableColumn<AuctionSummaryDTO, String> colStatus;
     @FXML private TableColumn<AuctionSummaryDTO, Void> colAction;
 
-    // BASE INPUT FORM FXML
+    // BIỂU MẪU NHẬP LIỆU THÔNG TIN CƠ BẢN FXML
     @FXML private TextField txtName;
     @FXML private ComboBox<String> cbType;
     @FXML private TextField txtPrice;
@@ -53,7 +53,7 @@ public class ManageSellerController {
 
     private String imageBase64;
 
-    // DYNAMIC CONTAINERS FXML
+    // CÁC KHUNG NHẬP LIỆU ĐẶC THÙ CHO TỪNG LOẠI DANH MỤC FXML
     @FXML private javafx.scene.layout.VBox paneElectronics;
     @FXML private TextField txtElecBrand;
     @FXML private TextField txtElecWarranty;
@@ -320,29 +320,34 @@ public class ManageSellerController {
      * Nén ảnh sản phẩm tối ưu dung lượng và kích thước.
      */
     private byte[] compressImage(java.io.File file) throws IOException {
+        // Đọc ảnh gốc từ File đầu vào
         java.awt.image.BufferedImage originalImage = javax.imageio.ImageIO.read(file);
         if (originalImage == null) {
             throw new IOException("Không thể đọc định dạng hình ảnh!");
         }
 
-        int maxDimension = 1024;
+        int maxDimension = 1024; // Kích thước cạnh tối đa được phép (để giảm dung lượng bộ nhớ)
         int originalWidth = originalImage.getWidth();
         int originalHeight = originalImage.getHeight();
         java.awt.image.BufferedImage scaledImage;
 
+        // Nếu một trong các cạnh lớn hơn maxDimension, thực hiện co giãn tỉ lệ ảnh gốc
         if (originalWidth > maxDimension || originalHeight > maxDimension) {
             double scale = Math.min((double) maxDimension / originalWidth, (double) maxDimension / originalHeight);
             int targetWidth = (int) (originalWidth * scale);
             int targetHeight = (int) (originalHeight * scale);
 
+            // Khởi tạo ảnh đích với kích thước mới và dải màu RGB tiêu chuẩn
             scaledImage = new java.awt.image.BufferedImage(targetWidth, targetHeight, java.awt.image.BufferedImage.TYPE_INT_RGB);
             java.awt.Graphics2D g2d = scaledImage.createGraphics();
-            g2d.setColor(java.awt.Color.WHITE);
+            g2d.setColor(java.awt.Color.WHITE); // Phủ nền trắng mặc định tránh lỗi kênh màu
             g2d.fillRect(0, 0, targetWidth, targetHeight);
+            // Sử dụng bộ lọc nội suy song tuyến tính (Bilinear) để giữ độ mượt mà của ảnh khi co
             g2d.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
             g2d.drawImage(originalImage, 0, 0, targetWidth, targetHeight, null);
             g2d.dispose();
         } else {
+            // Giữ nguyên kích thước nếu ảnh nằm trong giới hạn an toàn
             scaledImage = new java.awt.image.BufferedImage(originalWidth, originalHeight, java.awt.image.BufferedImage.TYPE_INT_RGB);
             java.awt.Graphics2D g2d = scaledImage.createGraphics();
             g2d.setColor(java.awt.Color.WHITE);
@@ -351,6 +356,7 @@ public class ManageSellerController {
             g2d.dispose();
         }
 
+        // Bắt đầu quá trình nén và xuất ảnh JPEG chất lượng cao tối ưu dung lượng Base64
         java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
         java.util.Iterator<javax.imageio.ImageWriter> writers = javax.imageio.ImageIO.getImageWritersByFormatName("jpg");
         if (!writers.hasNext()) {
@@ -361,6 +367,7 @@ public class ManageSellerController {
             writer.setOutput(ios);
             javax.imageio.ImageWriteParam param = writer.getDefaultWriteParam();
             if (param.canWriteCompressed()) {
+                // Thiết lập cơ chế nén thủ công với độ phân giải đạt 70% tối ưu
                 param.setCompressionMode(javax.imageio.ImageWriteParam.MODE_EXPLICIT);
                 param.setCompressionQuality(0.7f);
             }

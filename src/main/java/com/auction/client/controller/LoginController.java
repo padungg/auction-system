@@ -33,7 +33,7 @@ public class LoginController implements Initializable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LoginController.class);
 
-    // CONTAINERS & TABS FXML
+    // CÁC THÀNH PHẦN GIAO DIỆN CHÍNH & TAB ĐIỀU HƯỚNG FXML
     @FXML private Label lblTitle;
     @FXML private Label lblSubtitle;
     @FXML private Button tabLogin;
@@ -41,12 +41,12 @@ public class LoginController implements Initializable {
     @FXML private VBox loginForm;
     @FXML private VBox registerForm;
 
-    // LOGIN FORM FXML
+    // CÁC TRƯỜNG NHẬP LIỆU GIAO DIỆN ĐĂNG NHẬP FXML
     @FXML private TextField loginUsername;
     @FXML private PasswordField loginPassword;
     @FXML private Label loginMessage;
 
-    // REGISTER FORM FXML
+    // CÁC TRƯỜNG NHẬP LIỆU GIAO DIỆN ĐĂNG KÝ FXML
     @FXML private TextField regFullName;
     @FXML private TextField regEmail;
     @FXML private TextField regUsername;

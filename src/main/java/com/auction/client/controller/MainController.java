@@ -34,7 +34,7 @@ public class MainController implements Initializable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MainController.class);
 
-    // HEADER & INFO FXML
+    // THÔNG TIN NGƯỜI DÙNG TRÊN THANH ĐẦU TRANG FXML
     @FXML private Label headerTitle;
     @FXML private Label headerGreeting;
     @FXML private Label headerBalance;
@@ -43,7 +43,7 @@ public class MainController implements Initializable {
     @FXML private Label lblClock;
     @FXML private StackPane contentStack;
 
-    // THEME & NOTIFICATIONS FXML
+    // GIAO DIỆN CHỦ ĐỀ & THÔNG BÁO ĐẨY FXML
     @FXML private StackPane rootPane;
     @FXML private Button btnThemeToggle;
     @FXML private VBox notifDropdown;
@@ -53,7 +53,7 @@ public class MainController implements Initializable {
     private boolean isDarkMode = false;
     private int unreadCount = 0;
 
-    // NAVIGATION FXML
+    // THANH CHUYỂN TRANG ĐIỀU HƯỚNG FXML
     @FXML private Button navList;
     @FXML private Button navDetail;
     @FXML private Button navManage;

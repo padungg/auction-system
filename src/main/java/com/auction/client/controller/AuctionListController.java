@@ -34,12 +34,12 @@ public class AuctionListController implements Initializable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AuctionListController.class);
 
-    // STATS & SEARCH FXML
+    // THỐNG KÊ & TÌM KIẾM FXML
     @FXML private Label statTotal, statActive, statBids, statFinished;
     @FXML private TextField txtSearch;
     @FXML private FlowPane auctionGrid;
 
-    // FILTER CONTROLS FXML
+    // NÚT BỘ LỌC DANH MỤC & TRẠNG THÁI FXML
     @FXML private Button filterAll, filterElectronics, filterArt, filterVehicle;
     @FXML private Button statusAll, statusRunning, statusOpen, statusFinished;
 

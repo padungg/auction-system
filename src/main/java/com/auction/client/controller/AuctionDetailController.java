@@ -43,28 +43,28 @@ public class AuctionDetailController implements AuctionEventObserver {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AuctionDetailController.class);
 
-    // PRODUCT INFO FXML (LEFT PANEL)
+    // THÔNG TIN CHI TIẾT SẢN PHẨM FXML (KHUNG BÊN TRÁI)
     @FXML private Label lblBreadcrumbName, lblDetailName, lblDetailStatus, lblDetailEmoji, lblDetailDesc;
     @FXML private javafx.scene.image.ImageView imgProduct;
     @FXML private GridPane gridSpecs;
 
-    // PRICE & COUNTDOWN FXML (RIGHT PANEL)
+    // THÔNG TIN BƯỚC GIÁ & ĐẾM NGƯỢC FXML (KHUNG BÊN PHẢI)
     @FXML private Label lblCurrentPrice, lblStartPrice, lblBidStep;
     @FXML private Label lblCdH, lblCdM, lblCdS;
 
-    // CONTROLS PANEL FXML
+    // KHUNG ĐIỀU KHIỂN & ĐẶT GIÁ FXML
     @FXML private HBox paneAntiSnipe;
     @FXML private VBox paneWinner, paneBidForm, paneAutoBidStatus, paneAutoBidForm;
     @FXML private Label lblWinnerName, lblAutoBidDetail;
     @FXML private TextField txtBidAmount, txtAutoMax, txtAutoInc;
 
-    // BID HISTORY TABLE FXML
+    // BẢNG LỊCH SỬ ĐẶT GIÁ FXML
     @FXML private TableView<BidTransaction> tableHistory;
     @FXML private TableColumn<BidTransaction, String> colUser;
     @FXML private TableColumn<BidTransaction, Double> colAmount;
     @FXML private TableColumn<BidTransaction, LocalDateTime> colTime;
 
-    // LINE CHART FXML
+    // BIỂU ĐỒ BƯỚC GIÁ LINE CHART FXML
     @FXML private LineChart<String, Number> bidChart;
     @FXML private CategoryAxis chartXAxis;
     @FXML private NumberAxis chartYAxis;
@@ -420,25 +420,32 @@ public class AuctionDetailController implements AuctionEventObserver {
 
     @Override
     public void onAuctionEvent(String event, String eventAuctionId, JsonObject payload) {
+        // Kiểm tra xem sự kiện nhận được có đúng với phiên đấu giá hiện tại đang xem hay không
         if (!auctionId.equals(eventAuctionId))
             return;
 
         switch (event) {
             case "BID_UPDATE" -> {
+                // Nhận giá trị đặt thầu mới nhất từ payload JSON
                 double newPrice = payload.has("newPrice") ? payload.get("newPrice").getAsDouble() : 0;
+                // Cập nhật lên nhãn hiển thị giá hiện tại trên UI
                 lblCurrentPrice.setText(String.format("%,.0f VNĐ", newPrice));
                 if (currentAuction != null)
                     currentAuction.setCurrentPrice(newPrice);
+                // Nạp lại danh sách lịch sử đặt giá để hiển thị dòng mới nhất lên bảng
                 loadBidHistory();
             }
             case "ANTI_SNIPE" -> {
+                // Cơ chế chống bắn tỉa (Anti-Sniping): Nếu có người đặt giá ở những giây cuối, thời gian kết thúc được tự động gia hạn thêm
                 if (payload.has("newEndTime") && currentAuction != null) {
                     currentAuction.setEndTime(LocalDateTime.parse(payload.get("newEndTime").getAsString()));
                 }
+                // Hiển thị nhãn cảnh báo kích hoạt Anti-Snipe trên UI để thông báo cho người dùng
                 paneAntiSnipe.setVisible(true);
                 paneAntiSnipe.setManaged(true);
             }
             case "AUCTION_CLOSED" -> {
+                // Sự kiện đóng phiên: Dừng bộ đếm ngược thời gian và tải lại chi tiết phiên để cập nhật giao diện kết quả chung cuộc
                 stopCountdown();
                 loadAuctionDetail();
             }
@@ -451,15 +458,18 @@ public class AuctionDetailController implements AuctionEventObserver {
     @FXML
     void handlePlaceBid() {
         String amountStr = txtBidAmount.getText().trim();
+        // Kiểm tra xem ô nhập số tiền đặt thầu có bị bỏ trống hay không
         if (amountStr.isEmpty()) {
             AlertUtils.showWarning("Lỗi", "Vui lòng nhập số tiền muốn đặt.");
             return;
         }
         try {
+            // Lọc bỏ tất cả ký tự định dạng (chấm, phẩy) để chuyển thành số double thuần túy
             double amount = Double.parseDouble(amountStr.replace(",", "").replace(".", ""));
 
             double minRequiredBid;
             boolean isFirstBid = bidHistory.isEmpty();
+            // Trường hợp 1: Chưa từng có ai tham gia đặt giá cho sản phẩm này
             if (isFirstBid) {
                 minRequiredBid = currentAuction.getStartingPrice();
                 if (amount < minRequiredBid) {
@@ -468,7 +478,9 @@ public class AuctionDetailController implements AuctionEventObserver {
                                     + String.format("%,.0f VNĐ", minRequiredBid));
                     return;
                 }
-            } else {
+            } 
+            // Trường hợp 2: Đã có người đặt giá trước đó, yêu cầu giá mới phải lớn hơn hoặc bằng (Giá hiện hành + Bước giá)
+            else {
                 minRequiredBid = currentAuction.getCurrentPrice() + currentAuction.getStepPrice();
                 if (amount < minRequiredBid) {
                     AlertUtils.showWarning("Lỗi đặt giá",
@@ -479,6 +491,7 @@ public class AuctionDetailController implements AuctionEventObserver {
                 }
             }
 
+            // Đóng gói dữ liệu yêu cầu đặt thầu và gửi bất đồng bộ lên Server
             BidRequestDTO dto = new BidRequestDTO(auctionId, amount);
             ClientSocketManager.getInstance().execute(() -> {
                 try {
@@ -486,7 +499,7 @@ public class AuctionDetailController implements AuctionEventObserver {
                             .sendRequest(new Request(RequestType.PLACE_BID, dto));
                     Platform.runLater(() -> {
                         if (res != null && res.getStatus() == ResponseStatus.SUCCESS) {
-                            txtBidAmount.clear();
+                            txtBidAmount.clear(); // Dọn sạch ô nhập liệu trên UI sau khi giao dịch thành công
                         } else {
                             AlertUtils.showWarning("Đặt giá thất bại",
                                     res != null ? res.getMessage() : "Lỗi kết nối");

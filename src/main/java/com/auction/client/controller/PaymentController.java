@@ -27,24 +27,24 @@ public class PaymentController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PaymentController.class);
 
-    // TAB CONTROLS FXML
+    // THÀNH PHẦN CHUYỂN ĐỔI TAB FXML
     @FXML private Button btnTabPending;
     @FXML private Button btnTabHistory;
 
-    // PANELS FXML
+    // CÁC KHUNG GIAO DIỆN CHÍNH FXML
     @FXML private VBox panelPending;
     @FXML private VBox panelHistory;
     @FXML private VBox cardContainer;
     @FXML private Label lblNoPending;
 
-    // HISTORY TABLE FXML
+    // BẢNG LỊCH SỬ GIAO DỊCH FXML
     @FXML private TableView<AuctionSummaryDTO> tableHistory;
     @FXML private TableColumn<AuctionSummaryDTO, String> colHistName;
     @FXML private TableColumn<AuctionSummaryDTO, Double> colHistPrice;
     @FXML private TableColumn<AuctionSummaryDTO, String> colHistTime;
     @FXML private TableColumn<AuctionSummaryDTO, String> colHistStatus;
 
-    // PAGINATION CONTROLS FXML
+    // NÚT PHÂN TRANG GIAO DỊCH FXML
     @FXML private HBox histPageBox;
     @FXML private Label histPageInfo;
     @FXML private Button histBtnFirst;
