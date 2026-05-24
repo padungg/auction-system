@@ -9,7 +9,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * OBSERVER PATTERN + SINGLETON — quản lý ai đang xem phiên nào.
- * Khi có bid mới → AuctionManager duyệt danh sách observer thì gọi onBidUpdated() cho từng người.
+ * Khi có bid mới → AuctionManager duyệt danh sách observer thì gọi
+ * onBidUpdated() cho từng người.
  */
 public class AuctionManager {
 
@@ -69,9 +70,10 @@ public class AuctionManager {
      * Thông báo cho TẤT CẢ observer đang xem phiên này rằng có bid mới.
      */
     public void notifyBidUpdate(String auctionId, double newPrice, String bidderId,
-                                String bidderName, String itemName, String bidTime) {
+            String bidderName, String itemName, String bidTime) {
         List<AuctionObserver> observers = observerMap.get(auctionId);
-        if (observers == null || observers.isEmpty()) return;
+        if (observers == null || observers.isEmpty())
+            return;
 
         int count = 0;
         for (AuctionObserver observer : observers) {

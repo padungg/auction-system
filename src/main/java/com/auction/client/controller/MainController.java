@@ -35,34 +35,55 @@ public class MainController implements Initializable {
     private static final Logger LOGGER = LoggerFactory.getLogger(MainController.class);
 
     // THÔNG TIN NGƯỜI DÙNG TRÊN THANH ĐẦU TRANG FXML
-    @FXML private Label headerTitle;
-    @FXML private Label headerGreeting;
-    @FXML private Label headerBalance;
-    @FXML private Label headerAvatar;
-    @FXML private Label headerUsername;
-    @FXML private Label lblClock;
-    @FXML private StackPane contentStack;
+    @FXML
+    private Label headerTitle;
+    @FXML
+    private Label headerGreeting;
+    @FXML
+    private Label headerBalance;
+    @FXML
+    private Label headerAvatar;
+    @FXML
+    private Label headerUsername;
+    @FXML
+    private Label lblClock;
+    @FXML
+    private StackPane contentStack;
 
     // GIAO DIỆN CHỦ ĐỀ & THÔNG BÁO ĐẨY FXML
-    @FXML private StackPane rootPane;
-    @FXML private Button btnThemeToggle;
-    @FXML private VBox notifDropdown;
-    @FXML private Label notifBadge;
-    @FXML private VBox notifList;
+    @FXML
+    private StackPane rootPane;
+    @FXML
+    private Button btnThemeToggle;
+    @FXML
+    private VBox notifDropdown;
+    @FXML
+    private Label notifBadge;
+    @FXML
+    private VBox notifList;
 
     private boolean isDarkMode = false;
     private int unreadCount = 0;
 
     // THANH CHUYỂN TRANG ĐIỀU HƯỚNG FXML
-    @FXML private Button navList;
-    @FXML private Button navDetail;
-    @FXML private Button navManage;
-    @FXML private Button navAccount;
-    @FXML private Button navPayment;
-    @FXML private Button navAdminUsers;
-    @FXML private Button navAdminAuctions;
-    @FXML private VBox adminNav;
-    @FXML private Button btnBack;
+    @FXML
+    private Button navList;
+    @FXML
+    private Button navDetail;
+    @FXML
+    private Button navManage;
+    @FXML
+    private Button navAccount;
+    @FXML
+    private Button navPayment;
+    @FXML
+    private Button navAdminUsers;
+    @FXML
+    private Button navAdminAuctions;
+    @FXML
+    private VBox adminNav;
+    @FXML
+    private Button btnBack;
 
     private AuctionDetailController currentDetailController;
     private static MainController instance;
@@ -84,12 +105,12 @@ public class MainController implements Initializable {
      * Vận hành đồng hồ thời gian thực.
      */
     private void startClock() {
-        if (lblClock == null) return;
+        if (lblClock == null)
+            return;
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss - dd/MM/yyyy");
         Timeline clock = new Timeline(
                 new KeyFrame(Duration.ZERO, _ -> lblClock.setText("🕒 " + LocalDateTime.now().format(formatter))),
-                new KeyFrame(Duration.seconds(1))
-        );
+                new KeyFrame(Duration.seconds(1)));
         clock.setCycleCount(Animation.INDEFINITE);
         clock.play();
     }
@@ -105,15 +126,15 @@ public class MainController implements Initializable {
         }
 
         com.auction.client.network.ClientSocketManager.getInstance().addObserver(
-                (_, _, payload) -> handlePushNotification(payload)
-        );
+                (_, _, payload) -> handlePushNotification(payload));
     }
 
     /**
      * Phân tích và hiển thị thông báo đẩy từ server.
      */
     private void handlePushNotification(com.google.gson.JsonObject push) {
-        if (notifList == null) return;
+        if (notifList == null)
+            return;
 
         String eventType = push.has("event") ? push.get("event").getAsString() : "";
 
@@ -203,8 +224,8 @@ public class MainController implements Initializable {
             try {
                 com.auction.model.protocol.Request req = new com.auction.model.protocol.Request(
                         com.auction.model.protocol.RequestType.GET_MY_PROFILE, null);
-                com.auction.model.protocol.Response res =
-                        com.auction.client.network.ClientSocketManager.getInstance().sendRequest(req);
+                com.auction.model.protocol.Response res = com.auction.client.network.ClientSocketManager.getInstance()
+                        .sendRequest(req);
 
                 if (res != null && res.getStatus() == com.auction.model.protocol.ResponseStatus.SUCCESS) {
                     UserResponseDTO fresh = res.getPayloadAs(UserResponseDTO.class);
@@ -212,7 +233,8 @@ public class MainController implements Initializable {
                         SessionManager.getInstance().setCurrentUser(fresh);
                         javafx.application.Platform.runLater(() -> {
                             headerBalance.setText("💰 " + String.format("%,.0f", fresh.getBalance()) + " VNĐ");
-                            LOGGER.info("[MainController] REFRESH: balance={} VNĐ", String.format("%,.0f", fresh.getBalance()));
+                            LOGGER.info("[MainController] REFRESH: balance={} VNĐ",
+                                    String.format("%,.0f", fresh.getBalance()));
                         });
                     }
                 }

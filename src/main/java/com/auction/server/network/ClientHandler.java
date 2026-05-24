@@ -49,7 +49,9 @@ public class ClientHandler implements Runnable, AuctionObserver {
 
         try {
             in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
-            out = new PrintWriter(new java.io.OutputStreamWriter(socket.getOutputStream(), java.nio.charset.StandardCharsets.UTF_8), true);
+            out = new PrintWriter(
+                    new java.io.OutputStreamWriter(socket.getOutputStream(), java.nio.charset.StandardCharsets.UTF_8),
+                    true);
 
             String line;
             while ((line = in.readLine()) != null) {
@@ -57,7 +59,8 @@ public class ClientHandler implements Runnable, AuctionObserver {
                     handleRawMessage(line);
                 } catch (Exception e) {
                     LOGGER.error("LỖI NGOẠI LỆ: {}", e.getMessage(), e);
-                    sendResponse(new Response(ResponseStatus.ERROR, "Lỗi máy chủ nội bộ (500): " + e.getMessage(), null));
+                    sendResponse(
+                            new Response(ResponseStatus.ERROR, "Lỗi máy chủ nội bộ (500): " + e.getMessage(), null));
                 }
             }
         } catch (IOException e) {
@@ -119,7 +122,8 @@ public class ClientHandler implements Runnable, AuctionObserver {
                 response = new Response(ResponseStatus.BAD_REQUEST, "Thiếu auctionId", null);
             } else {
                 AuctionManager.getInstance().subscribe(auctionId, this);
-                response = new Response(ResponseStatus.SUCCESS, "Đã đăng ký nhận cập nhật cho phiên " + auctionId, null);
+                response = new Response(ResponseStatus.SUCCESS, "Đã đăng ký nhận cập nhật cho phiên " + auctionId,
+                        null);
             }
             if (request.getRequestId() != null) {
                 response.setRequestId(request.getRequestId());
@@ -146,7 +150,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
      */
     @Override
     public void onBidUpdated(String auctionId, double newPrice, String bidderId,
-                             String bidderName, String itemName, String bidTime) {
+            String bidderName, String itemName, String bidTime) {
         BidUpdateNotificationDTO notification = new BidUpdateNotificationDTO(
                 auctionId, newPrice, bidderId, bidderName, itemName, bidTime);
         sendPush(GSON.toJson(notification));
@@ -163,13 +167,15 @@ public class ClientHandler implements Runnable, AuctionObserver {
 
     private void sendResponse(Response response) {
         synchronized (outLock) {
-            if (out != null) out.println(GSON.toJson(response));
+            if (out != null)
+                out.println(GSON.toJson(response));
         }
     }
 
     private void sendPush(String json) {
         synchronized (outLock) {
-            if (out != null) out.println(json);
+            if (out != null)
+                out.println(json);
         }
     }
 
@@ -179,11 +185,13 @@ public class ClientHandler implements Runnable, AuctionObserver {
     private void cleanup(String clientAddr) {
         AuctionManager.getInstance().unsubscribeAll(this);
         try {
-            if (in != null) in.close();
+            if (in != null)
+                in.close();
         } catch (IOException e) {
             LOGGER.error("IN_CLOSE_ERROR: {}", e.getMessage());
         }
-        if (out != null) out.close();
+        if (out != null)
+            out.close();
         try {
             if (socket != null && !socket.isClosed()) {
                 socket.close();

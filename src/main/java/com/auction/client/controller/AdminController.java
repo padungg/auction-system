@@ -37,27 +37,46 @@ public class AdminController {
     private static final Logger LOGGER = LoggerFactory.getLogger(AdminController.class);
 
     // QUẢN LÝ NGƯỜI DÙNG FXML
-    @FXML private TableView<UserResponseDTO> tableUsers;
-    @FXML private TableColumn<UserResponseDTO, Boolean> colSelect;
-    @FXML private TableColumn<UserResponseDTO, String> colUserId;
-    @FXML private TableColumn<UserResponseDTO, String> colUserUsername;
-    @FXML private TableColumn<UserResponseDTO, String> colUserFullName;
-    @FXML private TableColumn<UserResponseDTO, String> colUserEmail;
-    @FXML private TableColumn<UserResponseDTO, Object> colUserRole;
-    @FXML private TableColumn<UserResponseDTO, Double> colUserBalance;
-    @FXML private TableColumn<UserResponseDTO, Boolean> colUserStatus;
+    @FXML
+    private TableView<UserResponseDTO> tableUsers;
+    @FXML
+    private TableColumn<UserResponseDTO, Boolean> colSelect;
+    @FXML
+    private TableColumn<UserResponseDTO, String> colUserId;
+    @FXML
+    private TableColumn<UserResponseDTO, String> colUserUsername;
+    @FXML
+    private TableColumn<UserResponseDTO, String> colUserFullName;
+    @FXML
+    private TableColumn<UserResponseDTO, String> colUserEmail;
+    @FXML
+    private TableColumn<UserResponseDTO, Object> colUserRole;
+    @FXML
+    private TableColumn<UserResponseDTO, Double> colUserBalance;
+    @FXML
+    private TableColumn<UserResponseDTO, Boolean> colUserStatus;
 
-    @FXML private Label statTotalUsers;
-    @FXML private Label statActiveUsers;
-    @FXML private Label statLockedUsers;
-    @FXML private Label statAdminUsers;
+    @FXML
+    private Label statTotalUsers;
+    @FXML
+    private Label statActiveUsers;
+    @FXML
+    private Label statLockedUsers;
+    @FXML
+    private Label statAdminUsers;
 
-    @FXML private HBox pageButtonBox;
-    @FXML private Label lblPageInfo;
-    @FXML private Button btnFirstPage;
-    @FXML private Button btnPrevPage;
-    @FXML private Button btnNextPage;
-    @FXML private Button btnLastPage;
+    @FXML
+    private HBox pageButtonBox;
+    @FXML
+    private Label lblPageInfo;
+    @FXML
+    private Button btnFirstPage;
+    @FXML
+    private Button btnPrevPage;
+    @FXML
+    private Button btnNextPage;
+    @FXML
+    private Button btnLastPage;
 
     private static final int PAGE_SIZE = 15;
     private int currentPage = 0;
@@ -66,30 +85,52 @@ public class AdminController {
     private final Map<String, BooleanProperty> selectedUsersMap = new HashMap<>();
 
     // QUẢN LÝ PHIÊN ĐẤU GIÁ FXML
-    @FXML private TableView<AuctionSummaryDTO> tableAuctions;
-    @FXML private TableColumn<AuctionSummaryDTO, String> colAucProduct;
-    @FXML private TableColumn<AuctionSummaryDTO, Double> colAucPrice;
-    @FXML private TableColumn<AuctionSummaryDTO, Integer> colAucViews;
-    @FXML private TableColumn<AuctionSummaryDTO, Integer> colAucBids;
-    @FXML private TableColumn<AuctionSummaryDTO, String> colAucWinner;
-    @FXML private TableColumn<AuctionSummaryDTO, String> colAucSeller;
-    @FXML private TableColumn<AuctionSummaryDTO, String> colAucEnd;
-    @FXML private TableColumn<AuctionSummaryDTO, String> colAucStatus;
-    @FXML private TableColumn<AuctionSummaryDTO, Void> colAucAction;
+    @FXML
+    private TableView<AuctionSummaryDTO> tableAuctions;
+    @FXML
+    private TableColumn<AuctionSummaryDTO, String> colAucProduct;
+    @FXML
+    private TableColumn<AuctionSummaryDTO, Double> colAucPrice;
+    @FXML
+    private TableColumn<AuctionSummaryDTO, Integer> colAucViews;
+    @FXML
+    private TableColumn<AuctionSummaryDTO, Integer> colAucBids;
+    @FXML
+    private TableColumn<AuctionSummaryDTO, String> colAucWinner;
+    @FXML
+    private TableColumn<AuctionSummaryDTO, String> colAucSeller;
+    @FXML
+    private TableColumn<AuctionSummaryDTO, String> colAucEnd;
+    @FXML
+    private TableColumn<AuctionSummaryDTO, String> colAucStatus;
+    @FXML
+    private TableColumn<AuctionSummaryDTO, Void> colAucAction;
 
-    @FXML private Label aucStatTotal;
-    @FXML private Label aucStatRunning;
-    @FXML private Label aucStatOpen;
-    @FXML private Label aucStatFinished;
-    @FXML private Label aucStatPaid;
-    @FXML private Label aucStatCanceled;
+    @FXML
+    private Label aucStatTotal;
+    @FXML
+    private Label aucStatRunning;
+    @FXML
+    private Label aucStatOpen;
+    @FXML
+    private Label aucStatFinished;
+    @FXML
+    private Label aucStatPaid;
+    @FXML
+    private Label aucStatCanceled;
 
-    @FXML private HBox aucPageButtonBox;
-    @FXML private Label aucLblPageInfo;
-    @FXML private Button aucBtnFirst;
-    @FXML private Button aucBtnPrev;
-    @FXML private Button aucBtnNext;
-    @FXML private Button aucBtnLast;
+    @FXML
+    private HBox aucPageButtonBox;
+    @FXML
+    private Label aucLblPageInfo;
+    @FXML
+    private Button aucBtnFirst;
+    @FXML
+    private Button aucBtnPrev;
+    @FXML
+    private Button aucBtnNext;
+    @FXML
+    private Button aucBtnLast;
 
     private static final int AUC_PAGE_SIZE = 5;
     private int aucCurrentPage = 0;
@@ -129,6 +170,7 @@ public class AdminController {
         colUserRole.setCellValueFactory(new PropertyValueFactory<>("role"));
         colUserRole.setCellFactory(_ -> new TableCell<>() {
             private final Label badge = new Label();
+
             @Override
             protected void updateItem(Object roleObj, boolean empty) {
                 super.updateItem(roleObj, empty);
@@ -155,14 +197,17 @@ public class AdminController {
             @Override
             protected void updateItem(Double balance, boolean empty) {
                 super.updateItem(balance, empty);
-                if (empty || balance == null) setText(null);
-                else setText(String.format("%,.0fđ", balance));
+                if (empty || balance == null)
+                    setText(null);
+                else
+                    setText(String.format("%,.0fđ", balance));
             }
         });
 
         colUserStatus.setCellValueFactory(new PropertyValueFactory<>("active"));
         colUserStatus.setCellFactory(_ -> new TableCell<>() {
             private final Label lbl = new Label();
+
             @Override
             protected void updateItem(Boolean isActive, boolean empty) {
                 super.updateItem(isActive, empty);
@@ -262,7 +307,9 @@ public class AdminController {
 
         colAucViews.setCellValueFactory(cellData -> {
             int bids = cellData.getValue().getBidCount();
-            int hash = cellData.getValue().getAuctionId() != null ? Math.abs(cellData.getValue().getAuctionId().hashCode()) : 0;
+            int hash = cellData.getValue().getAuctionId() != null
+                    ? Math.abs(cellData.getValue().getAuctionId().hashCode())
+                    : 0;
             int views = bids == 0 ? (hash % 5) : bids * 3 + (hash % 15);
             return new javafx.beans.property.SimpleIntegerProperty(views).asObject();
         });
@@ -341,6 +388,7 @@ public class AdminController {
         colAucStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
         colAucStatus.setCellFactory(_ -> new TableCell<>() {
             private final Label badge = new Label();
+
             @Override
             protected void updateItem(String status, boolean empty) {
                 super.updateItem(status, empty);
@@ -402,7 +450,8 @@ public class AdminController {
                         if (index >= 0 && index < getTableView().getItems().size()) {
                             AuctionSummaryDTO row = getTableView().getItems().get(index);
 
-                            btnView.setOnAction(_ -> MainController.getInstance().openAuctionDetail(row.getAuctionId()));
+                            btnView.setOnAction(
+                                    _ -> MainController.getInstance().openAuctionDetail(row.getAuctionId()));
                             btnClose.setOnAction(_ -> forceCloseAuction(row.getAuctionId()));
                             btnCancel.setOnAction(_ -> cancelAuctionAdmin(row.getAuctionId()));
                             btnPaid.setOnAction(_ -> markPaidAdmin(row.getAuctionId()));
@@ -445,17 +494,20 @@ public class AdminController {
                     UserResponseDTO[] arr = response.getPayloadAs(UserResponseDTO[].class);
                     Platform.runLater(() -> {
                         allUsersList.clear();
-                        if (arr != null) Collections.addAll(allUsersList, arr);
+                        if (arr != null)
+                            Collections.addAll(allUsersList, arr);
                         currentPage = 0;
                         updateStats();
                         renderPage();
                     });
                 } else {
-                    Platform.runLater(() -> AlertUtils.showError("Lỗi kết nối", "Không thể tải danh sách người dùng từ máy chủ."));
+                    Platform.runLater(() -> AlertUtils.showError("Lỗi kết nối",
+                            "Không thể tải danh sách người dùng từ máy chủ."));
                 }
             } catch (Exception e) {
                 LOGGER.error("Gặp sự cố lỗi mạng khi thực thi yêu cầu GET_ALL_USERS", e);
-                Platform.runLater(() -> AlertUtils.showError("Lỗi kết nối", "Gặp sự cố lỗi mạng khi tải danh sách người dùng."));
+                Platform.runLater(
+                        () -> AlertUtils.showError("Lỗi kết nối", "Gặp sự cố lỗi mạng khi tải danh sách người dùng."));
             }
         });
     }
@@ -470,10 +522,14 @@ public class AdminController {
         long admins = allUsersList.stream()
                 .filter(u -> u.getRole() != null && "ADMIN".equalsIgnoreCase(u.getRole().toString()))
                 .count();
-        if (statTotalUsers != null) statTotalUsers.setText(String.valueOf(total));
-        if (statActiveUsers != null) statActiveUsers.setText(String.valueOf(active));
-        if (statLockedUsers != null) statLockedUsers.setText(String.valueOf(locked));
-        if (statAdminUsers != null) statAdminUsers.setText(String.valueOf(admins));
+        if (statTotalUsers != null)
+            statTotalUsers.setText(String.valueOf(total));
+        if (statActiveUsers != null)
+            statActiveUsers.setText(String.valueOf(active));
+        if (statLockedUsers != null)
+            statLockedUsers.setText(String.valueOf(locked));
+        if (statAdminUsers != null)
+            statAdminUsers.setText(String.valueOf(admins));
     }
 
     /**
@@ -492,39 +548,60 @@ public class AdminController {
             lblPageInfo.setText("Trang " + (currentPage + 1) + " / " + totalPages
                     + "  (" + allUsersList.size() + " người dùng)");
 
-        if (btnFirstPage != null) btnFirstPage.setDisable(currentPage == 0);
-        if (btnPrevPage != null)  btnPrevPage.setDisable(currentPage == 0);
-        if (btnNextPage != null)  btnNextPage.setDisable(currentPage >= totalPages - 1);
-        if (btnLastPage != null)  btnLastPage.setDisable(currentPage >= totalPages - 1);
+        if (btnFirstPage != null)
+            btnFirstPage.setDisable(currentPage == 0);
+        if (btnPrevPage != null)
+            btnPrevPage.setDisable(currentPage == 0);
+        if (btnNextPage != null)
+            btnNextPage.setDisable(currentPage >= totalPages - 1);
+        if (btnLastPage != null)
+            btnLastPage.setDisable(currentPage >= totalPages - 1);
 
         if (pageButtonBox != null) {
             pageButtonBox.getChildren().clear();
             int maxBtn = 5;
             int startP = Math.max(0, currentPage - maxBtn / 2);
             int endP = Math.min(totalPages, startP + maxBtn);
-            if (endP - startP < maxBtn) startP = Math.max(0, endP - maxBtn);
+            if (endP - startP < maxBtn)
+                startP = Math.max(0, endP - maxBtn);
             for (int p = startP; p < endP; p++) {
                 final int pg = p;
                 Button btn = new Button(String.valueOf(p + 1));
                 btn.getStyleClass().setAll("button", p == currentPage ? "page-btn-active" : "page-btn-normal");
-                btn.setOnAction(_ -> { currentPage = pg; renderPage(); });
+                btn.setOnAction(_ -> {
+                    currentPage = pg;
+                    renderPage();
+                });
                 pageButtonBox.getChildren().add(btn);
             }
         }
     }
 
-    @FXML public void goFirstPage() { currentPage = 0; renderPage(); }
-
-    @FXML public void goPrevPage() {
-        if (currentPage > 0) { currentPage--; renderPage(); }
+    @FXML
+    public void goFirstPage() {
+        currentPage = 0;
+        renderPage();
     }
 
-    @FXML public void goNextPage() {
+    @FXML
+    public void goPrevPage() {
+        if (currentPage > 0) {
+            currentPage--;
+            renderPage();
+        }
+    }
+
+    @FXML
+    public void goNextPage() {
         int totalPages = (int) Math.ceil((double) allUsersList.size() / PAGE_SIZE);
-        if (currentPage < totalPages - 1) { currentPage++; renderPage(); }
+        if (currentPage < totalPages - 1) {
+            currentPage++;
+            renderPage();
+        }
     }
 
-    @FXML public void goLastPage() {
+    @FXML
+    public void goLastPage() {
         int totalPages = Math.max(1, (int) Math.ceil((double) allUsersList.size() / PAGE_SIZE));
         currentPage = totalPages - 1;
         renderPage();
@@ -543,17 +620,20 @@ public class AdminController {
                     AuctionSummaryDTO[] arr = response.getPayloadAs(AuctionSummaryDTO[].class);
                     Platform.runLater(() -> {
                         allAuctionsList.clear();
-                        if (arr != null) Collections.addAll(allAuctionsList, arr);
+                        if (arr != null)
+                            Collections.addAll(allAuctionsList, arr);
                         aucCurrentPage = 0;
                         updateAucStats();
                         renderAucPage();
                     });
                 } else {
-                    Platform.runLater(() -> AlertUtils.showError("Lỗi kết nối", "Không thể tải danh sách phiên đấu giá từ máy chủ."));
+                    Platform.runLater(() -> AlertUtils.showError("Lỗi kết nối",
+                            "Không thể tải danh sách phiên đấu giá từ máy chủ."));
                 }
             } catch (Exception e) {
                 LOGGER.error("Gặp sự cố lỗi mạng khi thực thi yêu cầu GET_ALL_AUCTIONS", e);
-                Platform.runLater(() -> AlertUtils.showError("Lỗi kết nối", "Gặp sự cố lỗi mạng khi tải danh sách đấu giá."));
+                Platform.runLater(
+                        () -> AlertUtils.showError("Lỗi kết nối", "Gặp sự cố lỗi mạng khi tải danh sách đấu giá."));
             }
         });
     }
@@ -562,18 +642,24 @@ public class AdminController {
      * Cập nhật nhãn thống kê phiên đấu giá.
      */
     private void updateAucStats() {
-        long total    = allAuctionsList.size();
-        long running  = allAuctionsList.stream().filter(a -> "RUNNING".equalsIgnoreCase(a.getStatus())).count();
-        long open     = allAuctionsList.stream().filter(a -> "OPEN".equalsIgnoreCase(a.getStatus())).count();
+        long total = allAuctionsList.size();
+        long running = allAuctionsList.stream().filter(a -> "RUNNING".equalsIgnoreCase(a.getStatus())).count();
+        long open = allAuctionsList.stream().filter(a -> "OPEN".equalsIgnoreCase(a.getStatus())).count();
         long finished = allAuctionsList.stream().filter(a -> "FINISHED".equalsIgnoreCase(a.getStatus())).count();
-        long paid     = allAuctionsList.stream().filter(a -> "PAID".equalsIgnoreCase(a.getStatus())).count();
+        long paid = allAuctionsList.stream().filter(a -> "PAID".equalsIgnoreCase(a.getStatus())).count();
         long canceled = allAuctionsList.stream().filter(a -> "CANCELED".equalsIgnoreCase(a.getStatus())).count();
-        if (aucStatTotal    != null) aucStatTotal.setText(String.valueOf(total));
-        if (aucStatRunning  != null) aucStatRunning.setText(String.valueOf(running));
-        if (aucStatOpen     != null) aucStatOpen.setText(String.valueOf(open));
-        if (aucStatFinished != null) aucStatFinished.setText(String.valueOf(finished));
-        if (aucStatPaid     != null) aucStatPaid.setText(String.valueOf(paid));
-        if (aucStatCanceled != null) aucStatCanceled.setText(String.valueOf(canceled));
+        if (aucStatTotal != null)
+            aucStatTotal.setText(String.valueOf(total));
+        if (aucStatRunning != null)
+            aucStatRunning.setText(String.valueOf(running));
+        if (aucStatOpen != null)
+            aucStatOpen.setText(String.valueOf(open));
+        if (aucStatFinished != null)
+            aucStatFinished.setText(String.valueOf(finished));
+        if (aucStatPaid != null)
+            aucStatPaid.setText(String.valueOf(paid));
+        if (aucStatCanceled != null)
+            aucStatCanceled.setText(String.valueOf(canceled));
     }
 
     /**
@@ -582,7 +668,7 @@ public class AdminController {
     private void renderAucPage() {
         int totalPages = Math.max(1, (int) Math.ceil((double) allAuctionsList.size() / AUC_PAGE_SIZE));
         int from = aucCurrentPage * AUC_PAGE_SIZE;
-        int to   = Math.min(from + AUC_PAGE_SIZE, allAuctionsList.size());
+        int to = Math.min(from + AUC_PAGE_SIZE, allAuctionsList.size());
 
         auctionsList.clear();
         auctionsList.addAll(allAuctionsList.subList(from, to));
@@ -591,39 +677,60 @@ public class AdminController {
             aucLblPageInfo.setText("Trang " + (aucCurrentPage + 1) + " / " + totalPages
                     + "  (" + allAuctionsList.size() + " phiên)");
 
-        if (aucBtnFirst != null) aucBtnFirst.setDisable(aucCurrentPage == 0);
-        if (aucBtnPrev  != null) aucBtnPrev.setDisable(aucCurrentPage == 0);
-        if (aucBtnNext  != null) aucBtnNext.setDisable(aucCurrentPage >= totalPages - 1);
-        if (aucBtnLast  != null) aucBtnLast.setDisable(aucCurrentPage >= totalPages - 1);
+        if (aucBtnFirst != null)
+            aucBtnFirst.setDisable(aucCurrentPage == 0);
+        if (aucBtnPrev != null)
+            aucBtnPrev.setDisable(aucCurrentPage == 0);
+        if (aucBtnNext != null)
+            aucBtnNext.setDisable(aucCurrentPage >= totalPages - 1);
+        if (aucBtnLast != null)
+            aucBtnLast.setDisable(aucCurrentPage >= totalPages - 1);
 
         if (aucPageButtonBox != null) {
             aucPageButtonBox.getChildren().clear();
             int maxBtn = 5;
             int startP = Math.max(0, aucCurrentPage - maxBtn / 2);
-            int endP   = Math.min(totalPages, startP + maxBtn);
-            if (endP - startP < maxBtn) startP = Math.max(0, endP - maxBtn);
+            int endP = Math.min(totalPages, startP + maxBtn);
+            if (endP - startP < maxBtn)
+                startP = Math.max(0, endP - maxBtn);
             for (int p = startP; p < endP; p++) {
                 final int pg = p;
                 Button btn = new Button(String.valueOf(p + 1));
                 btn.getStyleClass().setAll("button", p == aucCurrentPage ? "page-btn-active" : "page-btn-normal");
-                btn.setOnAction(_ -> { aucCurrentPage = pg; renderAucPage(); });
+                btn.setOnAction(_ -> {
+                    aucCurrentPage = pg;
+                    renderAucPage();
+                });
                 aucPageButtonBox.getChildren().add(btn);
             }
         }
     }
 
-    @FXML public void aucGoFirstPage() { aucCurrentPage = 0; renderAucPage(); }
-
-    @FXML public void aucGoPrevPage() {
-        if (aucCurrentPage > 0) { aucCurrentPage--; renderAucPage(); }
+    @FXML
+    public void aucGoFirstPage() {
+        aucCurrentPage = 0;
+        renderAucPage();
     }
 
-    @FXML public void aucGoNextPage() {
+    @FXML
+    public void aucGoPrevPage() {
+        if (aucCurrentPage > 0) {
+            aucCurrentPage--;
+            renderAucPage();
+        }
+    }
+
+    @FXML
+    public void aucGoNextPage() {
         int totalPages = (int) Math.ceil((double) allAuctionsList.size() / AUC_PAGE_SIZE);
-        if (aucCurrentPage < totalPages - 1) { aucCurrentPage++; renderAucPage(); }
+        if (aucCurrentPage < totalPages - 1) {
+            aucCurrentPage++;
+            renderAucPage();
+        }
     }
 
-    @FXML public void aucGoLastPage() {
+    @FXML
+    public void aucGoLastPage() {
         int totalPages = Math.max(1, (int) Math.ceil((double) allAuctionsList.size() / AUC_PAGE_SIZE));
         aucCurrentPage = totalPages - 1;
         renderAucPage();
@@ -660,7 +767,8 @@ public class AdminController {
                     if (success) {
                         AlertUtils.showInfo("Thành công", "Đã khóa " + selectedUsers.size() + " người dùng được chọn.");
                     } else {
-                        AlertUtils.showError("Lỗi", errorMsg != null ? errorMsg : "Một số hoặc toàn bộ yêu cầu khóa tài khoản thất bại.");
+                        AlertUtils.showError("Lỗi",
+                                errorMsg != null ? errorMsg : "Một số hoặc toàn bộ yêu cầu khóa tài khoản thất bại.");
                     }
                     selectedUsersMap.clear();
                     loadUsers();
@@ -701,9 +809,11 @@ public class AdminController {
                 final String errorMsg = firstError;
                 Platform.runLater(() -> {
                     if (success) {
-                        AlertUtils.showInfo("Thành công", "Đã mở khóa " + selectedUsers.size() + " người dùng được chọn.");
+                        AlertUtils.showInfo("Thành công",
+                                "Đã mở khóa " + selectedUsers.size() + " người dùng được chọn.");
                     } else {
-                        AlertUtils.showError("Lỗi", errorMsg != null ? errorMsg : "Một số hoặc toàn bộ yêu cầu mở khóa tài khoản thất bại.");
+                        AlertUtils.showError("Lỗi", errorMsg != null ? errorMsg
+                                : "Một số hoặc toàn bộ yêu cầu mở khóa tài khoản thất bại.");
                     }
                     selectedUsersMap.clear();
                     loadUsers();
@@ -752,7 +862,9 @@ public class AdminController {
                         AlertUtils.showInfo("Thành công", "Đã đóng phiên đấu giá: " + auctionId);
                         loadAuctions();
                     } else {
-                        AlertUtils.showError("Lỗi", (response != null && response.getMessage() != null) ? response.getMessage() : "Lỗi không xác định");
+                        AlertUtils.showError("Lỗi",
+                                (response != null && response.getMessage() != null) ? response.getMessage()
+                                        : "Lỗi không xác định");
                     }
                 });
             } catch (Exception e) {
@@ -773,7 +885,9 @@ public class AdminController {
                         AlertUtils.showInfo("Thành công", "Đã hủy phiên đấu giá: " + auctionId);
                         loadAuctions();
                     } else {
-                        AlertUtils.showError("Lỗi", (response != null && response.getMessage() != null) ? response.getMessage() : "Lỗi không xác định");
+                        AlertUtils.showError("Lỗi",
+                                (response != null && response.getMessage() != null) ? response.getMessage()
+                                        : "Lỗi không xác định");
                     }
                 });
             } catch (Exception e) {
@@ -794,7 +908,9 @@ public class AdminController {
                         AlertUtils.showInfo("Thành công", "Đã đánh dấu Đã thanh toán cho phiên: " + auctionId);
                         loadAuctions();
                     } else {
-                        AlertUtils.showError("Lỗi", (response != null && response.getMessage() != null) ? response.getMessage() : "Lỗi không xác định");
+                        AlertUtils.showError("Lỗi",
+                                (response != null && response.getMessage() != null) ? response.getMessage()
+                                        : "Lỗi không xác định");
                     }
                 });
             } catch (Exception e) {
