@@ -256,10 +256,10 @@ class AutoBidServiceTest {
     }
 
     @Test
-    @DisplayName("TC-AUTO-CANCEL-03: Hủy khi chưa đăng ký → SUCCESS (queue null = đã xóa hoặc không có)")
+    @DisplayName("TC-AUTO-CANCEL-03: Hủy khi chưa đăng ký → NOT_FOUND")
     void cancel_notRegistered() {
       Response res = autoBidService.cancel("auc-001", "user-999");
-      assertEquals(ResponseStatus.SUCCESS, res.getStatus());
+      assertEquals(ResponseStatus.NOT_FOUND, res.getStatus());
     }
 
     @Test

@@ -578,11 +578,22 @@ public class AuctionDetailController implements AuctionEventObserver {
                 Response res = ClientSocketManager.getInstance()
                         .sendRequest(new Request(RequestType.CANCEL_AUTO_BID, auctionId));
                 Platform.runLater(() -> {
-                    if (res != null && res.getStatus() == ResponseStatus.SUCCESS) {
-                        paneAutoBidStatus.setVisible(false);
-                        paneAutoBidStatus.setManaged(false);
-                        paneAutoBidForm.setVisible(true);
-                        paneAutoBidForm.setManaged(true);
+                    if (res != null) {
+                        if (res.getStatus() == ResponseStatus.SUCCESS) {
+                            paneAutoBidStatus.setVisible(false);
+                            paneAutoBidStatus.setManaged(false);
+                            paneAutoBidForm.setVisible(true);
+                            paneAutoBidForm.setManaged(true);
+                        } else if (res.getStatus() == ResponseStatus.NOT_FOUND) {
+                            // Cập nhật lại UI nếu thực chất đã bị hủy từ trước
+                            paneAutoBidStatus.setVisible(false);
+                            paneAutoBidStatus.setManaged(false);
+                            paneAutoBidForm.setVisible(true);
+                            paneAutoBidForm.setManaged(true);
+                            AlertUtils.showWarning("Thông báo", res.getMessage());
+                        } else {
+                            AlertUtils.showWarning("Lỗi", res.getMessage());
+                        }
                     }
                 });
             } catch (Exception e) {
