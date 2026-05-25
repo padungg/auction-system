@@ -1,4 +1,4 @@
-# 🔨 HỆ THỐNG ĐẤU GIÁ TRỰC TUYẾN (UET Auction System)
+#  HỆ THỐNG ĐẤU GIÁ TRỰC TUYẾN (UET Auction System)
 
 [![Java Version](https://img.shields.io/badge/Java-25-orange.svg)](https://openjdk.org/projects/jdk/25/)
 [![JavaFX](https://img.shields.io/badge/JavaFX-22.0.1-blue.svg)](https://openjfx.io/)
@@ -8,7 +8,7 @@
 
 ---
 
-## 📖 MỤC LỤC
+##  MỤC LỤC
 1. [Mô tả ngắn gọn bài toán và phạm vi hệ thống](#1-mô-tả-ngắn-gọn-bài-toán-và-phạm-vi-hệ-thống)
 2. [Công nghệ sử dụng, môi trường chạy và yêu cầu cài đặt](#2-công-nghệ-sử-dụng-môi-trường-chạy-và-yêu-cầu-cài-đặt)
 3. [Cấu trúc thư mục hoặc các module chính](#3-cấu-trúc-thư-mục-hoặc-các-module-chính)
@@ -116,14 +116,14 @@ Dự án sử dụng hệ thống CI/CD (GitHub Actions) để tự động đó
 
 Hệ thống sử dụng cơ sở dữ liệu đám mây **Supabase PostgreSQL** đã được cấu hình sẵn dữ liệu mẫu. Người dùng không cần cài đặt SQL cục bộ, chỉ cần đảm bảo máy tính chạy Server **có kết nối mạng Internet**.
 
-### 💻 Bước 1: Khởi chạy Server (Chạy đầu tiên)
+### Bước 1: Khởi chạy Server (Chạy đầu tiên)
 1. Mở dòng lệnh (Terminal/Command Prompt) tại thư mục chứa file `.jar` đã tải về.
 2. Chạy lệnh sau để bật Server:
    ```bash
    java -cp auction-system-1.0-SNAPSHOT.jar com.auction.server.ServerApp
    ```
 
-### 👥 Bước 2: Khởi chạy Client (Giao diện người dùng)
+### Bước 2: Khởi chạy Client (Giao diện người dùng)
 Sau khi Server báo khởi động thành công, người dùng có thể mở nhiều Client song song để giả lập tình huống nhiều người tham gia đấu giá cùng lúc:
 1. Mở một cửa sổ dòng lệnh mới tại thư mục chứa file `.jar`.
 2. Chạy lệnh sau để khởi động Client:
@@ -131,18 +131,18 @@ Sau khi Server báo khởi động thành công, người dùng có thể mở n
    java -cp auction-system-1.0-SNAPSHOT.jar com.auction.client.ClientApp
    ```
 
-### 🔑 Bước 3: Đăng nhập và Trải nghiệm
+### Bước 3: Đăng nhập và Trải nghiệm
 Dự án đã chuẩn bị sẵn các tài khoản có sẵn dữ liệu mẫu để thử nghiệm ngay lập tức:
 * **Tài khoản Admin (Quản trị viên)**:
-  * Tên đăng nhập: `admin` | Mật khẩu: `123`
+  * Tên đăng nhập: `admin` | Mật khẩu: `123456`
 * **Tài khoản Thành viên (Đóng vai trò người mua/bán)**:
-  * Tên đăng nhập: `member` | Mật khẩu: `123`
+  * Tên đăng nhập: `member` | Mật khẩu: `123456`
 
 ---
 
 ## 6. Danh sách chức năng đã hoàn thành
 
-### 👤 Quản lý Người dùng & Phân quyền
+###  Quản lý Người dùng & Phân quyền
 - Đăng ký / Đăng nhập tài khoản an toàn.
 - Hệ thống phân vai trò (Roles) linh hoạt:
   - **Admin**: Quản lý toàn bộ hệ thống, người dùng và các phiên đấu giá.
@@ -151,24 +151,24 @@ Dự án đã chuẩn bị sẵn các tài khoản có sẵn dữ liệu mẫu �
 - Giao diện (GUI) JavaFX với các màn hình chuyên biệt cho từng tính năng.
 - Xem và cập nhật thông tin cá nhân (Profile).
 
-### 📦 Quản lý Sản phẩm & Phiên đấu giá
+###  Quản lý Sản phẩm & Phiên đấu giá
 - Quản lý sản phẩm: Thêm, sửa, xóa sản phẩm và thông tin phiên đấu giá.
 - Cung cấp đầy đủ thông tin: Tên, mô tả, giá khởi điểm, giá hiện tại, thời gian bắt đầu & kết thúc.
 - Khởi tạo các sản phẩm đặc thù (Điện tử, Nghệ thuật, Phương tiện) sử dụng mẫu thiết kế **Factory Method**.
 - Tải và lưu trữ ảnh sản phẩm trực tiếp (mã hóa Base64) xuống Database.
 
-### 💰 Tham gia Đấu giá
+###  Tham gia Đấu giá
 - Xem danh sách phiên đấu giá đang mở, lọc theo trạng thái và loại sản phẩm.
 - **Đặt giá thủ công (Manual Bidding)**: Người dùng đặt giá cao hơn giá hiện tại. Hệ thống kiểm tra tính hợp lệ của giá đấu và cập nhật người dẫn đầu phiên.
 - **Đấu giá tự động (Auto-Bidding) [Nâng cao]**: Thiết lập giá tối đa (`maxBid`) và bước giá (`increment`). Hệ thống tự động trả giá thay người dùng khi có đối thủ cạnh tranh, so sánh và ưu tiên người đăng ký trước, đảm bảo không vượt quá `maxBid`.
 
-### ⚡ Xử lý Thời gian thực & Kỹ thuật Nâng cao
+###  Xử lý Thời gian thực & Kỹ thuật Nâng cao
 - **Realtime Update (Observer/Socket) [Nâng cao]**: Toàn bộ client đang xem phiên được cập nhật ngay lập tức khi có bid mới, không sử dụng cơ chế polling gây nặng máy.
 - **Xử lý đấu giá đồng thời (Concurrent Bidding) [Nâng cao]**: Đảm bảo an toàn luồng (Thread-safe) khi nhiều bidder đặt giá cùng lúc. Giải quyết triệt để vấn đề *Lost update*, *Rollback* giá và cam kết không có tình trạng hai người cùng thắng.
-- **Gia hạn phiên đấu giá (Anti-sniping) [Nâng cao]**: Tự động kéo dài thời gian phiên (cộng thêm 120s) nếu có lượt đặt giá mới lọt vào 60 giây cuối cùng của phiên, đảm bảo cạnh tranh công bằng.
+- **Gia hạn phiên đấu giá (Anti-sniping) [Nâng cao]**: Tự động kéo dài thời gian phiên (cộng thêm 60s) nếu có lượt đặt giá mới lọt vào 30 giây cuối cùng của phiên, đảm bảo cạnh tranh công bằng.
 - **Bid History Visualization [Nâng cao]**: Hiển thị biểu đồ đường (Line chart) biến động giá đấu theo thời gian thực (Trục X: Timestamp, Trục Y: Giá hiện tại). Biểu đồ tự động cập nhật khi có bid hợp lệ mà không cần tải lại trang.
 
-### 🏁 Xử lý Kết thúc Phiên & Ngoại lệ
+###  Xử lý Kết thúc Phiên & Ngoại lệ
 - **Tự động kết thúc phiên**: Luồng quét ngầm tự động đóng phiên khi hết thời gian, xác định chính xác người thắng cuộc.
 - **Chuyển đổi trạng thái chặt chẽ**: `OPEN` → `RUNNING` → `FINISHED` → `PAID` / `CANCELED`.
 - **Bắt lỗi nghiệp vụ đấu giá**: Chặn đặt giá thấp hơn hoặc bằng giá hiện tại, chặn đặt giá chính mình, kiểm tra số dư ví (không đủ tiền không cho đấu giá), chặn hành vi đấu giá khi phiên chưa bắt đầu hoặc đã đóng.
@@ -176,18 +176,18 @@ Dự án đã chuẩn bị sẵn các tài khoản có sẵn dữ liệu mẫu �
 - **Kiểm soát kết nối mạng & Socket**: Xử lý an toàn các tình huống đứt mạng, rớt kết nối đột ngột (Connection Reset/Timeout). Server tự động bắt `IOException` và dọn dẹp (cleanup) các luồng Client rác.
 - **Xử lý ngoại lệ bảo mật**: Cảnh báo tài khoản/mật khẩu không chính xác, tự động từ chối các thao tác truy cập trái phép hoặc khi tài khoản đã bị Admin khóa (Banned).
 
-### 🛡️ Quản lý & Vận hành (Admin)
+###  Quản lý & Vận hành (Admin)
 - Xem danh sách toàn bộ các phiên đấu giá trên hệ thống.
 - Đóng phiên đấu giá thủ công trước thời hạn.
 - Hủy các phiên đấu giá vi phạm chính sách.
 - Quản lý thành viên: Xem danh sách, khóa / mở khóa tài khoản vi phạm.
 
-### 💳 Quản lý Ví điện tử & Thanh toán tự động
+###  Quản lý Ví điện tử & Thanh toán tự động
 - **Ví điện tử cá nhân**: Nạp tiền, rút tiền, kiểm tra số dư ví. Ràng buộc kiểm tra số dư thực tế trước khi cho phép đặt giá.
 - **Thanh toán tự động**: Thanh toán hóa đơn mua sản phẩm, hệ thống tự động trích tiền từ ví người mua chuyển sang ví người bán sau khi giao dịch thành công.
 - Xem lịch sử đặt giá thầu và lịch sử giao dịch hóa đơn.
 
-### 🛠️ Tiêu chuẩn kỹ thuật & Chất lượng code
+###  Tiêu chuẩn kỹ thuật & Chất lượng code
 - **Unit Test (JUnit 5)**: Kiểm thử độc lập logic nghiệp vụ (User, Auction, Bid, AutoBid) bằng DB Stub In-Memory.
 - **Coding Convention**: Sử dụng **Checkstyle** (Google Java Style Guide) để chuẩn hóa mã nguồn.
 - **Logging System**: Tích hợp **SLF4J & Logback Classic** ghi nhận vết hoạt động và hỗ trợ debug lỗi.
@@ -209,9 +209,8 @@ Dưới đây là bảng phân công công việc chi tiết của các thành v
 
 ---
 
-## 8. Link báo cáo PDF và video demo
+## 8. Tài liệu Báo cáo & Video Demo
 
-* **Tài liệu Báo cáo PDF**:
-  - Xem báo cáo trực tuyến trên Google Drive: **[Link Báo cáo Google Drive] (Chèn link Drive tại đây)**
+* **Tài liệu Báo cáo PDF**: [nhom10_baocao_auction-system_2526II_UET.CS2043_1.pdf](./nhom10_baocao_auction-system_2526II_UET.CS2043_1.pdf?raw=true)
+* **Thiết kế UML & Luồng hệ thống**: [UML_Auction_System.md](./UML_Auction_System.md)
 * **Video Demo Hệ thống**:
-  - Trình chiếu chi tiết tính năng vận hành: **[Link Video Demo Youtube] (Chèn link Youtube demo tại đây)**

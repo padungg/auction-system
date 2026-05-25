@@ -390,7 +390,7 @@ public class AuctionDetailController implements AuctionEventObserver {
             lblCdM.setText(String.format("%02d", (seconds % 3600) / 60));
             lblCdS.setText(String.format("%02d", seconds % 60));
 
-            if (seconds < 60) {
+            if (seconds < 30) {
                 paneAntiSnipe.setVisible(true);
                 paneAntiSnipe.setManaged(true);
             }

@@ -71,25 +71,25 @@ class AuctionUtilsTest {
   }
 
   @Test
-  @DisplayName("TC-UTILS-01: Còn <= 60s → gia hạn thêm 120s + cập nhật DB")
+  @DisplayName("TC-UTILS-01: Còn <= 30s → gia hạn thêm 60s + cập nhật DB")
   void applyAntiSnipe_withinWindow_extends() {
-    Auction auction = buildAuction(30); // còn 30 giây
+    Auction auction = buildAuction(15); // còn 15 giây
     LocalDateTime endBefore = auction.getEndTime();
     AuctionDAOStub daoStub = new AuctionDAOStub();
 
     AuctionUtils.applyAntiSnipe(auction, daoStub);
 
-    // endTime phải tăng thêm 120 giây
-    assertEquals(endBefore.plusSeconds(120), auction.getEndTime());
+    // endTime phải tăng thêm 60 giây
+    assertEquals(endBefore.plusSeconds(60), auction.getEndTime());
     // dao.update phải được gọi 1 lần
     assertEquals(1, daoStub.updateCount);
     assertEquals(auction, daoStub.lastUpdatedAuction);
   }
 
   @Test
-  @DisplayName("TC-UTILS-02: Còn đúng 60s → gia hạn")
+  @DisplayName("TC-UTILS-02: Còn đúng 30s → gia hạn")
   void applyAntiSnipe_exactlyAtThreshold() {
-    Auction auction = buildAuction(60);
+    Auction auction = buildAuction(30);
     AuctionDAOStub daoStub = new AuctionDAOStub();
 
     AuctionUtils.applyAntiSnipe(auction, daoStub);
@@ -98,9 +98,9 @@ class AuctionUtilsTest {
   }
 
   @Test
-  @DisplayName("TC-UTILS-03: Còn > 60s → KHÔNG gia hạn, KHÔNG gọi update")
+  @DisplayName("TC-UTILS-03: Còn > 30s → KHÔNG gia hạn, KHÔNG gọi update")
   void applyAntiSnipe_outsideWindow_noChange() {
-    Auction auction = buildAuction(120); // còn 2 phút
+    Auction auction = buildAuction(60); // còn 60 giây
     LocalDateTime endBefore = auction.getEndTime();
     AuctionDAOStub daoStub = new AuctionDAOStub();
 
@@ -126,18 +126,18 @@ class AuctionUtilsTest {
   }
 
   @Test
-  @DisplayName("TC-UTILS-05: Gia hạn 2 lần liên tiếp → mỗi lần tăng thêm 120s")
+  @DisplayName("TC-UTILS-05: Gia hạn 2 lần liên tiếp → mỗi lần tăng thêm 60s")
   void applyAntiSnipe_appliedTwice() {
-    Auction auction = buildAuction(30);
+    Auction auction = buildAuction(15);
     LocalDateTime t0 = auction.getEndTime();
     AuctionDAOStub daoStub = new AuctionDAOStub();
 
-    AuctionUtils.applyAntiSnipe(auction, daoStub); // t0 + 120
-    AuctionUtils.applyAntiSnipe(auction, daoStub); // endTime mới = t0+120, còn 150s > 60 → KHÔNG gia hạn lần 2
+    AuctionUtils.applyAntiSnipe(auction, daoStub); // t0 + 60
+    AuctionUtils.applyAntiSnipe(auction, daoStub); // endTime mới = t0+60, còn 75s > 30 → KHÔNG gia hạn lần 2
 
-    // Sau lần 1: endTime = t0 + 120 (giờ còn ~150s → ngoài threshold)
+    // Sau lần 1: endTime = t0 + 60 (giờ còn ~75s → ngoài threshold)
     // Sau lần 2: không thay đổi nữa
-    assertEquals(t0.plusSeconds(120), auction.getEndTime());
+    assertEquals(t0.plusSeconds(60), auction.getEndTime());
     assertEquals(1, daoStub.updateCount); // chỉ 1 lần update
   }
 }

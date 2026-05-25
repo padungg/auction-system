@@ -191,9 +191,9 @@ public class BidService {
         } catch (Exception ignored) {}
 
         // ANTI-SNIPING
-        AuctionUtils.applyAntiSnipe(auction, auctionDAO);
+        boolean isExtended = AuctionUtils.applyAntiSnipe(auction, auctionDAO);
         
-        String newEndTimeStr = auction.getEndTime() != null ? auction.getEndTime().toString() : null;
+        String newEndTimeStr = isExtended && auction.getEndTime() != null ? auction.getEndTime().toString() : null;
         // OBSERVER
         AuctionManager.getInstance().notifyBidUpdate(auction.getId(), bidAmount, bidderId, bidderName, itemName, bidTimeIso, newEndTimeStr);
 
