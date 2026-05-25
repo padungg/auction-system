@@ -77,7 +77,12 @@ public class BidService {
             if (LocalDateTime.now().isAfter(auction.getEndTime())) {
                 // Cập nhật DB trước để đảm bảo nhất quán dữ liệu
                 auction.setStatus(AuctionStatus.FINISHED);
-                auctionDAO.update(auction);
+                boolean success = auctionDAO.update(auction);
+                if (!success) {
+                    auction.setStatus(AuctionStatus.RUNNING); // rollback in memory
+                    return new Response(ResponseStatus.ERROR, "Lỗi máy chủ: Không thể đóng phiên đấu giá đã hết hạn trong Database", null);
+                }
+                AuctionService.updateCachedStatus(auctionId, AuctionStatus.FINISHED.name());
                 
                 // Dọn dẹp AutoBid queue để tránh Memory Leak
                 autoBidService.clearAuction(auctionId);
@@ -109,7 +114,10 @@ public class BidService {
             }
 
             // Cập nhập giá và winner cho Bid thủ công
-            applyBid(auction, bidderId, bidAmount, false);
+            boolean success = applyBid(auction, bidderId, bidAmount, false);
+            if (!success) {
+                return new Response(ResponseStatus.ERROR, "Lỗi máy chủ: Không thể lưu giá đặt mới vào Database", null);
+            }
 
             // AUTO-BID
             runAutoBids(auctionId);
@@ -136,7 +144,8 @@ public class BidService {
                 // Nếu AutoBid đẩy giá lên sau khi phiên đã đóng thời gian
                 if (LocalDateTime.now().isAfter(auction.getEndTime())) break;
 
-                applyBid(auction, nextBid.userId(), nextBid.bidAmount(), true);
+                boolean success = applyBid(auction, nextBid.userId(), nextBid.bidAmount(), true);
+                if (!success) break; // dừng chuỗi auto-bid nếu lỗi CSDL
                 rounds++;
             }
 
@@ -150,14 +159,20 @@ public class BidService {
      * Cập nhật thông tin phiên, lưu lịch sử và bắn thông báo.
      * Dùng chung cho cả đặt giá thủ công và tự động (Đảm bảo DRY).
      */
-    private void applyBid(Auction auction, String bidderId, double bidAmount, boolean isAutoBid) {
+    private boolean applyBid(Auction auction, String bidderId, double bidAmount, boolean isAutoBid) {
         double oldPrice = auction.getCurrentPrice();
+        String oldWinnerId = auction.getCurrentWinnerId();
+
         auction.setCurrentPrice(bidAmount);
         auction.setCurrentWinnerId(bidderId);
-        auctionDAO.update(auction);
         
-        // Cập nhật giá mới vào RAM Cache của Server để giảm tải CSDL
-        AuctionService.updateCachedPrice(auction.getId(), bidAmount);
+        if (!auctionDAO.update(auction)) {
+            // Khôi phục trạng thái bộ nhớ RAM
+            auction.setCurrentPrice(oldPrice);
+            auction.setCurrentWinnerId(oldWinnerId);
+            LOGGER.error("PLACE_BID_FAILED: Không thể cập nhật giá phiên đấu giá {} trong Database", auction.getId());
+            return false;
+        }
 
         // Lịch sử giao dịch
         BidTransaction transaction = new BidTransaction(
@@ -167,7 +182,10 @@ public class BidService {
                 bidAmount,
                 LocalDateTime.now(),
                 isAutoBid);
-        bidTransactionDAO.save(transaction); // Lưu lịch sử bid
+        if (!bidTransactionDAO.save(transaction)) {
+            // Ghi log cảnh báo nghiêm trọng nhưng không rollback đấu giá vì đã trúng thầu DB
+            LOGGER.error("PLACE_BID_WARNING: Không thể lưu lịch sử bid của bidder {} tại phiên {} vào Database", bidderId, auction.getId());
+        }
 
         String bidTimeIso = transaction.getBidTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
 
@@ -194,6 +212,17 @@ public class BidService {
         boolean isExtended = AuctionUtils.applyAntiSnipe(auction, auctionDAO);
         
         String newEndTimeStr = isExtended && auction.getEndTime() != null ? auction.getEndTime().toString() : null;
+        
+        // Đồng bộ toàn diện Cache
+        int newBidCount = 0;
+        try {
+            newBidCount = bidTransactionDAO.findByAuctionId(auction.getId()).size();
+        } catch (Exception e) {
+            LOGGER.error("Lỗi khi lấy số lượt bid của phiên {}", auction.getId(), e);
+        }
+        LocalDateTime newEndTime = isExtended ? auction.getEndTime() : null;
+        AuctionService.syncCacheOnBid(auction.getId(), bidAmount, bidderId, newBidCount, newEndTime);
+
         // OBSERVER
         AuctionManager.getInstance().notifyBidUpdate(auction.getId(), bidAmount, bidderId, bidderName, itemName, bidTimeIso, newEndTimeStr);
 
@@ -203,6 +232,7 @@ public class BidService {
                 bidderId,
                 String.format("%,.0f", oldPrice),
                 String.format("%,.0f", bidAmount));
+        return true;
     }
 
     /**

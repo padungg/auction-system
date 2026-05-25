@@ -26,7 +26,10 @@ public class ItemService {
         Item item = ItemFactory.createItemFromDTO(itemId, sellerId, condition, dto);
         item.setImageBase64(dto.getImageBase64());
 
-        itemDAO.save(item);
+        boolean success = itemDAO.save(item);
+        if (!success) {
+            throw new ValidationException("Lỗi máy chủ: Không thể lưu sản phẩm vào Database");
+        }
         return item;
     }
 
@@ -47,7 +50,10 @@ public class ItemService {
         }
 
         item.applyUpdate(dto);
-        itemDAO.update(item);
+        boolean success = itemDAO.update(item);
+        if (!success) {
+            throw new ValidationException("Lỗi máy chủ: Không thể cập nhật thông tin sản phẩm trong Database");
+        }
     }
 
     public void deleteItem(String itemId, String sellerId) throws ValidationException {
@@ -55,6 +61,9 @@ public class ItemService {
         if (item == null || !item.getSellerId().equals(sellerId)) {
             throw new ValidationException("Bạn không có quyền xóa sản phẩm này");
         }
-        itemDAO.delete(itemId);
+        boolean success = itemDAO.delete(itemId);
+        if (!success) {
+            throw new ValidationException("Lỗi máy chủ: Không thể xóa sản phẩm khỏi Database");
+        }
     }
 }

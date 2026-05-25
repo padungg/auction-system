@@ -143,6 +143,7 @@ public class CreateAuctionDTO {
     }
 
     private int durationHours;
+    private int durationMinutes;
     private double stepPrice;
     private String startTimeStr;
     private String imageBase64;
@@ -153,6 +154,14 @@ public class CreateAuctionDTO {
 
     public void setDurationHours(int durationHours) {
         this.durationHours = durationHours;
+    }
+
+    public int getDurationMinutes() {
+        return durationMinutes;
+    }
+
+    public void setDurationMinutes(int durationMinutes) {
+        this.durationMinutes = durationMinutes;
     }
 
     public double getStepPrice() {

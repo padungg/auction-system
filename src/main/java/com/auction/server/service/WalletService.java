@@ -95,7 +95,10 @@ public class WalletService {
                 user.setPassword(password);
             }
 
-            userDAO.update(user);
+            boolean success = userDAO.update(user);
+            if (!success) {
+                return new Response(ResponseStatus.ERROR, "Lỗi máy chủ: Không thể cập nhật thông tin hồ sơ trong Database", null);
+            }
             LOGGER.info("UPDATE_PROFILE: user={} | fullName={}", user.getUsername(), fullName);
             return new Response(ResponseStatus.SUCCESS, "Cập nhật hồ sơ thành công!", userMapper.toFullDTO(user));
         }
@@ -136,7 +139,17 @@ public class WalletService {
                 }
                 user.withdraw(amount);
             }
-            userDAO.update(user);
+
+            boolean success = userDAO.update(user);
+            if (!success) {
+                // Khôi phục bộ nhớ RAM
+                if (isDeposit) {
+                    user.withdraw(amount);
+                } else {
+                    user.deposit(amount);
+                }
+                return new Response(ResponseStatus.ERROR, "Lỗi máy chủ: Không thể cập nhật số dư trong Database", null);
+            }
 
             String action = isDeposit ? "DEPOSIT" : "WITHDRAW";
             String sign   = isDeposit ? "+" : "-";

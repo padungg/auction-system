@@ -20,20 +20,20 @@ public class BidTransactionDAOImpl implements BidTransactionDAO {
     @Override
     public boolean save(BidTransaction bid) {
         String sql = "INSERT INTO bid_transactions (id, bidder_id, auction_id, bid_amount, bid_time, is_auto_bid) " +
-                     "VALUES (?, ?, ?, ?, ?, ?)";
+                "VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setString(1, bid.getId());
             stmt.setString(2, bid.getBidderId());
             stmt.setString(3, bid.getAuctionId());
             stmt.setDouble(4, bid.getBidAmount());
             stmt.setTimestamp(5, Timestamp.valueOf(bid.getBidTime()));
-            stmt.setBoolean(6, false);
-            
+            stmt.setBoolean(6, bid.isAutoBid());
+
             int rowsAffected = stmt.executeUpdate();
             return rowsAffected > 0;
-            
+
         } catch (SQLException e) {
             LOGGER.error(">>> [BidTransactionDAO] Lỗi save: {}", e.getMessage(), e);
         }
@@ -45,8 +45,8 @@ public class BidTransactionDAOImpl implements BidTransactionDAO {
         List<BidTransaction> transactions = new ArrayList<>();
         String sql = "SELECT * FROM bid_transactions WHERE auction_id = ? ORDER BY bid_time ASC";
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setString(1, auctionId);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -54,13 +54,18 @@ public class BidTransactionDAOImpl implements BidTransactionDAO {
                     if (rs.getTimestamp("bid_time") != null) {
                         bidTime = rs.getTimestamp("bid_time").toLocalDateTime();
                     }
+                    boolean isAutoBid = false;
+                    try {
+                        isAutoBid = rs.getBoolean("is_auto_bid");
+                    } catch (SQLException e) {
+                    }
                     BidTransaction bid = new BidTransaction(
                             rs.getString("id"),
                             rs.getString("bidder_id"),
                             rs.getString("auction_id"),
                             rs.getDouble("bid_amount"),
-                            bidTime
-                    );
+                            bidTime,
+                            isAutoBid);
                     transactions.add(bid);
                 }
             }
@@ -75,7 +80,7 @@ public class BidTransactionDAOImpl implements BidTransactionDAO {
         List<BidTransaction> transactions = new ArrayList<>();
         String sql = "SELECT * FROM bid_transactions WHERE bidder_id = ? ORDER BY bid_time DESC";
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, bidderId);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -84,13 +89,18 @@ public class BidTransactionDAOImpl implements BidTransactionDAO {
                     if (rs.getTimestamp("bid_time") != null) {
                         bidTime = rs.getTimestamp("bid_time").toLocalDateTime();
                     }
+                    boolean isAutoBid = false;
+                    try {
+                        isAutoBid = rs.getBoolean("is_auto_bid");
+                    } catch (SQLException e) {
+                    }
                     BidTransaction bid = new BidTransaction(
                             rs.getString("id"),
                             rs.getString("bidder_id"),
                             rs.getString("auction_id"),
                             rs.getDouble("bid_amount"),
-                            bidTime
-                    );
+                            bidTime,
+                            isAutoBid);
                     transactions.add(bid);
                 }
             }

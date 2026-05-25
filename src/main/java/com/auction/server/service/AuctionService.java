@@ -35,11 +35,29 @@ public class AuctionService {
     private static boolean isCacheLoaded = false;
     private static final Object cacheLock = new Object();
 
-    public static void updateCachedPrice(String auctionId, double newPrice) {
-        if (isCacheLoaded && CACHE.containsKey(auctionId)) {
-            CACHE.get(auctionId).setCurrentPrice(newPrice);
+    public static void updateCachedStatus(String auctionId, String status) {
+        synchronized (cacheLock) {
+            if (isCacheLoaded && CACHE.containsKey(auctionId)) {
+                CACHE.get(auctionId).setStatus(status);
+            }
         }
     }
+
+    public static void syncCacheOnBid(String auctionId, double newPrice, String newWinnerId, int newBidCount,
+            LocalDateTime newEndTime) {
+        synchronized (cacheLock) {
+            if (isCacheLoaded && CACHE.containsKey(auctionId)) {
+                AuctionSummaryDTO dto = CACHE.get(auctionId);
+                dto.setCurrentPrice(newPrice);
+                dto.setCurrentWinnerId(newWinnerId);
+                dto.setBidCount(newBidCount);
+                if (newEndTime != null) {
+                    dto.setEndTime(newEndTime.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
+                }
+            }
+        }
+    }
+
     private final AuctionDAO auctionDAO;
     private final UserDAO userDAO;
     private final ItemService itemService;
@@ -67,7 +85,7 @@ public class AuctionService {
                 LOGGER.info("DB_FETCH: Đã tải {} phiên đấu giá vào RAM Cache", CACHE.size());
             }
         }
-        
+
         List<AuctionSummaryDTO> summaryList = new ArrayList<>(CACHE.values());
         LOGGER.info("GET_ALL: {} phiên đang mở (Từ Cache)", summaryList.size());
         return new Response(ResponseStatus.SUCCESS, "Lấy danh sách thành công", summaryList);
@@ -91,8 +109,9 @@ public class AuctionService {
         if (dto.getStepPrice() <= 0) {
             return new Response(ResponseStatus.BAD_REQUEST, "Bước giá tối thiểu phải lớn hơn 0", null);
         }
-        if (dto.getDurationHours() <= 0) {
-            return new Response(ResponseStatus.BAD_REQUEST, "Thời gian đấu giá phải lớn hơn 0 giờ", null);
+        if (dto.getDurationHours() < 0 || dto.getDurationMinutes() < 0
+                || (dto.getDurationHours() == 0 && dto.getDurationMinutes() == 0)) {
+            return new Response(ResponseStatus.BAD_REQUEST, "Thời gian đấu giá phải lớn hơn 0", null);
         }
 
         LocalDateTime startTime = LocalDateTime.now();
@@ -115,7 +134,7 @@ public class AuctionService {
             }
         }
 
-        LocalDateTime endTime = startTime.plusHours(dto.getDurationHours());
+        LocalDateTime endTime = startTime.plusHours(dto.getDurationHours()).plusMinutes(dto.getDurationMinutes());
         if (!endTime.isAfter(startTime)) {
             return new Response(ResponseStatus.BAD_REQUEST, "Thời gian kết thúc phải sau thời gian bắt đầu", null);
         }
@@ -138,7 +157,10 @@ public class AuctionService {
             auction.setStatus(AuctionStatus.RUNNING);
         }
 
-        auctionDAO.save(auction);
+        boolean success = auctionDAO.save(auction);
+        if (!success) {
+            return new Response(ResponseStatus.ERROR, "Lỗi máy chủ: Không thể lưu phiên đấu giá vào Database", null);
+        }
 
         AuctionSummaryDTO result = auctionMapper.toSummaryDTO(auction);
         synchronized (cacheLock) {
@@ -146,7 +168,7 @@ public class AuctionService {
                 CACHE.put(auction.getId(), result);
             }
         }
-        
+
         LOGGER.info("CREATE: item={} | loại={} | giá khởi={} VNĐ | auctionId={}",
                 item.getName(), dto.getItemType(), String.format("%,.0f", dto.getStartingPrice()), auction.getId());
         return new Response(ResponseStatus.SUCCESS, "Tạo phiên đấu giá thành công!", result);
@@ -169,7 +191,10 @@ public class AuctionService {
             }
 
             auction.setStatus(AuctionStatus.FINISHED);
-            auctionDAO.update(auction);
+            boolean success = auctionDAO.update(auction);
+            if (!success) {
+                return new Response(ResponseStatus.ERROR, "Lỗi máy chủ: Không thể cập nhật trạng thái phiên", null);
+            }
 
             synchronized (cacheLock) {
                 if (isCacheLoaded && CACHE.containsKey(auctionId)) {
@@ -220,7 +245,10 @@ public class AuctionService {
             if (dto.getStartingPrice() > 0) {
                 auction.setCurrentPrice(dto.getStartingPrice());
             }
-            auctionDAO.update(auction);
+            boolean success = auctionDAO.update(auction);
+            if (!success) {
+                return new Response(ResponseStatus.ERROR, "Lỗi máy chủ: Không thể cập nhật phiên đấu giá", null);
+            }
 
             synchronized (cacheLock) {
                 if (isCacheLoaded) {
@@ -234,40 +262,59 @@ public class AuctionService {
     }
 
     public Response deleteAuctionItem(String auctionId, String sellerId) throws ValidationException {
-        Auction auction = validateAndGetAuction(auctionId);
-        if (auction.getCurrentWinnerId() != null) {
-            return new Response(ResponseStatus.BAD_REQUEST, "Không thể xóa sản phẩm đã có người đặt giá", null);
-        }
-
-        itemService.deleteItem(auction.getItemId(), sellerId);
-        auctionDAO.delete(auction.getId());
-
-        synchronized (cacheLock) {
-            if (isCacheLoaded) {
-                CACHE.remove(auction.getId());
+        Object lock = com.auction.server.util.LockManager.getAuctionLock(auctionId);
+        synchronized (lock) {
+            Auction auction = validateAndGetAuction(auctionId);
+            if (auction.getCurrentWinnerId() != null) {
+                return new Response(ResponseStatus.BAD_REQUEST, "Không thể xóa sản phẩm đã có người đặt giá", null);
             }
+
+            itemService.deleteItem(auction.getItemId(), sellerId);
+            boolean success = auctionDAO.delete(auction.getId());
+            if (!success) {
+                return new Response(ResponseStatus.ERROR, "Lỗi máy chủ: Không thể xóa phiên đấu giá", null);
+            }
+
+            synchronized (cacheLock) {
+                if (isCacheLoaded) {
+                    CACHE.remove(auction.getId());
+                }
+            }
+
+            // Tránh memory leak
+            com.auction.server.util.LockManager.removeAuctionLock(auctionId);
+
+            LOGGER.info("DELETE: auctionId={} by seller={}", auction.getId(), sellerId);
+            return new Response(ResponseStatus.SUCCESS, "Xóa sản phẩm thành công!", null);
         }
-
-        // Tránh memory leak
-        com.auction.server.util.LockManager.removeAuctionLock(auctionId);
-
-        LOGGER.info("DELETE: auctionId={} by seller={}", auction.getId(), sellerId);
-        return new Response(ResponseStatus.SUCCESS, "Xóa sản phẩm thành công!", null);
     }
 
     // ADMIN OPERATIONS
 
     public Response adminCancelAuction(String auctionId) throws ValidationException {
-        Auction auction = validateAndGetAuction(auctionId);
-        auction.setStatus(AuctionStatus.CANCELED);
-        auctionDAO.update(auction);
-        synchronized (cacheLock) {
-            if (isCacheLoaded && CACHE.containsKey(auctionId)) {
-                CACHE.get(auctionId).setStatus(AuctionStatus.CANCELED.name());
+        Object lock = com.auction.server.util.LockManager.getAuctionLock(auctionId);
+        synchronized (lock) {
+            Auction auction = validateAndGetAuction(auctionId);
+            auction.setStatus(AuctionStatus.CANCELED);
+            boolean success = auctionDAO.update(auction);
+            if (!success) {
+                return new Response(ResponseStatus.ERROR, "Lỗi máy chủ: Không thể hủy phiên đấu giá", null);
             }
+            synchronized (cacheLock) {
+                if (isCacheLoaded && CACHE.containsKey(auctionId)) {
+                    CACHE.get(auctionId).setStatus(AuctionStatus.CANCELED.name());
+                }
+            }
+
+            // Dọn dẹp AutoBid queue để tránh Memory Leak
+            autoBidService.clearAuction(auctionId);
+
+            // Tránh memory leak trong LockManager
+            com.auction.server.util.LockManager.removeAuctionLock(auctionId);
+
+            LOGGER.info("ADMIN_CANCEL_AUCTION: auctionId={}", auctionId);
+            return new Response(ResponseStatus.SUCCESS, "Đã hủy phiên đấu giá thành công!", null);
         }
-        LOGGER.info("ADMIN_CANCEL_AUCTION: auctionId={}", auctionId);
-        return new Response(ResponseStatus.SUCCESS, "Đã hủy phiên đấu giá thành công!", null);
     }
 
     public Response adminMarkPaid(String auctionId) throws ValidationException {
@@ -276,7 +323,11 @@ public class AuctionService {
             return new Response(ResponseStatus.BAD_REQUEST, "Chỉ có thể đánh dấu PAID cho phiên đã kết thúc", null);
         }
         auction.setStatus(AuctionStatus.PAID);
-        auctionDAO.update(auction);
+        boolean success = auctionDAO.update(auction);
+        if (!success) {
+            auction.setStatus(AuctionStatus.FINISHED); // rollback memory
+            return new Response(ResponseStatus.ERROR, "Lỗi máy chủ: Không thể đánh dấu PAID cho phiên đấu giá trong Database", null);
+        }
         synchronized (cacheLock) {
             if (isCacheLoaded && CACHE.containsKey(auctionId)) {
                 CACHE.get(auctionId).setStatus(AuctionStatus.PAID.name());

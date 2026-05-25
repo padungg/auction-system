@@ -115,7 +115,7 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public boolean update(User user) {
         String sql = "UPDATE users SET email = ?, full_name = ?, phone = ?, address = ?, " +
-                     "is_active = ?, role = ?, balance = ?, store_name = ?, rating = ? WHERE id = ?";
+                     "is_active = ?, role = ?, balance = ?, store_name = ?, rating = ?, password = ? WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -128,7 +128,8 @@ public class UserDAOImpl implements UserDAO {
             stmt.setDouble(7,  user.getBalance());
             stmt.setString(8,  user.getStoreName());
             stmt.setDouble(9,  user.getRating());
-            stmt.setString(10, user.getId());
+            stmt.setString(10, user.getPassword());
+            stmt.setString(11, user.getId());
 
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {

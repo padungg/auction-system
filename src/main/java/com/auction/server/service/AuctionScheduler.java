@@ -86,9 +86,15 @@ public class AuctionScheduler {
                             Auction currentAuction = auctionDAO.findById(auction.getId());
                             if (currentAuction != null && currentAuction.getStatus() == AuctionStatus.OPEN) {
                                 currentAuction.setStatus(AuctionStatus.RUNNING);
-                                auctionDAO.update(currentAuction);
-                                startedCount++;
-                                LOGGER.info("SCHEDULER: Phiên đấu giá {} bắt đầu hoạt động (RUNNING).", currentAuction.getId());
+                                boolean success = auctionDAO.update(currentAuction);
+                                if (success) {
+                                    AuctionService.updateCachedStatus(currentAuction.getId(), AuctionStatus.RUNNING.name());
+                                    startedCount++;
+                                    LOGGER.info("SCHEDULER: Phiên đấu giá {} bắt đầu hoạt động (RUNNING).", currentAuction.getId());
+                                } else {
+                                    currentAuction.setStatus(AuctionStatus.OPEN); // rollback memory
+                                    LOGGER.error("SCHEDULER: Không thể cập nhật trạng thái RUNNING cho phiên {} trong Database.", currentAuction.getId());
+                                }
                             }
                         } catch (Exception e) {
                             LOGGER.error("Lỗi khi chuyển trạng thái phiên đấu giá sang RUNNING: {}", auction.getId(), e);

@@ -147,7 +147,11 @@ public class UserService {
                 return new Response(ResponseStatus.NOT_FOUND, "Không tìm thấy người dùng", null);
             }
             user.setActive(status);
-            userDAO.update(user);
+            boolean success = userDAO.update(user);
+            if (!success) {
+                user.setActive(!status); // rollback memory
+                return new Response(ResponseStatus.ERROR, "Lỗi máy chủ: Không thể cập nhật trạng thái người dùng trong Database", null);
+            }
             LOGGER.info("{}: {}", logAction, user.getUsername());
             return new Response(ResponseStatus.SUCCESS, successMsg + user.getUsername(), null);
         }

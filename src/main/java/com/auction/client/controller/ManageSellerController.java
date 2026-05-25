@@ -42,6 +42,7 @@ public class ManageSellerController {
     @FXML private ComboBox<String> cbType;
     @FXML private TextField txtPrice;
     @FXML private TextField txtDurationHours;
+    @FXML private TextField txtDurationMinutes;
     @FXML private TextField txtStepPrice;
     @FXML private DatePicker dpStartDate;
     @FXML private ComboBox<String> cbStartHour;
@@ -383,16 +384,20 @@ public class ManageSellerController {
      */
     @FXML
     void handleCreate() {
+        boolean emptyHours = txtDurationHours.getText().trim().isEmpty();
+        boolean emptyMinutes = txtDurationMinutes == null || txtDurationMinutes.getText().trim().isEmpty();
+
         if (txtName.getText().trim().isEmpty() || txtPrice.getText().trim().isEmpty() ||
-                txtDurationHours.getText().trim().isEmpty() || txtStepPrice.getText().trim().isEmpty() || cbType.getValue() == null) {
-            AlertUtils.showError("Lỗi", "Vui lòng nhập đủ các trường có dấu *");
+                (emptyHours && emptyMinutes) || txtStepPrice.getText().trim().isEmpty() || cbType.getValue() == null) {
+            AlertUtils.showError("Lỗi", "Vui lòng nhập đủ các trường có dấu * (Cần ít nhất Giờ hoặc Phút)");
             return;
         }
 
         try {
             double price = Double.parseDouble(txtPrice.getText().trim());
             double stepPrice = Double.parseDouble(txtStepPrice.getText().trim());
-            int durationHours = Integer.parseInt(txtDurationHours.getText().trim());
+            int durationHours = emptyHours ? 0 : Integer.parseInt(txtDurationHours.getText().trim());
+            int durationMinutes = emptyMinutes ? 0 : Integer.parseInt(txtDurationMinutes.getText().trim());
 
             if (price <= 0) {
                 AlertUtils.showError("Lỗi", "Giá khởi điểm phải là số dung!");
@@ -402,8 +407,8 @@ public class ManageSellerController {
                 AlertUtils.showError("Lỗi", "Bước giá tối thiểu phải là số dương!");
                 return;
             }
-            if (durationHours <= 0) {
-                AlertUtils.showError("Lỗi", "Thời hạn đấu giá phải lớn hơn 0 giờ!");
+            if (durationHours < 0 || durationMinutes < 0 || (durationHours == 0 && durationMinutes == 0)) {
+                AlertUtils.showError("Lỗi", "Thời hạn đấu giá phải lớn hơn 0!");
                 return;
             }
 
@@ -433,6 +438,7 @@ public class ManageSellerController {
             dto.setStartingPrice(price);
             dto.setStepPrice(stepPrice);
             dto.setDurationHours(durationHours);
+            dto.setDurationMinutes(durationMinutes);
             dto.setStartTimeStr(startTimeStr);
             dto.setImageBase64(this.imageBase64);
             dto.setCondition(cbCondition.getValue() != null ? cbCondition.getValue() : "Mới");
@@ -496,6 +502,7 @@ public class ManageSellerController {
         cbType.setValue(null);
         txtPrice.clear();
         txtDurationHours.clear();
+        if (txtDurationMinutes != null) txtDurationMinutes.clear();
         txtStepPrice.clear();
         if (dpStartDate != null) dpStartDate.setValue(null);
         if (cbStartHour != null) cbStartHour.setValue("00");

@@ -78,8 +78,11 @@
             </VBox>
             
             <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="2">
-                <Label text="Thời hạn đấu giá (giờ) *" styleClass="form-label"/>
-                <TextField fx:id="txtDurationHours" promptText="Ví dụ: 2" styleClass="form-input"/>
+                <Label text="Thời hạn đấu giá *" styleClass="form-label"/>
+                <HBox spacing="8">
+                    <TextField fx:id="txtDurationHours" promptText="Giờ (VD: 2)" styleClass="form-input" HBox.hgrow="ALWAYS"/>
+                    <TextField fx:id="txtDurationMinutes" promptText="Phút (VD: 30)" styleClass="form-input" HBox.hgrow="ALWAYS"/>
+                </HBox>
             </VBox>
             
             <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="2">

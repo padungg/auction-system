@@ -19,7 +19,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Xử lý Auto-Bid (Đặt giá tự động)
- * - Thread-safe: Các method public được synchronized. Lock order: BidService -> AutoBidService.
+ * - Thread-safe: Các method public được synchronized. Lock order: BidService ->
+ * AutoBidService.
  * - Anti-loop: Giới hạn MAX_ROUNDS = 50 lần tự động phản giá liên tiếp.
  */
 public class AutoBidService {
@@ -101,15 +102,34 @@ public class AutoBidService {
             PriorityQueue<AutoBidEntry> queue = registry.computeIfAbsent(
                     dto.getAuctionId(), ignored -> new PriorityQueue<>());
 
-            // Nếu user đã đăng ký → xóa entry cũ trước (để ghi đè)
-            queue.removeIf(e -> e.getUserId().equals(userId));
+            // Tìm entry cũ nếu có (để có thể khôi phục nếu lưu DB lỗi)
+            AutoBidEntry oldEntry = null;
+            for (AutoBidEntry e : queue) {
+                if (e.getUserId().equals(userId)) {
+                    oldEntry = e;
+                    break;
+                }
+            }
 
-            // Thêm entry mới
+            // Tạo entry mới
             AutoBidEntry newEntry = new AutoBidEntry(userId, dto.getAuctionId(), dto.getMaxBid(), dto.getIncrement());
-            queue.add(newEntry);
 
-            // Lưu vào DB
-            autoBidDAO.save(newEntry);
+            // Lưu vào DB trước!
+            boolean saved = autoBidDAO.save(newEntry);
+            if (!saved) {
+                // Dọn dẹp hàng chờ trống nếu vừa tạo mới
+                if (queue.isEmpty()) {
+                    registry.remove(dto.getAuctionId());
+                }
+                return new Response(ResponseStatus.ERROR, "Lỗi máy chủ: Không thể lưu đăng ký auto-bid vào Database",
+                        null);
+            }
+
+            // DB lưu thành công mới cập nhật bộ nhớ RAM
+            if (oldEntry != null) {
+                queue.remove(oldEntry);
+            }
+            queue.add(newEntry);
 
             LOGGER.info("REGISTER: phiên={} | user={} | maxBid={} | increment={} | tổng auto-bidder={}",
                     dto.getAuctionId(),
@@ -140,14 +160,37 @@ public class AutoBidService {
         Object lock = com.auction.server.util.LockManager.getAuctionLock(auctionId);
         synchronized (lock) {
             PriorityQueue<AutoBidEntry> queue = registry.get(auctionId);
-            if (queue == null || queue.removeIf(e -> e.getUserId().equals(userId))) {
-                if (queue != null && queue.isEmpty())
-                    registry.remove(auctionId);
-                autoBidDAO.delete(auctionId, userId);
-                LOGGER.info("CANCEL: phiên={} | user={}", auctionId, userId);
-                return new Response(ResponseStatus.SUCCESS, "Đã hủy đăng ký auto-bid", null);
+            if (queue == null) {
+                return new Response(ResponseStatus.NOT_FOUND, "Bạn chưa đăng ký auto-bid cho phiên này", null);
             }
-            return new Response(ResponseStatus.NOT_FOUND, "Bạn chưa đăng ký auto-bid cho phiên này", null);
+
+            AutoBidEntry target = null;
+            for (AutoBidEntry e : queue) {
+                if (e.getUserId().equals(userId)) {
+                    target = e;
+                    break;
+                }
+            }
+
+            if (target == null) {
+                return new Response(ResponseStatus.NOT_FOUND, "Bạn chưa đăng ký auto-bid cho phiên này", null);
+            }
+
+            // Xóa trong DB trước!
+            boolean deleted = autoBidDAO.delete(auctionId, userId);
+            if (!deleted) {
+                return new Response(ResponseStatus.ERROR, "Lỗi máy chủ: Không thể hủy đăng ký auto-bid trong Database",
+                        null);
+            }
+
+            // DB thành công mới giải phóng bộ nhớ RAM!
+            queue.remove(target);
+            if (queue.isEmpty()) {
+                registry.remove(auctionId);
+            }
+
+            LOGGER.info("CANCEL: phiên={} | user={}", auctionId, userId);
+            return new Response(ResponseStatus.SUCCESS, "Đã hủy đăng ký auto-bid", null);
         }
     }
 
@@ -158,9 +201,13 @@ public class AutoBidService {
     public void clearAuction(String auctionId) {
         Object lock = com.auction.server.util.LockManager.getAuctionLock(auctionId);
         synchronized (lock) {
-            registry.remove(auctionId);
-            autoBidDAO.deleteByAuctionId(auctionId);
-            LOGGER.info("CLEAR: đã xóa auto-bid của phiên={}", auctionId);
+            boolean success = autoBidDAO.deleteByAuctionId(auctionId);
+            if (success) {
+                registry.remove(auctionId);
+                LOGGER.info("CLEAR: đã xóa auto-bid của phiên={}", auctionId);
+            } else {
+                LOGGER.error("CLEAR: không thể xóa auto-bid của phiên={} trong Database", auctionId);
+            }
         }
     }
 
@@ -170,7 +217,8 @@ public class AutoBidService {
      * Kích hoạt vòng tự động phản giá sau khi có bid mới.
      * Được gọi bởi BidService.placeBid() — đã nằm trong synchronized context.
      */
-    public record NextAutoBid(String userId, double bidAmount) {}
+    public record NextAutoBid(String userId, double bidAmount) {
+    }
 
     /**
      * Tính toán xem ai là người auto-bid tiếp theo và giá là bao nhiêu.

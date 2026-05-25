@@ -121,11 +121,8 @@ public class PaymentService {
         }
 
         // Tìm sellerId từ Item để khóa
-        String sellerId = null;
         Item item = itemDAO.findById(auction.getItemId());
-        if (item != null) {
-            sellerId = item.getSellerId();
-        }
+        final String sellerId = (item != null) ? item.getSellerId() : null;
 
         // Tìm adminId để khóa
         User admin = userDAO.findFirstByRole(com.auction.model.entity.UserRole.ADMIN);
@@ -168,12 +165,46 @@ public class PaymentService {
                         null);
             }
 
-            // Thực hiện giao dịch tài chính
-            processPaymentTransaction(user, basePrice, platformFee, totalRequired, lockedAuction.getItemId());
+            // Thực hiện giao dịch tài chính với cơ chế Rollback thủ công
+            boolean txSuccess = processPaymentTransaction(user, basePrice, platformFee, totalRequired, lockedAuction.getItemId());
+            if (!txSuccess) {
+                return new Response(ResponseStatus.ERROR, "Lỗi máy chủ: Không thể xử lý giao dịch tài chính trong Database", null);
+            }
 
             // Chuyển status sang PAID
             lockedAuction.setStatus(AuctionStatus.PAID);
-            auctionDAO.update(lockedAuction);
+            boolean auctionSuccess = auctionDAO.update(lockedAuction);
+            if (!auctionSuccess) {
+                LOGGER.error("PAY_FAILED: Không thể cập nhật trạng thái đấu giá thành PAID cho phiên {}. Đang hoàn tiền cho các bên...", auctionId);
+
+                // 1. Hoàn tiền cho buyer
+                user.deposit(totalRequired);
+                userDAO.update(user);
+
+                // 2. Trừ tiền seller
+                if (sellerId != null) {
+                    User sellerObj = userDAO.findById(sellerId);
+                    if (sellerObj != null) {
+                        sellerObj.withdraw(basePrice);
+                        userDAO.update(sellerObj);
+                    }
+                }
+
+                // 3. Trừ tiền admin
+                if (adminId != null) {
+                    User adminObj = userDAO.findById(adminId);
+                    if (adminObj != null) {
+                        adminObj.withdraw(platformFee);
+                        userDAO.update(adminObj);
+                    }
+                }
+
+                // Khôi phục trạng thái đối tượng trong RAM
+                lockedAuction.setStatus(AuctionStatus.FINISHED);
+                return new Response(ResponseStatus.ERROR, "Lỗi máy chủ: Không thể cập nhật trạng thái thanh toán của phiên đấu giá trong Database", null);
+            }
+
+            AuctionService.updateCachedStatus(auctionId, AuctionStatus.PAID.name());
 
             LOGGER.info("PAY_AUCTION: auctionId={} | buyer={} | giá={} | phí={} | tổng={} VNĐ",
                     auctionId, userId, String.format("%,.0f", basePrice), String.format("%,.0f", platformFee), String.format("%,.0f", totalRequired));
@@ -184,32 +215,56 @@ public class PaymentService {
     }
 
     /**
-     * Xử lý giao dịch
+     * Xử lý giao dịch với rollback thủ công (Manual Transaction Compensation) để bảo toàn số dư nếu DB lỗi nửa chừng.
      */
-    private void processPaymentTransaction(User buyer, double basePrice, double platformFee, double totalRequired, String itemId) {
-        // Trừ tiền buyer
+    private boolean processPaymentTransaction(User buyer, double basePrice, double platformFee, double totalRequired, String itemId) {
+        // 1. Trừ tiền buyer
         buyer.withdraw(totalRequired);
-        userDAO.update(buyer);
+        if (!userDAO.update(buyer)) {
+            buyer.deposit(totalRequired); // rollback memory
+            LOGGER.error("PAY_FAILED: Không thể trừ tiền buyer {} trong Database", buyer.getUsername());
+            return false;
+        }
 
-        // Cộng tiền cho seller
+        // 2. Cộng tiền cho seller
         Item item = itemDAO.findById(itemId);
+        User seller = null;
         if (item != null && item.getSellerId() != null) {
-            User seller = userDAO.findById(item.getSellerId());
+            seller = userDAO.findById(item.getSellerId());
             if (seller != null) {
                 seller.deposit(basePrice);
-                userDAO.update(seller);
+                if (!userDAO.update(seller)) {
+                    LOGGER.error("PAY_FAILED: Không thể cộng tiền cho seller {} trong Database. Đang tiến hành rollback buyer...", seller.getUsername());
+                    // Rollback buyer
+                    buyer.deposit(totalRequired);
+                    userDAO.update(buyer);
+                    return false;
+                }
                 LOGGER.info("PAY: seller={} +{} VNĐ", seller.getUsername(), String.format("%,.0f", basePrice));
             }
         }
 
-        // Cộng phí cho Admin
+        // 3. Cộng phí cho Admin
         User admin = userDAO.findFirstByRole(com.auction.model.entity.UserRole.ADMIN);
         if (admin != null) {
             admin.deposit(platformFee);
-            userDAO.update(admin);
+            if (!userDAO.update(admin)) {
+                LOGGER.error("PAY_FAILED: Không thể cộng phí cho admin {} trong Database. Đang tiến hành rollback buyer và seller...", admin.getUsername());
+                // Rollback seller
+                if (seller != null) {
+                    seller.withdraw(basePrice);
+                    userDAO.update(seller);
+                }
+                // Rollback buyer
+                buyer.deposit(totalRequired);
+                userDAO.update(buyer);
+                return false;
+            }
             LOGGER.info("PAY: admin={} +{} VNĐ (phí {}%)", admin.getUsername(), String.format("%,.0f", platformFee), PLATFORM_FEE_PERCENTAGE * 100);
         } else {
             LOGGER.warn("Không tìm thấy Admin để nhận phí!");
         }
+
+        return true;
     }
 }
