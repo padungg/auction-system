@@ -171,6 +171,7 @@ Dự án đã chuẩn bị sẵn các tài khoản có sẵn dữ liệu mẫu �
 ###  Xử lý Kết thúc Phiên & Ngoại lệ
 - **Tự động kết thúc phiên**: Luồng quét ngầm tự động đóng phiên khi hết thời gian, xác định chính xác người thắng cuộc.
 - **Chuyển đổi trạng thái chặt chẽ**: `OPEN` → `RUNNING` → `FINISHED` → `PAID` / `CANCELED`.
+- **An toàn Giao dịch & Rollback (Fault Tolerance)**: Hệ thống xử lý hoàn hảo các sự cố khi lưu Database (Manual Compensation Rollback). Khôi phục tự động bộ nhớ đệm (RAM Cache) nếu lưu dữ liệu đặt giá thất bại và đảo ngược các giao dịch tài chính (hoàn tiền) nếu thanh toán bị lỗi giữa chừng, đảm bảo không thất thoát tiền hay sai lệch dữ liệu.
 - **Bắt lỗi nghiệp vụ đấu giá**: Chặn đặt giá thấp hơn hoặc bằng giá hiện tại, chặn đặt giá chính mình, kiểm tra số dư ví (không đủ tiền không cho đấu giá), chặn hành vi đấu giá khi phiên chưa bắt đầu hoặc đã đóng.
 - **Bảo vệ toàn vẹn dữ liệu**: Validate chặt chẽ Form dữ liệu đầu vào (kiểm tra rỗng, sai định dạng chữ/số), đảm bảo hệ thống không bị crash (văng ứng dụng) khi người dùng thao tác sai.
 - **Kiểm soát kết nối mạng & Socket**: Xử lý an toàn các tình huống đứt mạng, rớt kết nối đột ngột (Connection Reset/Timeout). Server tự động bắt `IOException` và dọn dẹp (cleanup) các luồng Client rác.

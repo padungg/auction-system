@@ -380,7 +380,7 @@ classDiagram
 | **`LoginDTO`** | username, password | Đóng gói thông tin đăng nhập từ Client lên Server. |
 | **`RegisterDTO`** | username, password, email, fullName, phone, address, storeName | Đóng gói thông tin đăng ký tài khoản thành viên mới. |
 | **`UserResponseDTO`** | id, username, email, fullName, phone, address, role, balance, storeName, rating | Trả về thông tin cá nhân của người dùng (bảo mật mật khẩu). |
-| **`CreateAuctionDTO`** | name, description, condition, startingPrice, stepPrice, durationMinutes, itemType, imageBase64, brand, model, year, km, warrantyMonths, artistName, material, creationYear | Gom toàn bộ trường động để tạo phiên đấu giá cho cả 3 loại sản phẩm. |
+| **`CreateAuctionDTO`** | name, description, condition, startingPrice, stepPrice, durationHours, durationMinutes, itemType, imageBase64, brand, model, year, km, warrantyMonths, artistName, material, creationYear | Gom toàn bộ trường động để tạo phiên đấu giá cho cả 3 loại sản phẩm. |
 | **`UpdateAuctionDTO`** | name, description, condition, imageBase64, brand, model, year, km, warrantyMonths, artistName, material, creationYear | Cập nhật thông tin chi tiết sản phẩm. |
 | **`AuctionSummaryDTO`** | id, itemName, currentPrice, endTime, status, itemType, sellerName, imageBase64 | Hiển thị tóm tắt danh sách phiên để tối ưu hóa bộ nhớ và băng thông. |
 | **`AuctionDetailDTO`** | Toàn bộ trường của `Auction` & `Item` tương ứng, thông tin `sellerName` & `currentWinnerName` | Hiển thị thông tin chi tiết trên trang sản phẩm. |
@@ -420,7 +420,7 @@ classDiagram
         -loggedInUserId: String
         +ClientHandler(socket, controller)
         +run() void
-        +onBidUpdated(auctionId, newPrice, bidderId, bidderName, itemName, bidTime) void
+        +onBidUpdated(auctionId, newPrice, bidderId, bidderName, itemName, bidTime, newEndTime) void
         +onAuctionClosed(auctionId, finalPrice, winnerId) void
         -handleRawMessage(json: String) void
         -handleSubscriptionRequest(request: Request) boolean
@@ -431,7 +431,7 @@ classDiagram
 
     class AuctionObserver {
         <<interface>>
-        +onBidUpdated(auctionId, newPrice, bidderId, bidderName, itemName, bidTime)* void
+        +onBidUpdated(auctionId, newPrice, bidderId, bidderName, itemName, bidTime, newEndTime)* void
         +onAuctionClosed(auctionId, finalPrice, winnerId)* void
     }
 
@@ -442,7 +442,7 @@ classDiagram
         +subscribe(auctionId, observer: AuctionObserver) void
         +unsubscribe(auctionId, observer: AuctionObserver) void
         +unsubscribeAll(observer: AuctionObserver) void
-        +notifyBidUpdate(auctionId, newPrice, bidderId, bidderName, itemName, bidTime) void
+        +notifyBidUpdate(auctionId, newPrice, bidderId, bidderName, itemName, bidTime, newEndTime) void
         +notifyAuctionClosed(auctionId, finalPrice, winnerId) void
     }
 
@@ -653,9 +653,9 @@ classDiagram
 
 ---
 
-## 6. Quy trình xử lý Real-time (Bidding Flow)
+## 6. Quy trình xử lý Real-time (Bidding Flow) & Rollback
 
-Sơ đồ trình tự (Sequence Diagram) dưới đây mô tả luồng đi của dữ liệu từ khi một Client thực hiện đặt thầu cho tới khi toàn bộ các Client khác nhận được cập nhật mới tức thời:
+Sơ đồ trình tự (Sequence Diagram) dưới đây mô tả luồng đi của dữ liệu khi Client thực hiện đặt thầu, bao gồm cả **Cơ chế Rollback (Khôi phục RAM)** khi lưu vào CSDL thất bại:
 
 ```mermaid
 sequenceDiagram
@@ -665,14 +665,74 @@ sequenceDiagram
     participant CH as ClientHandler
     participant RC as RequestController
     participant BS as BidService
+    participant DB as Database (DAO)
     participant AM as AuctionManager
     
     Client->>CSM: PLACE_BID (BidRequestDTO)
     CSM->>CH: Gửi gói tin JSON (RequestId)
     CH->>RC: handle(request, userId)
     RC->>BS: placeBid(...)
-    BS->>AM: notifyBidUpdate(...)
-    AM->>CH: onBidUpdated(...) (Tất cả Observer)
-    CH->>CSM: Push JSON event (bid_update)
-    CSM->>Client: dispatch event sang các UI Controllers
+    BS->>BS: Cập nhật giá & winner trên RAM
+    BS->>DB: Cập nhật giá đấu & Lưu lịch sử (DB-First)
+    
+    alt Lỗi Database
+        DB-->>BS: Trạng thái ghi CSDL (false) / Exception
+        BS->>BS: Khôi phục lại giá & winner cũ trên RAM (Rollback)
+        BS-->>RC: Lỗi (Không thể cập nhật DB)
+        RC-->>Client: Trả về Response(ERROR)
+    else Thành công
+        DB-->>BS: Trạng thái ghi CSDL (true)
+        Note over BS: Chỉ đồng bộ RAM và phát tin nếu DB thành công
+        BS->>AM: notifyBidUpdate(...)
+        AM->>CH: onBidUpdated(...) (Tất cả Observer)
+        CH->>CSM: Push JSON event (bid_update)
+        CSM->>Client: dispatch event sang các UI Controllers
+    end
+```
+
+---
+
+## 7. Quy trình Thanh toán (Payment & Rollback Flow)
+
+Sơ đồ trình tự mô tả quy trình thanh toán tự động khi phiên kết thúc, bao gồm cơ chế **Manual Compensation Rollback** để khôi phục số dư ví của các bên liên quan nếu giao dịch gặp lỗi:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Admin/System as Trình kích hoạt (Scheduler/Client)
+    participant PS as PaymentService
+    participant UDAO as UserDAO
+    participant ADAO as AuctionDAO
+    
+    Admin/System->>PS: payAuction(auctionId, buyerId)
+    PS->>PS: Kiểm tra số dư Buyer (Phải >= Giá chốt + 2% Phí)
+    
+    Note over PS, UDAO: Giao dịch Tài chính (Financial Transaction)
+    PS->>UDAO: Trừ tiền Buyer
+    PS->>UDAO: Cộng tiền Seller
+    PS->>UDAO: Cộng tiền Admin (2% Phí)
+    
+    alt Transaction Thành công
+        PS->>ADAO: Cập nhật trạng thái Auction = PAID
+        
+        alt Cập nhật Auction thất bại
+            ADAO-->>PS: false
+            Note over PS, UDAO: Kích hoạt Manual Rollback
+            PS->>UDAO: Cộng lại tiền cho Buyer (Rollback)
+            PS->>UDAO: Trừ lại tiền của Seller (Rollback)
+            PS->>UDAO: Trừ lại tiền của Admin (Rollback)
+            PS->>PS: Trả trạng thái Auction về FINISHED trên RAM
+            PS-->>Admin/System: Trả về Response(ERROR)
+        else Cập nhật Auction thành công
+            ADAO-->>PS: true
+            PS-->>Admin/System: Trả về Response(SUCCESS)
+        end
+        
+    else Transaction Thất bại (VD: Cộng tiền Admin lỗi)
+        UDAO-->>PS: false
+        Note over PS, UDAO: Kích hoạt Manual Rollback ngay lập tức
+        PS->>UDAO: Cộng lại tiền cho Buyer (Rollback)
+        PS->>UDAO: Trừ lại tiền của Seller (Nếu đã cộng)
+        PS-->>Admin/System: Trả về Response(ERROR)
+    end
 ```
