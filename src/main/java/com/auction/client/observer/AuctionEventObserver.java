@@ -3,12 +3,12 @@ package com.auction.client.observer;
 import com.google.gson.JsonObject;
 
 /**
- * Giao diện đăng ký và đón nhận sự kiện đấu giá thời gian thực.
+ * Nhận sự kiện đấu giá thời gian thực từ Server.
  */
 public interface AuctionEventObserver {
 
     /**
-     * Phương thức phản hồi tự động (Callback) khi máy chủ đẩy sự kiện về Client.
+     * Callback được gọi khi có sự kiện đẩy về từ Server.
      */
     void onAuctionEvent(String event, String auctionId, JsonObject payload);
 }

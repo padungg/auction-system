@@ -12,10 +12,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Luồng chạy ngầm (Background Reader Thread) liên tục nhận và phân phối dữ liệu từ Socket mạng.
- * Đọc từng dòng văn bản (JSON) gửi từ Server, phân tích loại dữ liệu và định hướng:
- * 1. Nếu là sự kiện Realtime (chứa trường "event"): Chuyển tới AuctionEventDispatcher để phát sóng tới UI.
- * 2. Nếu là phản hồi cho một yêu cầu cụ thể (Request-Response): Khớp ID (requestId) để giải phóng luồng gửi đang chờ.
+ * Luồng chạy ngầm liên tục đọc dữ liệu từ Socket.
+ * Phân tích JSON nhận từ Server để phân loại: sự kiện realtime hoặc phản hồi cho request đồng bộ.
  */
 public class SocketReader implements Runnable {
 
@@ -40,33 +38,32 @@ public class SocketReader implements Runnable {
     public void run() {
         try {
             String line;
-            // Vòng lặp đọc dữ liệu liên tục từ Server (chặn luồng cho đến khi có dữ liệu mới)
+            // Đọc dòng dữ liệu liên tục từ socket
             while ((line = in.readLine()) != null) {
                 LOGGER.info("<<< Nhận gói tin mạng từ Server: {}", line);
                 try {
                     JsonObject json = gson.fromJson(line, JsonObject.class);
 
-                    // Phân loại 1: Đây là một sự kiện cập nhật Realtime (Ví dụ: đặt thầu, đóng phiên)
+                    // Xử lý sự kiện Realtime (đặt giá, đóng phiên, v.v.)
                     if (json.has("event")) {
                         String eventName = json.get("event").getAsString();
                         String auctionId = json.has("auctionId") ? json.get("auctionId").getAsString() : "";
 
-                        // Điều phối sự kiện tới các UI Component đang subscribe
                         dispatcher.dispatch(eventName, auctionId, json);
-                    } 
-                    // Phân loại 2: Đây là gói tin phản hồi Response từ một Request trước đó
+                    }
+                    // Xử lý phản hồi cho một Request đã gửi
                     else {
                         Response response = gson.fromJson(json, Response.class);
                         String reqId = response.getRequestId();
 
-                        // Tìm và đánh dấu hoàn thành CompletableFuture tương ứng với requestId
+                        // Hoàn thành CompletableFuture đang chờ kết quả
                         if (reqId != null) {
                             CompletableFuture<Response> future = pendingRequests.remove(reqId);
                             if (future != null) {
                                 future.complete(response);
                             }
-                        } 
-                        // Trường hợp đặc biệt: Không có requestId, tự động khớp với request cũ nhất
+                        }
+                        // Dự phòng: Ghép đôi phản hồi với request cũ nhất nếu thiếu requestId
                         else {
                             if (!pendingRequests.isEmpty()) {
                                 String oldestKey = pendingRequests.keySet().iterator().next();
@@ -84,7 +81,7 @@ public class SocketReader implements Runnable {
         } catch (IOException e) {
             LOGGER.info("Luồng đọc Socket (SocketReader) dừng vận hành hoặc đã đóng kết nối.");
         } finally {
-            // Khi kết nối bị ngắt, đảm bảo giải phóng toàn bộ các request đang chờ đợi để tránh treo UI
+            // Giải phóng các request đang chờ khi ngắt kết nối để tránh treo UI
             if (!pendingRequests.isEmpty()) {
                 LOGGER.warn("Đường truyền Socket đóng đột ngột. Giải phóng {} request đang đợi.", pendingRequests.size());
 

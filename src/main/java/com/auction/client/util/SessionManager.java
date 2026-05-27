@@ -3,8 +3,8 @@ package com.auction.client.util;
 import com.auction.model.dto.UserResponseDTO;
 
 /**
- * Bộ quản lý phiên làm việc tập trung (User Session) của người dùng phía Client.
- * Sử dụng mẫu thiết kế Singleton (Lazy Initialization qua Holder class) để đảm bảo an toàn đa luồng.
+ * Quản lý thông tin phiên đăng nhập (User Session) phía Client.
+ * Sử dụng Singleton Pattern để đảm bảo an toàn truy cập từ nhiều luồng.
  */
 public class SessionManager {
 
@@ -18,35 +18,35 @@ public class SessionManager {
     }
 
     /**
-     * Lấy thực thể duy nhất của SessionManager.
+     * Lấy instance duy nhất (Singleton) của SessionManager.
      */
     public static SessionManager getInstance() {
         return InstanceHolder.INSTANCE;
     }
 
     /**
-     * Lấy thông tin của người dùng đang đăng nhập hiện tại.
+     * Lấy thông tin người dùng đang đăng nhập.
      */
     public UserResponseDTO getCurrentUser() {
         return currentUser;
     }
 
     /**
-     * Thiết lập thông tin người dùng đăng nhập hiện tại khi đăng nhập thành công.
+     * Thiết lập thông tin người dùng đăng nhập.
      */
     public void setCurrentUser(UserResponseDTO currentUser) {
         this.currentUser = currentUser;
     }
 
     /**
-     * Xóa thông tin phiên làm việc hiện tại (Đăng xuất).
+     * Đăng xuất, xóa thông tin phiên hiện tại.
      */
     public void clear() {
         this.currentUser = null;
     }
 
     /**
-     * Kiểm tra người dùng đã đăng nhập hay chưa.
+     * Kiểm tra xem người dùng đã đăng nhập chưa.
      */
     @SuppressWarnings("unused")
     public boolean isLoggedIn() {

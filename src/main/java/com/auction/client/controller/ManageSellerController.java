@@ -227,6 +227,13 @@ public class ManageSellerController {
                             dialogStage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
                             dialogStage.setScene(new javafx.scene.Scene(root));
 
+                            // Thiết lập icon cho dialog
+                            try {
+                                dialogStage.getIcons().add(new javafx.scene.image.Image(getClass().getResourceAsStream("/images/gavel-light-blue.png")));
+                            } catch (Exception ex) {
+                                LOGGER.warn("Không thể nạp icon dialog chỉnh sửa sản phẩm: {}", ex.getMessage());
+                            }
+
                             EditAuctionDialogController controller = loader.getController();
                             controller.initData(row.getAuctionId(), row.getItemName(), row.getStartingPrice(), row.getItemType(), dialogStage, () -> {
                                 loadMyAuctions();

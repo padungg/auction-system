@@ -7,52 +7,50 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
 /**
- * Bộ điều phối sự kiện đấu giá thời gian thực (Realtime Event Dispatcher) phía Client.
- * Sử dụng mô hình Observer để phân phối sự kiện mạng tới các thành phần UI đang lắng nghe.
- * Danh sách đăng ký là CopyOnWriteArrayList để đảm bảo an toàn đa luồng khi sửa đổi danh sách trong lúc duyệt.
+ * Điều phối các sự kiện đấu giá thời gian thực tới các UI component đang lắng nghe.
+ * Sử dụng CopyOnWriteArrayList để đảm bảo an toàn đa luồng khi đăng ký/hủy observer.
  */
 public class AuctionEventDispatcher {
 
-    // Danh sách các Observer đang lắng nghe sự kiện đấu giá
     private final CopyOnWriteArrayList<AuctionEventObserver> observers = new CopyOnWriteArrayList<>();
-    
-    // Mặc định thực thi các callback cập nhật UI trên luồng đồ họa JavaFX (JavaFX Application Thread) qua Platform::runLater
+
+    // Mặc định chạy tác vụ cập nhật giao diện trên luồng đồ họa JavaFX qua Platform::runLater
     private volatile Consumer<Runnable> taskExecutor = Platform::runLater;
 
     /**
-     * Đăng ký Observer mới nhận sự kiện đấu giá realtime.
+     * Đăng ký observer mới để nhận sự kiện realtime.
      */
     public void addObserver(AuctionEventObserver observer) {
         observers.addIfAbsent(observer);
     }
 
     /**
-     * Hủy đăng ký Observer nhận sự kiện đấu giá.
+     * Hủy đăng ký observer.
      */
     public void removeObserver(AuctionEventObserver observer) {
         observers.remove(observer);
     }
 
     /**
-     * Xóa toàn bộ danh sách Observer đang lắng nghe.
+     * Xóa toàn bộ danh sách observer.
      */
     public void clear() {
         observers.clear();
     }
 
     /**
-     * Thay đổi bộ thực thi tác vụ (dùng trong viết Unit Test để chạy đồng bộ).
+     * Thay đổi executor thực thi tác vụ (chủ yếu dùng cho Unit Test chạy đồng bộ).
      */
     public void setTaskExecutor(Consumer<Runnable> taskExecutor) {
         this.taskExecutor = taskExecutor;
     }
 
     /**
-     * Điều hướng và phát tán sự kiện nhận được từ Server tới toàn bộ các Observer đã đăng ký.
+     * Phân phối sự kiện nhận từ Server đến toàn bộ observer đã đăng ký.
      *
-     * @param eventName Tên loại sự kiện (vd: bid_update, auction_close)
-     * @param auctionId Mã định danh phiên đấu giá liên quan
-     * @param json      Dữ liệu chi tiết đính kèm của sự kiện dưới dạng JsonObject
+     * @param eventName Tên sự kiện (ví dụ: bid_update, auction_close)
+     * @param auctionId ID của phiên đấu giá liên quan
+     * @param json      Dữ liệu chi tiết của sự kiện
      */
     public void dispatch(String eventName, String auctionId, JsonObject json) {
         for (AuctionEventObserver observer : observers) {

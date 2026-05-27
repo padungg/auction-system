@@ -16,9 +16,8 @@ import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 /**
- * Bộ quản lý kết nối Socket TCP phía Client (Client Socket Connection Manager).
- * Đóng vai trò cầu nối truyền thông điệp dạng JSON giữa Client và Server.
- * Áp dụng mẫu thiết kế Singleton và an toàn đa luồng (Thread-safe) trong toàn bộ thao tác I/O.
+ * Quản lý kết nối Socket TCP phía client.
+ * Thực hiện gửi request đồng bộ và nhận các sự kiện realtime từ Server bằng dữ liệu định dạng JSON.
  */
 public class ClientSocketManager {
 
@@ -27,17 +26,16 @@ public class ClientSocketManager {
     private Socket socket;
     private PrintWriter out;
     private final Gson gson;
-    
-    // Lưu các yêu cầu đang đợi phản hồi từ máy chủ (để khớp nối đồng bộ qua ID yêu cầu)
+
+    // Lưu trữ các request đang chờ phản hồi để đối chiếu bằng requestId
     private final ConcurrentMap<String, CompletableFuture<Response>> pendingRequests = new ConcurrentHashMap<>();
-    
-    // Bộ điều phối sự kiện đấu giá realtime tới các thành phần đăng ký lắng nghe
+
     private final AuctionEventDispatcher eventDispatcher = new AuctionEventDispatcher();
-    
+
     private ExecutorService executor;
     private Future<?> listenerFuture;
 
-    // Khóa ghi đồng bộ tránh tranh chấp ghi socket từ nhiều luồng đồng thời
+    // Khóa đồng bộ hóa thao tác ghi dữ liệu ra socket
     private final Object writeLock = new Object();
 
     private ClientSocketManager() {
@@ -49,14 +47,14 @@ public class ClientSocketManager {
     }
 
     /**
-     * Lấy thực thể duy nhất của ClientSocketManager.
+     * Lấy instance duy nhất (Singleton) của ClientSocketManager.
      */
     public static ClientSocketManager getInstance() {
         return InstanceHolder.INSTANCE;
     }
 
     /**
-     * Đảm bảo Executor Service phục vụ các tác vụ mạng ngầm luôn hoạt động.
+     * Đảm bảo ExecutorService hoạt động để xử lý các luồng chạy ngầm.
      */
     private synchronized void ensureExecutorActive() {
         if (executor == null || executor.isShutdown()) {
@@ -70,7 +68,7 @@ public class ClientSocketManager {
     }
 
     /**
-     * Thực thi một tác vụ bất đồng bộ ngầm bằng luồng worker an toàn.
+     * Thực thi tác vụ bất đồng bộ bằng thread pool.
      */
     public void execute(Runnable task) {
         ensureExecutorActive();
@@ -78,34 +76,26 @@ public class ClientSocketManager {
     }
 
     /**
-     * Đăng ký nhận sự kiện realtime từ Socket (Bid mới, kết thúc phiên, v.v.).
+     * Đăng ký observer nhận sự kiện realtime.
      */
     public void addObserver(AuctionEventObserver observer) {
         eventDispatcher.addObserver(observer);
     }
 
     /**
-     * Hủy đăng ký nhận sự kiện realtime từ Socket.
+     * Hủy đăng ký observer nhận sự kiện.
      */
     public void removeObserver(AuctionEventObserver observer) {
         eventDispatcher.removeObserver(observer);
     }
 
-    /**
-     * Đăng ký lắng nghe sự kiện realtime (Phương thức cũ, khuyến khích sử dụng addObserver).
-     */
     @Deprecated
     public void setNotificationListener(Consumer<JsonObject> listener) {
         addObserver((_, _, payload) -> listener.accept(payload));
     }
 
     /**
-     * Khởi tạo đường truyền kết nối mạng Socket TCP đến Server.
-     * Khởi động luồng đọc ngầm để lắng nghe dữ liệu liên tục từ Server.
-     *
-     * @param host Địa chỉ IP hoặc tên máy chủ (Hostname)
-     * @param port Cổng kết nối (Port) của máy chủ
-     * @throws IOException Xảy ra nếu lỗi thiết lập kết nối mạng
+     * Kết nối TCP tới Server và khởi động luồng đọc ngầm.
      */
     public void connect(String host, int port) throws IOException {
         if (isConnected()) return;
@@ -118,12 +108,11 @@ public class ClientSocketManager {
 
         LOGGER.info("Đã kết nối thành công đến máy chủ Server tại địa chỉ {}:{}", host, port);
 
-        // Bắt đầu chạy luồng đọc dữ liệu từ Socket (SocketReader)
         startListener(inLocal);
     }
 
     /**
-     * Khởi chạy luồng SocketReader ngầm để liên tục nhận gói tin JSON trả về.
+     * Bắt đầu luồng đọc dữ liệu liên tục từ socket.
      */
     private void startListener(BufferedReader inParam) {
         SocketReader reader = new SocketReader(inParam, gson, pendingRequests, eventDispatcher);
@@ -131,19 +120,14 @@ public class ClientSocketManager {
     }
 
     /**
-     * Gửi yêu cầu mạng đồng bộ sang máy chủ qua Socket và chờ đợi phản hồi.
-     * Phương thức này sẽ chặn luồng gọi hiện tại tối đa 10 giây để chờ kết quả khớp ID.
-     *
-     * @param request Gói tin yêu cầu chứa thông tin payload và loại request
-     * @return Phản hồi (Response) trả về từ máy chủ
-     * @throws IOException Xảy ra nếu mất kết nối hoặc máy chủ phản hồi quá hạn (Timeout)
+     * Gửi request đồng bộ lên Server và chờ phản hồi tối đa 10 giây.
      */
     public Response sendRequest(Request request) throws IOException {
         if (!isConnected()) {
             throw new IOException("Hệ thống chưa thiết lập kết nối đến Server!");
         }
 
-        // Tạo mã định danh ngẫu nhiên duy nhất cho mỗi yêu cầu để ánh xạ phản hồi chính xác
+        // Tạo ID duy nhất cho request để đối chiếu response
         String requestId = java.util.UUID.randomUUID().toString();
         request.setRequestId(requestId);
 
@@ -153,7 +137,7 @@ public class ClientSocketManager {
         String jsonRequest = gson.toJson(request);
         LOGGER.info(">>> Gửi gói tin yêu cầu lên Server: {}", jsonRequest);
 
-        // Khóa đồng bộ bảo vệ luồng xuất socket tránh bị xen ngang
+        // Ghi dữ liệu đồng bộ ra socket
         synchronized (writeLock) {
             if (out != null) {
                 out.println(jsonRequest);
@@ -161,7 +145,7 @@ public class ClientSocketManager {
         }
 
         try {
-            // Chờ tối đa 10 giây để nhận kết quả khớp từ luồng SocketReader
+            // Đợi kết quả từ SocketReader
             return future.get(10, TimeUnit.SECONDS);
         } catch (TimeoutException e) {
             pendingRequests.remove(requestId);
@@ -177,14 +161,12 @@ public class ClientSocketManager {
     }
 
     /**
-     * Giải phóng tài nguyên và ngắt kết nối an toàn với máy chủ.
-     * Hoàn tất các yêu cầu mạng đang đợi với ngoại lệ ngắt kết nối và tắt luồng thread worker.
+     * Ngắt kết nối socket, giải phóng tài nguyên và hủy các request đang chờ.
      */
     public void disconnect() {
         try {
             eventDispatcher.clear();
 
-            // Đóng tất cả các request đang đợi để tránh treo luồng Client
             for (CompletableFuture<Response> future : pendingRequests.values()) {
                 future.completeExceptionally(new IOException("Đã chủ động ngắt kết nối hoặc mất tín hiệu từ máy chủ."));
             }
@@ -218,15 +200,12 @@ public class ClientSocketManager {
     }
 
     /**
-     * Kiểm tra xem kết nối Socket đến Server có đang hoạt động hay không.
+     * Kiểm tra trạng thái kết nối của socket.
      */
     public boolean isConnected() {
         return socket != null && socket.isConnected() && !socket.isClosed();
     }
 
-    /**
-     * Lấy đối tượng Gson dùng chung trong kết nối.
-     */
     public Gson getGson() {
         return gson;
     }
