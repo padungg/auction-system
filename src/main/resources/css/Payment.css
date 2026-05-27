@@ -1,15 +1,15 @@
-/* ══════════════════════════════════════════════════════
-   UET Auction - Payment Stylesheet
-   ══════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════════
+   UET Auction — Payment.css  (Black & Cyan-Green Theme)
+   ══════════════════════════════════════════════════════════════════ */
 
 /* ── PAYMENT & TRANSACTIONS REFACTOR CLASSES ── */
 .pay-hist-price {
     -fx-font-weight: bold;
-    -fx-text-fill: #10b981;
+    -fx-text-fill: #00e676;
 }
 .pay-hist-status {
-    -fx-background-color: #d1fae5;
-    -fx-text-fill: #065f46;
+    -fx-background-color: #061a0e;
+    -fx-text-fill: #00c87a;
     -fx-padding: 3 10 3 10;
     -fx-background-radius: 99;
     -fx-font-weight: bold;
@@ -17,29 +17,29 @@
 }
 .pay-tab-active {
     -fx-background-color: transparent;
-    -fx-text-fill: #2563eb;
+    -fx-text-fill: #00c87a;
     -fx-font-weight: bold;
     -fx-font-size: 13.5px;
     -fx-padding: 10 22 10 22;
-    -fx-border-color: transparent transparent #2563eb transparent;
+    -fx-border-color: transparent transparent #00c87a transparent;
     -fx-border-width: 0 0 2 0;
     -fx-cursor: hand;
 }
 .pay-tab-inactive {
     -fx-background-color: transparent;
-    -fx-text-fill: #94a3b8;
+    -fx-text-fill: #4d8c6a;
     -fx-font-weight: bold;
     -fx-font-size: 13.5px;
     -fx-padding: 10 22 10 22;
     -fx-cursor: hand;
 }
 .pay-card {
-    -fx-background-color: white;
-    -fx-border-color: #e2e8f0;
+    -fx-background-color: #0d1a12;
+    -fx-border-color: #1a3326;
     -fx-border-radius: 12;
     -fx-background-radius: 12;
     -fx-padding: 18 20 18 20;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.06), 6, 0, 0, 2);
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.35), 6, 0, 0, 2);
 }
 .pay-icon {
     -fx-font-size: 38px;
@@ -49,60 +49,60 @@
 .pay-name-label {
     -fx-font-size: 15px;
     -fx-font-weight: bold;
-    -fx-text-fill: #0f172a;
+    -fx-text-fill: #c6f6e0;
 }
 .pay-cond-label {
-    -fx-text-fill: #64748b;
+    -fx-text-fill: #4d8c6a;
     -fx-font-size: 12px;
 }
 .pay-end-label {
-    -fx-text-fill: #64748b;
+    -fx-text-fill: #4d8c6a;
     -fx-font-size: 12px;
 }
 .pay-deadline-box {
-    -fx-background-color: #fef9c3;
+    -fx-background-color: #1c1500;
     -fx-padding: 4 10 4 10;
     -fx-background-radius: 6;
 }
 .pay-deadline-label {
-    -fx-text-fill: #854d0e;
+    -fx-text-fill: #f59e0b;
     -fx-font-size: 11px;
     -fx-font-weight: bold;
 }
 .pay-auction-id-label {
-    -fx-text-fill: #94a3b8;
+    -fx-text-fill: #4d8c6a;
     -fx-font-size: 11px;
 }
 .pay-price-caption {
-    -fx-text-fill: #94a3b8;
+    -fx-text-fill: #4d8c6a;
     -fx-font-size: 10px;
     -fx-font-weight: bold;
 }
 .pay-price-label {
     -fx-font-size: 18px;
     -fx-font-weight: 800;
-    -fx-text-fill: #2563eb;
+    -fx-text-fill: #00e676;
 }
 .pay-fee-label {
-    -fx-text-fill: #64748b;
+    -fx-text-fill: #4d8c6a;
     -fx-font-size: 11px;
 }
 .pay-total-label {
-    -fx-text-fill: #0f172a;
+    -fx-text-fill: #a7f3d0;
     -fx-font-weight: bold;
     -fx-font-size: 13px;
 }
 .pay-btn-view {
-    -fx-background-color: #f1f5f9;
-    -fx-text-fill: #334155;
+    -fx-background-color: #0f2218;
+    -fx-text-fill: #a7f3d0;
     -fx-font-size: 11px;
     -fx-background-radius: 8;
     -fx-cursor: hand;
     -fx-padding: 5 10 5 10;
 }
 .pay-btn-pay-now {
-    -fx-background-color: #2563eb;
-    -fx-text-fill: white;
+    -fx-background-color: #00a854;
+    -fx-text-fill: #020d06;
     -fx-font-weight: bold;
     -fx-font-size: 11px;
     -fx-background-radius: 8;
@@ -119,21 +119,21 @@
     -fx-padding: 5 12 5 12;
 }
 .pay-bal-warning {
-    -fx-text-fill: #dc2626;
+    -fx-text-fill: #f87171;
     -fx-font-size: 11px;
     -fx-font-style: italic;
 }
 .pay-pagination-active {
-    -fx-background-color: #2563eb;
-    -fx-text-fill: white;
+    -fx-background-color: #00a854;
+    -fx-text-fill: #020d06;
     -fx-font-weight: bold;
     -fx-background-radius: 8;
     -fx-cursor: hand;
     -fx-min-width: 30px;
 }
 .pay-pagination-inactive {
-    -fx-background-color: #f1f5f9;
-    -fx-text-fill: #475569;
+    -fx-background-color: #0f2218;
+    -fx-text-fill: #5a9e7a;
     -fx-background-radius: 8;
     -fx-cursor: hand;
     -fx-min-width: 30px;
@@ -141,38 +141,38 @@
 
 /* ── DARK MODE OVERRIDES ── */
 .dark-mode .pay-card {
-    -fx-background-color: #1e293b;
-    -fx-border-color: #334155;
+    -fx-background-color: #0d1a12;
+    -fx-border-color: #1a3326;
 }
 .dark-mode .pay-name-label {
-    -fx-text-fill: #f8fafc;
+    -fx-text-fill: #c6f6e0;
 }
 .dark-mode .pay-cond-label {
-    -fx-text-fill: #94a3b8;
+    -fx-text-fill: #4d8c6a;
 }
 .dark-mode .pay-end-label {
-    -fx-text-fill: #94a3b8;
+    -fx-text-fill: #4d8c6a;
 }
 .dark-mode .pay-deadline-box {
-    -fx-background-color: #78350f;
+    -fx-background-color: #1c1500;
 }
 .dark-mode .pay-deadline-label {
-    -fx-text-fill: #fef08a;
+    -fx-text-fill: #f59e0b;
 }
 .dark-mode .pay-price-label {
-    -fx-text-fill: #60a5fa;
+    -fx-text-fill: #00e676;
 }
 .dark-mode .pay-total-label {
-    -fx-text-fill: #cbd5e1;
+    -fx-text-fill: #a7f3d0;
 }
 .dark-mode .pay-btn-view {
-    -fx-background-color: #334155;
-    -fx-text-fill: #cbd5e1;
+    -fx-background-color: #0f2218;
+    -fx-text-fill: #a7f3d0;
 }
 .dark-mode .pay-btn-view:hover {
-    -fx-background-color: #475569;
-    -fx-text-fill: #f8fafc;
+    -fx-background-color: #1a3326;
+    -fx-text-fill: #c6f6e0;
 }
 .dark-mode .pay-btn-pay-now:hover {
-    -fx-background-color: #1d4ed8;
+    -fx-background-color: #00c862;
 }

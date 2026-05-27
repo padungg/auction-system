@@ -1,24 +1,24 @@
-/* ══════════════════════════════════════════════════════
-   UET Auction - Product Card Stylesheet
-   ══════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════════
+   UET Auction — ProductCard.css  (Black & Cyan-Green Theme)
+   ══════════════════════════════════════════════════════════════════ */
 
 /* ── AUCTION CARDS ── */
 .auction-card {
-    -fx-background-color: white;
-    -fx-border-color: #e2e8f0;
+    -fx-background-color: #0d1a12;
+    -fx-border-color: #1a3326;
     -fx-border-radius: 16;
     -fx-background-radius: 16;
-    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.08), 3, 0, 0, 1);
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.35), 3, 0, 0, 1);
     -fx-cursor: hand;
 }
 
 .auction-card:hover {
-    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.12), 12, 0, 0, 4);
-    -fx-border-color: #2563eb;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 200, 100, 0.2), 12, 0, 0, 4);
+    -fx-border-color: #00a854;
 }
 
 .card-img-area {
-    -fx-background-color: linear-gradient(to bottom right, #f1f5f9, #e2e8f0);
+    -fx-background-color: linear-gradient(to bottom right, #0a1e12, #0f2a18);
     -fx-background-radius: 16 16 0 0;
     -fx-alignment: center;
     -fx-pref-height: 160;
@@ -27,12 +27,12 @@
 .card-emoji-icon {
     -fx-font-size: 48px;
     -fx-font-weight: bold;
-    -fx-text-fill: #1e293b;
+    -fx-text-fill: #a7f3d0;
 }
 
 .card-badge-running {
-    -fx-background-color: #16a34a;
-    -fx-text-fill: white;
+    -fx-background-color: #00a854;
+    -fx-text-fill: #020d06;
     -fx-font-size: 11px;
     -fx-font-weight: bold;
     -fx-padding: 3 10 3 10;
@@ -40,8 +40,8 @@
 }
 
 .card-badge-open {
-    -fx-background-color: #fffbeb;
-    -fx-text-fill: #d97706;
+    -fx-background-color: #1c1500;
+    -fx-text-fill: #f59e0b;
     -fx-font-size: 11px;
     -fx-font-weight: bold;
     -fx-padding: 3 10 3 10;
@@ -49,8 +49,8 @@
 }
 
 .card-badge-finished {
-    -fx-background-color: #f1f5f9;
-    -fx-text-fill: #64748b;
+    -fx-background-color: #0f1a13;
+    -fx-text-fill: #4d8c6a;
     -fx-font-size: 11px;
     -fx-font-weight: bold;
     -fx-padding: 3 10 3 10;
@@ -58,8 +58,8 @@
 }
 
 .card-badge-paid {
-    -fx-background-color: #d1fae5;
-    -fx-text-fill: #065f46;
+    -fx-background-color: #0a2018;
+    -fx-text-fill: #00c87a;
     -fx-font-size: 11px;
     -fx-font-weight: bold;
     -fx-padding: 3 10 3 10;
@@ -67,8 +67,8 @@
 }
 
 .card-badge-cancelled {
-    -fx-background-color: #fee2e2;
-    -fx-text-fill: #ef4444;
+    -fx-background-color: #1a0808;
+    -fx-text-fill: #f87171;
     -fx-font-size: 11px;
     -fx-font-weight: bold;
     -fx-padding: 3 10 3 10;
@@ -78,84 +78,84 @@
 .card-name {
     -fx-font-weight: bold;
     -fx-font-size: 14.5px;
-    -fx-text-fill: #1e293b;
+    -fx-text-fill: #c6f6e0;
 }
 
 .card-price {
     -fx-font-weight: bold;
     -fx-font-size: 17px;
-    -fx-text-fill: #2563eb;
+    -fx-text-fill: #00e676;
 }
 
 .card-timer {
     -fx-font-size: 12px;
-    -fx-text-fill: #d97706;
+    -fx-text-fill: #f59e0b;
     -fx-font-weight: bold;
 }
 
 .card-time-left {
-    -fx-text-fill: #d97706;
+    -fx-text-fill: #f59e0b;
     -fx-font-size: 12px;
     -fx-font-weight: bold;
 }
 
 /* ── DARK MODE OVERRIDES ── */
 .dark-mode .product-card {
-    -fx-background-color: #1e293b;
-    -fx-border-color: #334155;
+    -fx-background-color: #0d1a12;
+    -fx-border-color: #1a3326;
     -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.4), 10, 0, 0, 4);
 }
 
 .dark-mode .auction-card {
-    -fx-background-color: #1e293b;
-    -fx-border-color: #334155;
+    -fx-background-color: #0d1a12;
+    -fx-border-color: #1a3326;
 }
 
 .dark-mode .auction-card:hover {
-    -fx-border-color: #60a5fa;
+    -fx-border-color: #00a854;
 }
 
 .dark-mode .card-img-area {
-    -fx-background-color: #0f172a;
+    -fx-background-color: #080f0a;
 }
 
 .dark-mode .card-emoji-icon {
-    -fx-text-fill: #f8fafc;
+    -fx-text-fill: #a7f3d0;
 }
 
 .dark-mode .card-name {
-    -fx-text-fill: #f8fafc;
+    -fx-text-fill: #c6f6e0;
 }
 
 .dark-mode .card-price {
-    -fx-text-fill: #60a5fa;
+    -fx-text-fill: #00e676;
 }
 
 .dark-mode .card-badge-running {
-    -fx-background-color: #064e3b;
-    -fx-text-fill: #a7f3d0;
+    -fx-background-color: #061a0e;
+    -fx-text-fill: #00e676;
 }
 
 .dark-mode .card-badge-open {
-    -fx-background-color: #78350f;
-    -fx-text-fill: #fef08a;
+    -fx-background-color: #1c1500;
+    -fx-text-fill: #f59e0b;
 }
 
 .dark-mode .card-badge-finished {
-    -fx-background-color: #334155;
-    -fx-text-fill: #cbd5e1;
+    -fx-background-color: #0f1a13;
+    -fx-text-fill: #4d8c6a;
 }
 
 .dark-mode .card-badge-paid {
-    -fx-background-color: #064e3b;
-    -fx-text-fill: #a7f3d0;
+    -fx-background-color: #0a2018;
+    -fx-text-fill: #00c87a;
 }
 
 .dark-mode .card-badge-cancelled {
-    -fx-background-color: #7f1d1d;
+    -fx-background-color: #1a0808;
     -fx-text-fill: #fca5a5;
 }
 
 .dark-mode .card-time-left {
-    -fx-text-fill: #fbbf24;
+    -fx-text-fill: #f59e0b;
 }

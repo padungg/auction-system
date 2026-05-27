@@ -1,19 +1,19 @@
-/* ══════════════════════════════════════════════════════
-   UET Auction - Admin Console Stylesheet
-   ══════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════════
+   UET Auction — Admin.css  (Black & Cyan-Green Theme)
+   ══════════════════════════════════════════════════════════════════ */
 
 /* Role Badges */
 .role-badge-admin {
-    -fx-background-color: #f3e8ff;
-    -fx-text-fill: #7e22ce;
+    -fx-background-color: #0a1e10;
+    -fx-text-fill: #00e676;
     -fx-padding: 4 12;
     -fx-background-radius: 12;
     -fx-font-weight: bold;
     -fx-font-size: 11px;
 }
 .role-badge-user {
-    -fx-background-color: #d1fae5;
-    -fx-text-fill: #047857;
+    -fx-background-color: #061a0e;
+    -fx-text-fill: #00c87a;
     -fx-padding: 4 12;
     -fx-background-radius: 12;
     -fx-font-weight: bold;
@@ -22,50 +22,50 @@
 
 /* Active Status Labels */
 .status-lbl-active {
-    -fx-text-fill: #059669;
+    -fx-text-fill: #00c87a;
     -fx-font-weight: bold;
 }
 .status-lbl-locked {
-    -fx-text-fill: #d97706;
+    -fx-text-fill: #f59e0b;
     -fx-font-weight: bold;
 }
 
 /* Product Info Cell Items */
 .prod-title-lbl {
     -fx-font-weight: bold;
-    -fx-text-fill: #0f172a;
+    -fx-text-fill: #c6f6e0;
 }
 .prod-id-lbl {
-    -fx-text-fill: #64748b;
+    -fx-text-fill: #4d8c6a;
     -fx-font-size: 11px;
 }
 .prod-type-electronics {
-    -fx-background-color: #f3e8ff;
-    -fx-text-fill: #7e22ce;
+    -fx-background-color: #0a1e10;
+    -fx-text-fill: #00e5ff;
     -fx-padding: 2 6;
     -fx-background-radius: 8;
     -fx-font-weight: bold;
     -fx-font-size: 9px;
 }
 .prod-type-art {
-    -fx-background-color: #fce7f3;
-    -fx-text-fill: #be185d;
+    -fx-background-color: #1c0a18;
+    -fx-text-fill: #e879f9;
     -fx-padding: 2 6;
     -fx-background-radius: 8;
     -fx-font-weight: bold;
     -fx-font-size: 9px;
 }
 .prod-type-vehicle {
-    -fx-background-color: #d1fae5;
-    -fx-text-fill: #047857;
+    -fx-background-color: #061a0e;
+    -fx-text-fill: #00c87a;
     -fx-padding: 2 6;
     -fx-background-radius: 8;
     -fx-font-weight: bold;
     -fx-font-size: 9px;
 }
 .prod-type-default {
-    -fx-background-color: #f1f5f9;
-    -fx-text-fill: #64748b;
+    -fx-background-color: #0f1a13;
+    -fx-text-fill: #4d8c6a;
     -fx-padding: 2 6;
     -fx-background-radius: 8;
     -fx-font-weight: bold;
@@ -74,40 +74,40 @@
 
 /* Auction Badges */
 .auc-badge-running {
-    -fx-background-color: #dcfce7;
-    -fx-text-fill: #16a34a;
+    -fx-background-color: #061a0e;
+    -fx-text-fill: #00e676;
     -fx-padding: 4 12;
     -fx-background-radius: 12;
     -fx-font-weight: bold;
     -fx-font-size: 11px;
 }
 .auc-badge-open {
-    -fx-background-color: #ffe4e6;
-    -fx-text-fill: #e11d48;
+    -fx-background-color: #1c1500;
+    -fx-text-fill: #f59e0b;
     -fx-padding: 4 12;
     -fx-background-radius: 12;
     -fx-font-weight: bold;
     -fx-font-size: 11px;
 }
 .auc-badge-finished {
-    -fx-background-color: #f1f5f9;
-    -fx-text-fill: #64748b;
+    -fx-background-color: #0f1a13;
+    -fx-text-fill: #4d8c6a;
     -fx-padding: 4 12;
     -fx-background-radius: 12;
     -fx-font-weight: bold;
     -fx-font-size: 11px;
 }
 .auc-badge-paid {
-    -fx-background-color: #d1fae5;
-    -fx-text-fill: #059669;
+    -fx-background-color: #0a2018;
+    -fx-text-fill: #00c87a;
     -fx-padding: 4 12;
     -fx-background-radius: 12;
     -fx-font-weight: bold;
     -fx-font-size: 11px;
 }
 .auc-badge-canceled {
-    -fx-background-color: #f3e8ff;
-    -fx-text-fill: #9333ea;
+    -fx-background-color: #1a0808;
+    -fx-text-fill: #f87171;
     -fx-padding: 4 12;
     -fx-background-radius: 12;
     -fx-font-weight: bold;
@@ -116,9 +116,9 @@
 
 /* Action Buttons */
 .btn-action-view {
-    -fx-background-color: #f8fafc;
-    -fx-text-fill: #334155;
-    -fx-border-color: #cbd5e1;
+    -fx-background-color: #0f2218;
+    -fx-text-fill: #a7f3d0;
+    -fx-border-color: #1a3326;
     -fx-border-radius: 6;
     -fx-background-radius: 6;
     -fx-cursor: hand;
@@ -133,40 +133,40 @@
     -fx-padding: 4 8;
 }
 .btn-action-paid {
-    -fx-background-color: #3b82f6;
-    -fx-text-fill: white;
+    -fx-background-color: #00a854;
+    -fx-text-fill: #020d06;
     -fx-font-weight: bold;
     -fx-background-radius: 6;
     -fx-cursor: hand;
     -fx-padding: 4 8;
 }
 .btn-action-cancel {
-    -fx-background-color: white;
-    -fx-text-fill: #475569;
-    -fx-border-color: #cbd5e1;
+    -fx-background-color: #0d1a12;
+    -fx-text-fill: #5a9e7a;
+    -fx-border-color: #1a3326;
     -fx-border-radius: 6;
     -fx-background-radius: 6;
     -fx-cursor: hand;
     -fx-padding: 4 8;
 }
 
-/* Dark mode overrides for Admin Badges & Buttons */
+/* Dark mode overrides */
 .dark-mode .prod-title-lbl {
-    -fx-text-fill: #f8fafc;
+    -fx-text-fill: #c6f6e0;
 }
 .dark-mode .status-lbl-active {
-    -fx-text-fill: #34d399;
+    -fx-text-fill: #00e676;
 }
 .dark-mode .status-lbl-locked {
     -fx-text-fill: #f59e0b;
 }
 .dark-mode .btn-action-view {
-    -fx-background-color: #334155;
-    -fx-text-fill: #cbd5e1;
-    -fx-border-color: #475569;
+    -fx-background-color: #0f2218;
+    -fx-text-fill: #a7f3d0;
+    -fx-border-color: #1a3326;
 }
 .dark-mode .btn-action-cancel {
-    -fx-background-color: #334155;
-    -fx-text-fill: #cbd5e1;
-    -fx-border-color: #475569;
+    -fx-background-color: #0d1a12;
+    -fx-text-fill: #5a9e7a;
+    -fx-border-color: #1a3326;
 }

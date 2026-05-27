@@ -74,7 +74,7 @@
                 <TableColumn fx:id="colAucSeller" text="Ng&#432;&#7901;i t&#7841;o" prefWidth="110"/>
                 <TableColumn fx:id="colAucEnd" text="K&#7871;t th&#250;c" prefWidth="90"/>
                 <TableColumn fx:id="colAucStatus" text="Tr&#7841;ng th&#225;i" prefWidth="90"/>
-                <TableColumn fx:id="colAucAction" text="Thao t&#225;c" prefWidth="180" sortable="false"/>
+                <TableColumn fx:id="colAucAction" text="Thao t&#225;c" prefWidth="240" minWidth="230" sortable="false"/>
             </columns>
             <columnResizePolicy>
                 <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>

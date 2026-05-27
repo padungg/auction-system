@@ -1,36 +1,36 @@
-/* ══════════════════════════════════════════════════════
-   UET Auction - Auction Detail Stylesheet
-   ══════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════════
+   UET Auction — AuctionDetail.css  (Black & Cyan-Green Theme)
+   ══════════════════════════════════════════════════════════════════ */
 
 /* ── SECTION CARD ── */
 .section-card {
-    -fx-background-color: white;
-    -fx-border-color: #e2e8f0;
+    -fx-background-color: #0d1a12;
+    -fx-border-color: #1a3326;
     -fx-border-radius: 16;
     -fx-background-radius: 16;
-    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.08), 3, 0, 0, 1);
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.35), 3, 0, 0, 1);
     -fx-padding: 22;
 }
 
 /* ── BID PANEL ── */
 .bid-panel {
-    -fx-background-color: white;
-    -fx-border-color: #e2e8f0;
+    -fx-background-color: #0d1a12;
+    -fx-border-color: #1a4028;
     -fx-border-width: 1.5;
     -fx-border-radius: 16;
     -fx-background-radius: 16;
-    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.1), 12, 0, 0, 4);
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 200, 100, 0.12), 12, 0, 0, 4);
     -fx-padding: 22;
 }
 
 .current-price {
     -fx-font-weight: bold;
     -fx-font-size: 32px;
-    -fx-text-fill: #dc2626;
+    -fx-text-fill: #00e676;
 }
 
 .countdown-box {
-    -fx-background-color: #eff6ff;
+    -fx-background-color: #0a1e12;
     -fx-background-radius: 10;
     -fx-padding: 14;
     -fx-alignment: center;
@@ -39,10 +39,10 @@
 .countdown-digit {
     -fx-font-weight: bold;
     -fx-font-size: 30px;
-    -fx-text-fill: #2563eb;
-    -fx-background-color: white;
+    -fx-text-fill: #00c87a;
+    -fx-background-color: #0d2218;
     -fx-background-radius: 8;
-    -fx-border-color: #dbeafe;
+    -fx-border-color: #1a4028;
     -fx-border-radius: 8;
     -fx-padding: 4 12 4 12;
     -fx-alignment: center;
@@ -52,20 +52,20 @@
 .countdown-colon {
     -fx-font-size: 26px;
     -fx-font-weight: bold;
-    -fx-text-fill: #2563eb;
+    -fx-text-fill: #00c87a;
 }
 
 /* ── AUTO-BID SECTION ── */
 .auto-bid-section {
-    -fx-background-color: #fffbeb;
-    -fx-border-color: #fde68a;
+    -fx-background-color: #14200e;
+    -fx-border-color: #2d6010;
     -fx-border-radius: 10;
     -fx-background-radius: 10;
     -fx-padding: 14;
 }
 
 .auto-bid-btn {
-    -fx-background-color: #d97706;
+    -fx-background-color: #5a9a00;
     -fx-text-fill: white;
     -fx-font-weight: bold;
     -fx-cursor: hand;
@@ -76,20 +76,20 @@
 
 /* ── ANTI-SNIPE WARNING ── */
 .anti-snipe-warn {
-    -fx-background-color: #fef3c7;
-    -fx-border-color: #fde68a;
+    -fx-background-color: #1c1500;
+    -fx-border-color: #4a3800;
     -fx-border-radius: 8;
     -fx-background-radius: 8;
     -fx-padding: 8 12 8 12;
     -fx-font-size: 12px;
-    -fx-text-fill: #92400e;
+    -fx-text-fill: #f59e0b;
     -fx-alignment: center;
 }
 
 /* ── WINNER BANNER ── */
 .winner-banner {
-    -fx-background-color: linear-gradient(to right, #f0fdf4, #d1fae5);
-    -fx-border-color: #a7f3d0;
+    -fx-background-color: linear-gradient(to right, #0a2018, #0d2e1c);
+    -fx-border-color: #00a854;
     -fx-border-radius: 10;
     -fx-background-radius: 10;
     -fx-padding: 14 18 14 18;
@@ -97,34 +97,34 @@
 
 /* ── AUCTION DETAIL REFACTOR CLASSES ── */
 .auc-detail-auto-label {
-    -fx-text-fill: #d97706;
+    -fx-text-fill: #5a9a00;
     -fx-font-size: 10px;
     -fx-font-weight: bold;
 }
 .auc-detail-first-row-price {
     -fx-font-weight: bold;
-    -fx-text-fill: #2563eb;
+    -fx-text-fill: #00c87a;
 }
 .auc-detail-chart-bg {
     -fx-background-color: transparent;
 }
 .auc-detail-spec-key {
-    -fx-text-fill: #94a3b8;
+    -fx-text-fill: #4d8c6a;
     -fx-font-size: 13px;
 }
 .auc-detail-spec-val {
-    -fx-text-fill: #334155;
+    -fx-text-fill: #a7f3d0;
     -fx-font-weight: bold;
     -fx-font-size: 13px;
 }
 .bid-chart-series {
-    -fx-stroke: #2563eb;
+    -fx-stroke: #00c87a;
     -fx-stroke-width: 2px;
 }
 
 /* ── DARK MODE OVERRIDES ── */
 .dark-mode .section-card,
 .dark-mode .bid-panel {
-    -fx-background-color: #1e293b;
-    -fx-border-color: #334155;
+    -fx-background-color: #0d1a12;
+    -fx-border-color: #1a3326;
 }

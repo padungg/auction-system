@@ -3,128 +3,227 @@
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
 <?import java.net.URL?>
 
-<HBox prefWidth="1000.0" prefHeight="650.0"
-      xmlns="http://javafx.com/javafx/17"
-      xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.auction.client.controller.LoginController">
+<!--
+    UET Auction — Login Screen  (Dark Premium Glassmorphism Redesign)
+    Layout: StackPane root → dark gradient backdrop + centered glass card
+-->
+<StackPane prefWidth="1100.0" prefHeight="700.0"
+           xmlns="http://javafx.com/javafx/17"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.auction.client.controller.LoginController"
+           styleClass="login-root">
+
     <stylesheets>
-        <URL value="@css/styles.css" />
         <URL value="@css/Login.css" />
     </stylesheets>
 
-    <!-- LEFT BRAND PANEL -->
-    <VBox alignment="CENTER_LEFT" prefWidth="520" spacing="22"
-          style="-fx-background-color: linear-gradient(to bottom right, #1d4ed8, #2563eb, #0ea5e9); -fx-padding: 60;">
-        <Label text="&#128296;" style="-fx-font-size: 64;"/>
-        <Label text="UET Auction" style="-fx-font-size: 40; -fx-font-weight: bold; -fx-text-fill: white;"/>
-        <Label text="N&#7873;n t&#7843;ng &#273;&#7845;u gi&#225; tr&#7921;c tuy&#7871;n h&#224;ng &#273;&#7847;u"
-               style="-fx-font-size: 16; -fx-text-fill: rgba(255,255,255,0.75);"/>
-        <VBox spacing="12" style="-fx-padding: 20 0 0 0;">
-            <Label text="&#9989; &#272;&#7845;u gi&#225; th&#7901;i gian th&#7921;c" style="-fx-text-fill: rgba(255,255,255,0.9); -fx-font-size: 14;"/>
-            <Label text="&#9989; Tự động đặt giá thông minh" style="-fx-text-fill: rgba(255,255,255,0.9); -fx-font-size: 14;"/>
-            <Label text="&#9989; Chống sụp giá phút chốt tự động" style="-fx-text-fill: rgba(255,255,255,0.9); -fx-font-size: 14;"/>
-            <Label text="&#9989; B&#7843;o m&#7853;t &amp; minh b&#7841;ch" style="-fx-text-fill: rgba(255,255,255,0.9); -fx-font-size: 14;"/>
-        </VBox>
-    </VBox>
+    <!-- ═══════════════════════════════════════════════════════
+         DECORATIVE BACKGROUND CIRCLES (blurred orbs)
+         ═══════════════════════════════════════════════════════ -->
+    <Circle styleClass="orb-1" radius="280" StackPane.alignment="TOP_LEFT"
+            translateX="-80" translateY="-60"/>
+    <Circle styleClass="orb-2" radius="220" StackPane.alignment="BOTTOM_RIGHT"
+            translateX="60" translateY="80"/>
+    <Circle styleClass="orb-3" radius="140" StackPane.alignment="CENTER_RIGHT"
+            translateX="160" translateY="-120"/>
 
-    <!-- RIGHT FORM PANEL — wrapped in ScrollPane for register form overflow -->
-    <ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
-                HBox.hgrow="ALWAYS"
-                style="-fx-background-color: transparent; -fx-background: transparent;">
-    <VBox alignment="CENTER" spacing="0"
-          style="-fx-padding: 40 50 40 50;">
+    <!-- ═══════════════════════════════════════════════════════
+         MAIN CONTENT — two-column HBox centred on screen
+         ═══════════════════════════════════════════════════════ -->
+    <HBox alignment="CENTER" spacing="0" maxWidth="960" maxHeight="620"
+          StackPane.alignment="CENTER">
 
-        <!-- Title (set dynamically by controller) -->
-        <Label fx:id="lblTitle" text="Ch&#224;o m&#7915;ng tr&#7903; l&#7841;i &#128075;"
-               style="-fx-font-size: 28; -fx-font-weight: bold; -fx-text-fill: #0f172a;"/>
-        <Label fx:id="lblSubtitle" text="&#272;&#259;ng nh&#7853;p &#273;&#7875; tham gia &#273;&#7845;u gi&#225; ngay h&#244;m nay"
-               style="-fx-font-size: 14; -fx-text-fill: #64748b; -fx-padding: 4 0 20 0;"/>
+        <!-- ─── LEFT: GLASS FORM PANEL ─── -->
+        <VBox styleClass="glass-card" alignment="TOP_LEFT" spacing="0"
+              prefWidth="430" minWidth="380">
 
-        <!-- Tab buttons -->
-        <HBox spacing="0" style="-fx-background-color: #f1f5f9; -fx-background-radius: 10; -fx-padding: 4;">
-            <Button fx:id="tabLogin" text="&#272;&#259;ng nh&#7853;p" onAction="#switchToLoginTab"
-                    styleClass="auth-tab-active" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-            <Button fx:id="tabRegister" text="&#272;&#259;ng k&#253;" onAction="#switchToRegisterTab"
-                    styleClass="auth-tab" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-        </HBox>
+            <!-- Brand badge -->
+            <HBox alignment="CENTER_LEFT" spacing="10" styleClass="brand-badge">
+                <Label text="⬡" styleClass="brand-hex"/>
+                <Label text="UET Auction" styleClass="brand-name"/>
+            </HBox>
 
-        <!-- LOGIN FORM -->
-        <VBox fx:id="loginForm" spacing="16" style="-fx-padding: 20 0 0 0;">
-            <VBox spacing="6">
-                <Label text="T&#234;n &#273;&#259;ng nh&#7853;p" style="-fx-font-weight: bold; -fx-text-fill: #374151; -fx-font-size: 13;"/>
-                <TextField fx:id="loginUsername" promptText="Nh&#7853;p t&#234;n &#273;&#259;ng nh&#7853;p..."
-                           styleClass="form-input"/>
+            <!-- Dynamic title area -->
+            <Label fx:id="lblTitle" text="Chào mừng trở lại"
+                   styleClass="form-heading" wrapText="true"/>
+            <Label fx:id="lblSubtitle" text="Đăng nhập để tham gia đấu giá ngay hôm nay"
+                   styleClass="form-subheading" wrapText="true"/>
+
+            <!-- Tab switcher -->
+            <HBox styleClass="tab-row" spacing="0">
+                <Button fx:id="tabLogin" text="Đăng nhập" onAction="#switchToLoginTab"
+                        styleClass="tab-btn-active" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                <Button fx:id="tabRegister" text="Đăng ký" onAction="#switchToRegisterTab"
+                        styleClass="tab-btn" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+            </HBox>
+
+            <!-- ── LOGIN FORM ── -->
+            <VBox fx:id="loginForm" spacing="14" styleClass="fields-area">
+                <VBox spacing="5">
+                    <Label text="Tên đăng nhập" styleClass="field-label"/>
+                    <TextField fx:id="loginUsername" promptText="Nhập tên đăng nhập..."
+                               styleClass="dark-input"/>
+                </VBox>
+                <VBox spacing="5">
+                    <Label text="Mật khẩu" styleClass="field-label"/>
+                    <PasswordField fx:id="loginPassword" promptText="Nhập mật khẩu..."
+                                  styleClass="dark-input"/>
+                </VBox>
+
+                <Label fx:id="loginMessage" text="" styleClass="msg-error" wrapText="true"/>
+
+                <Button text="ĐĂNG NHẬP  →" onAction="#handleLogin"
+                        maxWidth="Infinity" styleClass="primary-btn"/>
+
+                <HBox alignment="CENTER" spacing="6">
+                    <Label text="Chưa có tài khoản?" styleClass="hint-text"/>
+                    <Label text="Đăng ký ngay" onMouseClicked="#switchToRegisterTab"
+                           styleClass="link-text"/>
+                </HBox>
             </VBox>
-            <VBox spacing="6">
-                <Label text="M&#7853;t kh&#7849;u" style="-fx-font-weight: bold; -fx-text-fill: #374151; -fx-font-size: 13;"/>
-                <PasswordField fx:id="loginPassword" promptText="Nh&#7853;p m&#7853;t kh&#7849;u..."
-                               styleClass="form-input"/>
+
+            <!-- ── REGISTER FORM ── -->
+            <ScrollPane fx:id="registerScrollPane" fitToWidth="true" hbarPolicy="NEVER"
+                        vbarPolicy="AS_NEEDED" styleClass="reg-scroll"
+                        visible="false" managed="false">
+                <VBox fx:id="registerForm" spacing="11" styleClass="fields-area-reg">
+                    <HBox spacing="10">
+                        <VBox spacing="4" HBox.hgrow="ALWAYS">
+                            <Label text="Họ và tên *" styleClass="field-label"/>
+                            <TextField fx:id="regFullName" promptText="Nguyễn Văn A"
+                                       styleClass="dark-input"/>
+                        </VBox>
+                        <VBox spacing="4" HBox.hgrow="ALWAYS">
+                            <Label text="Email *" styleClass="field-label"/>
+                            <TextField fx:id="regEmail" promptText="email@example.com"
+                                       styleClass="dark-input"/>
+                        </VBox>
+                    </HBox>
+                    <HBox spacing="10">
+                        <VBox spacing="4" HBox.hgrow="ALWAYS">
+                            <Label text="Tên đăng nhập *" styleClass="field-label"/>
+                            <TextField fx:id="regUsername" promptText="username"
+                                       styleClass="dark-input"/>
+                        </VBox>
+                        <VBox spacing="4" HBox.hgrow="ALWAYS">
+                            <Label text="Số điện thoại" styleClass="field-label"/>
+                            <TextField fx:id="regPhone" promptText="0123456789"
+                                       styleClass="dark-input"/>
+                        </VBox>
+                    </HBox>
+                    <HBox spacing="10">
+                        <VBox spacing="4" HBox.hgrow="ALWAYS">
+                            <Label text="Địa chỉ" styleClass="field-label"/>
+                            <TextField fx:id="regAddress" promptText="Số nhà, đường, quận..."
+                                       styleClass="dark-input"/>
+                        </VBox>
+                        <VBox spacing="4" HBox.hgrow="ALWAYS">
+                            <Label text="Tên cửa hàng (nếu bán)" styleClass="field-label"/>
+                            <TextField fx:id="regStoreName" promptText="Tên shop..."
+                                       styleClass="dark-input"/>
+                        </VBox>
+                    </HBox>
+                    <HBox spacing="10">
+                        <VBox spacing="4" HBox.hgrow="ALWAYS">
+                            <Label text="Mật khẩu *" styleClass="field-label"/>
+                            <PasswordField fx:id="regPassword" promptText="Mật khẩu..."
+                                          styleClass="dark-input"/>
+                        </VBox>
+                        <VBox spacing="4" HBox.hgrow="ALWAYS">
+                            <Label text="Xác nhận mật khẩu *" styleClass="field-label"/>
+                            <PasswordField fx:id="regConfirm" promptText="Nhập lại..."
+                                          styleClass="dark-input"/>
+                        </VBox>
+                    </HBox>
+
+                    <Label fx:id="regMessage" text="" styleClass="msg-error" wrapText="true"/>
+
+                    <Button text="TẠO TÀI KHOẢN  →" onAction="#handleRegister"
+                            maxWidth="Infinity" styleClass="primary-btn"/>
+
+                    <HBox alignment="CENTER" spacing="6">
+                        <Label text="Đã có tài khoản?" styleClass="hint-text"/>
+                        <Label text="Đăng nhập ngay" onMouseClicked="#switchToLoginTab"
+                               styleClass="link-text"/>
+                    </HBox>
+                </VBox>
+            </ScrollPane>
+
+        </VBox>
+        <!-- end glass-card -->
+
+        <!-- ─── RIGHT: INFO PANEL ─── -->
+        <VBox styleClass="info-panel" alignment="CENTER_LEFT" spacing="28"
+              prefWidth="470" minWidth="400">
+
+            <!-- Headline -->
+            <VBox spacing="10">
+                <Label text="Nền tảng đấu giá" styleClass="info-eyebrow"/>
+                <Label text="Mua – Bán – Thắng" styleClass="info-title" wrapText="true"/>
+                <Label text="trực tuyến thông minh" styleClass="info-title-accent" wrapText="true"/>
+                <Label text="Hệ thống đấu giá thời gian thực, an toàn và minh bạch\ndành riêng cho cộng đồng UET."
+                       styleClass="info-desc" wrapText="true"/>
             </VBox>
-            <Label fx:id="loginMessage" text="" style="-fx-text-fill: #ef4444; -fx-font-size: 13;"/>
-            <Button text="&#272;&#258;NG NH&#7852;P" onAction="#handleLogin" maxWidth="Infinity"
-                    style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14; -fx-padding: 12 0; -fx-background-radius: 8; -fx-cursor: hand;"/>
-            <!-- Link chuyen sang dang ky -->
-            <HBox alignment="CENTER" spacing="4">
-                <Label text="Ch&#432;a c&#243; t&#224;i kho&#7843;n?" style="-fx-text-fill: #64748b; -fx-font-size: 13;"/>
-                <Label text="&#272;&#259;ng k&#253; ngay" onMouseClicked="#switchToRegisterTab"
-                       style="-fx-text-fill: #2563eb; -fx-font-weight: bold; -fx-font-size: 13; -fx-cursor: hand;"/>
+
+            <!-- Feature list -->
+            <VBox spacing="14">
+                <HBox alignment="CENTER_LEFT" spacing="14">
+                    <Label text="⚡" styleClass="feat-icon"/>
+                    <VBox spacing="1">
+                        <Label text="Đấu giá thời gian thực" styleClass="feat-title"/>
+                        <Label text="Cập nhật giá tức thì, không độ trễ" styleClass="feat-desc"/>
+                    </VBox>
+                </HBox>
+                <HBox alignment="CENTER_LEFT" spacing="14">
+                    <Label text="🤖" styleClass="feat-icon"/>
+                    <VBox spacing="1">
+                        <Label text="Tự động đặt giá thông minh" styleClass="feat-title"/>
+                        <Label text="Hệ thống Auto-bid bảo vệ bạn 24/7" styleClass="feat-desc"/>
+                    </VBox>
+                </HBox>
+                <HBox alignment="CENTER_LEFT" spacing="14">
+                    <Label text="🔒" styleClass="feat-icon"/>
+                    <VBox spacing="1">
+                        <Label text="Bảo mật &amp; minh bạch tuyệt đối" styleClass="feat-title"/>
+                        <Label text="Giao dịch được mã hóa end-to-end" styleClass="feat-desc"/>
+                    </VBox>
+                </HBox>
+                <HBox alignment="CENTER_LEFT" spacing="14">
+                    <Label text="💰" styleClass="feat-icon"/>
+                    <VBox spacing="1">
+                        <Label text="Thanh toán nhanh chóng" styleClass="feat-title"/>
+                        <Label text="Ví điện tử tích hợp, rút tiền dễ dàng" styleClass="feat-desc"/>
+                    </VBox>
+                </HBox>
+            </VBox>
+
+            <!-- Stats row -->
+            <HBox spacing="28" styleClass="stats-row">
+                <VBox alignment="CENTER" spacing="2">
+                    <Label text="10K+" styleClass="stat-num"/>
+                    <Label text="Người dùng" styleClass="stat-label"/>
+                </VBox>
+                <Label text="|" styleClass="stat-divider"/>
+                <VBox alignment="CENTER" spacing="2">
+                    <Label text="50K+" styleClass="stat-num"/>
+                    <Label text="Phiên đấu giá" styleClass="stat-label"/>
+                </VBox>
+                <Label text="|" styleClass="stat-divider"/>
+                <VBox alignment="CENTER" spacing="2">
+                    <Label text="99.9%" styleClass="stat-num"/>
+                    <Label text="Uptime" styleClass="stat-label"/>
+                </VBox>
             </HBox>
+
+            <!-- Footer -->
+            <Label text="© 2025 UET Auction · CS2043 · Nhóm 10"
+                   styleClass="info-footer"/>
         </VBox>
 
-        <!-- REGISTER FORM -->
-        <VBox fx:id="registerForm" spacing="10" visible="false" managed="false" style="-fx-padding: 16 0 0 0;">
-            <HBox spacing="10">
-                <VBox spacing="4" HBox.hgrow="ALWAYS">
-                    <Label text="H&#7885; v&#224; t&#234;n *" style="-fx-font-weight: bold; -fx-text-fill: #374151; -fx-font-size: 12;"/>
-                    <TextField fx:id="regFullName" promptText="Nguy&#7877;n V&#259;n A" styleClass="form-input"/>
-                </VBox>
-                <VBox spacing="4" HBox.hgrow="ALWAYS">
-                    <Label text="Email *" style="-fx-font-weight: bold; -fx-text-fill: #374151; -fx-font-size: 12;"/>
-                    <TextField fx:id="regEmail" promptText="email@example.com" styleClass="form-input"/>
-                </VBox>
-            </HBox>
-            <HBox spacing="10">
-                <VBox spacing="4" HBox.hgrow="ALWAYS">
-                    <Label text="T&#234;n &#273;&#259;ng nh&#7853;p *" style="-fx-font-weight: bold; -fx-text-fill: #374151; -fx-font-size: 12;"/>
-                    <TextField fx:id="regUsername" promptText="username" styleClass="form-input"/>
-                </VBox>
-                <VBox spacing="4" HBox.hgrow="ALWAYS">
-                    <Label text="S&#7889; &#273;i&#7879;n tho&#7841;i" style="-fx-font-weight: bold; -fx-text-fill: #374151; -fx-font-size: 12;"/>
-                    <TextField fx:id="regPhone" promptText="0123456789" styleClass="form-input"/>
-                </VBox>
-            </HBox>
-            <HBox spacing="10">
-                <VBox spacing="4" HBox.hgrow="ALWAYS">
-                    <Label text="&#272;&#7883;a ch&#7881;" style="-fx-font-weight: bold; -fx-text-fill: #374151; -fx-font-size: 12;"/>
-                    <TextField fx:id="regAddress" promptText="S&#7889; nh&#224;, &#273;&#432;&#7901;ng, qu&#7853;n..." styleClass="form-input"/>
-                </VBox>
-                <VBox spacing="4" HBox.hgrow="ALWAYS">
-                    <Label text="T&#234;n c&#7917;a h&#224;ng (n&#7871;u b&#225;n)" style="-fx-font-weight: bold; -fx-text-fill: #374151; -fx-font-size: 12;"/>
-                    <TextField fx:id="regStoreName" promptText="T&#234;n shop..." styleClass="form-input"/>
-                </VBox>
-            </HBox>
-            <HBox spacing="10">
-                <VBox spacing="4" HBox.hgrow="ALWAYS">
-                    <Label text="M&#7853;t kh&#7849;u *" style="-fx-font-weight: bold; -fx-text-fill: #374151; -fx-font-size: 12;"/>
-                    <PasswordField fx:id="regPassword" promptText="M&#7853;t kh&#7849;u..." styleClass="form-input"/>
-                </VBox>
-                <VBox spacing="4" HBox.hgrow="ALWAYS">
-                    <Label text="X&#225;c nh&#7853;n m&#7853;t kh&#7849;u *" style="-fx-font-weight: bold; -fx-text-fill: #374151; -fx-font-size: 12;"/>
-                    <PasswordField fx:id="regConfirm" promptText="Nh&#7853;p l&#7841;i..." styleClass="form-input"/>
-                </VBox>
-            </HBox>
-            <Label fx:id="regMessage" text="" style="-fx-text-fill: #ef4444; -fx-font-size: 13;"/>
-            <Button text="T&#7840;O T&#192;I KHO&#7842;N" onAction="#handleRegister" maxWidth="Infinity"
-                    style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14; -fx-padding: 12 0; -fx-background-radius: 8; -fx-cursor: hand;"/>
-            <HBox alignment="CENTER" spacing="4">
-                <Label text="&#272;&#227; c&#243; t&#224;i kho&#7843;n?" style="-fx-text-fill: #64748b; -fx-font-size: 13;"/>
-                <Label text="&#272;&#259;ng nh&#7853;p ngay" onMouseClicked="#switchToLoginTab"
-                       style="-fx-text-fill: #2563eb; -fx-font-weight: bold; -fx-font-size: 13; -fx-cursor: hand;"/>
-            </HBox>
-        </VBox>
+    </HBox>
+    <!-- end main HBox -->
 
-    </VBox>
-    </ScrollPane>
-</HBox>
+</StackPane>
