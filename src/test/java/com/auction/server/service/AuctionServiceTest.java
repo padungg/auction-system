@@ -497,20 +497,6 @@ class AuctionServiceTest {
       assertEquals(AuctionStatus.CANCELED, runningAuction.getStatus());
     }
 
-    @Test
-    @DisplayName("TC-AUC-ADMIN-03: markPaid phiên chưa FINISHED → BAD_REQUEST")
-    void adminMarkPaid_notFinished() {
-      assertEquals(ResponseStatus.BAD_REQUEST,
-          auctionService.adminMarkPaid("auc-running").getStatus());
-    }
 
-    @Test
-    @DisplayName("TC-AUC-ADMIN-04: markPaid thành công → SUCCESS + status PAID")
-    void adminMarkPaid_success() {
-      runningAuction.setStatus(AuctionStatus.FINISHED);
-      Response res = auctionService.adminMarkPaid("auc-running");
-      assertEquals(ResponseStatus.SUCCESS, res.getStatus());
-      assertEquals(AuctionStatus.PAID, runningAuction.getStatus());
-    }
   }
 }

@@ -295,6 +295,9 @@ public class AuctionService {
         Object lock = com.auction.server.util.LockManager.getAuctionLock(auctionId);
         synchronized (lock) {
             Auction auction = validateAndGetAuction(auctionId);
+            if (auction.getStatus() == AuctionStatus.PAID) {
+                return new Response(ResponseStatus.BAD_REQUEST, "Không thể hủy phiên đấu giá đã được thanh toán", null);
+            }
             auction.setStatus(AuctionStatus.CANCELED);
             boolean success = auctionDAO.update(auction);
             if (!success) {
@@ -316,27 +319,6 @@ public class AuctionService {
             return new Response(ResponseStatus.SUCCESS, "Đã hủy phiên đấu giá thành công!", null);
         }
     }
-
-    public Response adminMarkPaid(String auctionId) throws ValidationException {
-        Auction auction = validateAndGetAuction(auctionId);
-        if (auction.getStatus() != AuctionStatus.FINISHED) {
-            return new Response(ResponseStatus.BAD_REQUEST, "Chỉ có thể đánh dấu PAID cho phiên đã kết thúc", null);
-        }
-        auction.setStatus(AuctionStatus.PAID);
-        boolean success = auctionDAO.update(auction);
-        if (!success) {
-            auction.setStatus(AuctionStatus.FINISHED); // rollback memory
-            return new Response(ResponseStatus.ERROR, "Lỗi máy chủ: Không thể đánh dấu PAID cho phiên đấu giá trong Database", null);
-        }
-        synchronized (cacheLock) {
-            if (isCacheLoaded && CACHE.containsKey(auctionId)) {
-                CACHE.get(auctionId).setStatus(AuctionStatus.PAID.name());
-            }
-        }
-        LOGGER.info("ADMIN_MARK_PAID: auctionId={}", auctionId);
-        return new Response(ResponseStatus.SUCCESS, "Đã đánh dấu phiên thành PAID thành công!", null);
-    }
-
     private Auction validateAndGetAuction(String auctionId) throws ValidationException {
         if (auctionId == null || auctionId.trim().isEmpty()) {
             throw new ValidationException("Thiếu mã phiên đấu giá");

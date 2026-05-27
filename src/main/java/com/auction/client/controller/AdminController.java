@@ -428,14 +428,12 @@ public class AdminController {
                 private final Button btnView = new Button("👁 Xem");
                 private final Button btnClose = new Button("Đóng");
                 private final Button btnCancel = new Button("Hủy");
-                private final Button btnPaid = new Button("Thanh toán");
                 private final HBox box = new HBox(6);
 
                 {
                     btnView.getStyleClass().add("btn-action-view");
                     btnClose.getStyleClass().add("btn-action-close");
                     btnCancel.getStyleClass().add("btn-action-cancel");
-                    btnPaid.getStyleClass().add("btn-action-paid");
                     box.setAlignment(Pos.CENTER);
                 }
 
@@ -454,14 +452,13 @@ public class AdminController {
                                     _ -> MainController.getInstance().openAuctionDetail(row.getAuctionId()));
                             btnClose.setOnAction(_ -> forceCloseAuction(row.getAuctionId()));
                             btnCancel.setOnAction(_ -> cancelAuctionAdmin(row.getAuctionId()));
-                            btnPaid.setOnAction(_ -> markPaidAdmin(row.getAuctionId()));
 
                             box.getChildren().clear();
                             String status = row.getStatus();
                             if ("RUNNING".equalsIgnoreCase(status) || "OPEN".equalsIgnoreCase(status)) {
                                 box.getChildren().addAll(btnView, btnClose, btnCancel);
                             } else if ("FINISHED".equalsIgnoreCase(status)) {
-                                box.getChildren().addAll(btnView, btnPaid, btnCancel);
+                                box.getChildren().addAll(btnView, btnCancel);
                             } else {
                                 box.getChildren().add(btnView);
                             }
@@ -892,29 +889,6 @@ public class AdminController {
                 });
             } catch (Exception e) {
                 LOGGER.error("Gặp sự cố lỗi kết nối mạng khi admin yêu cầu hủy phiên đấu giá: {}", auctionId, e);
-                Platform.runLater(() -> AlertUtils.showError("Lỗi kết nối", e.getMessage()));
-            }
-        });
-    }
-
-    private void markPaidAdmin(String auctionId) {
-        ClientSocketManager.getInstance().execute(() -> {
-            try {
-                Request request = new Request(RequestType.ADMIN_MARK_PAID, auctionId);
-                Response response = ClientSocketManager.getInstance().sendRequest(request);
-
-                Platform.runLater(() -> {
-                    if (response != null && response.getStatus() == ResponseStatus.SUCCESS) {
-                        AlertUtils.showInfo("Thành công", "Đã đánh dấu Đã thanh toán cho phiên: " + auctionId);
-                        loadAuctions();
-                    } else {
-                        AlertUtils.showError("Lỗi",
-                                (response != null && response.getMessage() != null) ? response.getMessage()
-                                        : "Lỗi không xác định");
-                    }
-                });
-            } catch (Exception e) {
-                LOGGER.error("Gặp sự cố lỗi kết nối mạng khi admin yêu cầu đánh dấu tất toán phiên: {}", auctionId, e);
                 Platform.runLater(() -> AlertUtils.showError("Lỗi kết nối", e.getMessage()));
             }
         });

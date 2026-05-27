@@ -29,8 +29,6 @@ public class AdminHandler extends BaseHandler {
                 return handleUnlockUser(request);
             case ADMIN_CANCEL_AUCTION:
                 return handleAdminCancelAuction(request);
-            case ADMIN_MARK_PAID:
-                return handleAdminMarkPaid(request);
             default:
                 return new Response(ResponseStatus.BAD_REQUEST, "Loại request không được hỗ trợ trong AdminHandler", null);
         }
@@ -49,10 +47,5 @@ public class AdminHandler extends BaseHandler {
     private Response handleAdminCancelAuction(Request request) {
         String auctionId = parsePayload(request, String.class);
         return auctionService.adminCancelAuction(auctionId);
-    }
-
-    private Response handleAdminMarkPaid(Request request) {
-        String auctionId = parsePayload(request, String.class);
-        return auctionService.adminMarkPaid(auctionId);
     }
 }

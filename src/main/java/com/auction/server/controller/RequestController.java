@@ -74,7 +74,6 @@ public class RequestController {
         handlerMap.put(RequestType.LOCK_USER, adminHandler);
         handlerMap.put(RequestType.UNLOCK_USER, adminHandler);
         handlerMap.put(RequestType.ADMIN_CANCEL_AUCTION, adminHandler);
-        handlerMap.put(RequestType.ADMIN_MARK_PAID, adminHandler);
 
         // ACCOUNT
         handlerMap.put(RequestType.GET_MY_PROFILE, accountHandler);
