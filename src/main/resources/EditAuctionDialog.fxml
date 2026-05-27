@@ -7,7 +7,7 @@
 <?import java.lang.String?>
 <?import java.net.URL?>
 
-<VBox spacing="16" style="-fx-padding: 24; -fx-background-radius: 12;"
+<VBox spacing="16" style="-fx-padding: 24; -fx-background-radius: 12; -fx-background-color: #0d1a12;"
       xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.auction.client.controller.EditAuctionDialogController">
     <stylesheets>
@@ -17,12 +17,12 @@
 
     <!-- Header -->
     <HBox alignment="CENTER_LEFT">
-        <Label text="✏️ Chỉnh sửa sản phẩm" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+        <Label text="✏️ Chỉnh sửa sản phẩm" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #a7f3d0;"/>
         <Region HBox.hgrow="ALWAYS"/>
-        <Button text="✕" onAction="#handleClose" style="-fx-background-color: transparent; -fx-font-size: 18; -fx-text-fill: #94a3b8; -fx-cursor: hand; -fx-padding: 0;"/>
+        <Button text="✕" onAction="#handleClose" style="-fx-background-color: transparent; -fx-font-size: 18; -fx-text-fill: #4d8c6a; -fx-cursor: hand; -fx-padding: 0;"/>
     </HBox>
 
-    <Separator style="-fx-border-color: #f1f5f9; -fx-border-width: 1 0 0 0;"/>
+    <Separator style="-fx-background-color: #1a3326;"/>
 
     <VBox spacing="16" VBox.vgrow="ALWAYS">
         <GridPane hgap="20" vgap="16">
@@ -30,12 +30,12 @@
                 <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
                 <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
             </columnConstraints>
-            
+
             <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
                 <Label text="Tên sản phẩm *" styleClass="form-label"/>
                 <TextField fx:id="txtName" styleClass="form-input"/>
             </VBox>
-            
+
             <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
                 <Label text="Tình trạng" styleClass="form-label"/>
                 <ComboBox fx:id="cbCondition" styleClass="form-select" maxWidth="Infinity">
@@ -48,12 +48,12 @@
                     </items>
                 </ComboBox>
             </VBox>
-            
+
             <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="1">
                 <Label text="Giá khởi điểm (VNĐ) *" styleClass="form-label"/>
                 <TextField fx:id="txtPrice" styleClass="form-input"/>
             </VBox>
-            
+
             <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.columnSpan="2">
                 <Label text="Mô tả sản phẩm" styleClass="form-label"/>
                 <TextArea fx:id="txtDesc" prefRowCount="4" styleClass="form-textarea" wrapText="true"/>
@@ -61,8 +61,10 @@
         </GridPane>
 
         <!-- Dynamic fields based on type -->
-        <VBox fx:id="paneElectronics" style="-fx-padding: 16; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;" spacing="16" visible="false" managed="false">
-            <Label text="💻 THÔNG TIN ELECTRONICS" style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #64748b;"/>
+        <VBox fx:id="paneElectronics"
+              style="-fx-padding: 16; -fx-background-radius: 8; -fx-border-color: #1a3326; -fx-border-radius: 8; -fx-background-color: #0a1810;"
+              spacing="16" visible="false" managed="false">
+            <Label text="💻 THÔNG TIN ELECTRONICS" style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #4d8c6a;"/>
             <GridPane hgap="20" vgap="16">
                 <columnConstraints>
                     <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
@@ -79,8 +81,10 @@
             </GridPane>
         </VBox>
 
-        <VBox fx:id="paneArt" style="-fx-padding: 16; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;" spacing="16" visible="false" managed="false">
-            <Label text="🎨 THÔNG TIN NGHỆ THUẬT" style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #64748b;"/>
+        <VBox fx:id="paneArt"
+              style="-fx-padding: 16; -fx-background-radius: 8; -fx-border-color: #1a3326; -fx-border-radius: 8; -fx-background-color: #0a1810;"
+              spacing="16" visible="false" managed="false">
+            <Label text="🎨 THÔNG TIN NGHỆ THUẬT" style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #4d8c6a;"/>
             <GridPane hgap="20" vgap="16">
                 <columnConstraints>
                     <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
@@ -101,8 +105,10 @@
             </GridPane>
         </VBox>
 
-        <VBox fx:id="paneVehicle" style="-fx-padding: 16; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;" spacing="16" visible="false" managed="false">
-            <Label text="🚗 THÔNG TIN PHƯƠNG TIỆN" style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #64748b;"/>
+        <VBox fx:id="paneVehicle"
+              style="-fx-padding: 16; -fx-background-radius: 8; -fx-border-color: #1a3326; -fx-border-radius: 8; -fx-background-color: #0a1810;"
+              spacing="16" visible="false" managed="false">
+            <Label text="🚗 THÔNG TIN PHƯƠNG TIỆN" style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #4d8c6a;"/>
             <GridPane hgap="20" vgap="16">
                 <columnConstraints>
                     <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
@@ -127,17 +133,18 @@
             </GridPane>
         </VBox>
 
-        <HBox style="-fx-background-color: #fffbeb; -fx-border-color: #fde68a; -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 12;">
-            <Label text="⚠️ Lưu ý: Loại sản phẩm không thể thay đổi sau khi tạo." style="-fx-text-fill: #d97706;"/>
+        <HBox style="-fx-background-color: #1c1500; -fx-border-color: #4a3800; -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 12;">
+            <Label text="⚠️ Lưu ý: Loại sản phẩm không thể thay đổi sau khi tạo." style="-fx-text-fill: #f59e0b;"/>
         </HBox>
     </VBox>
 
-    <Separator style="-fx-border-color: #f1f5f9; -fx-border-width: 1 0 0 0;"/>
+    <Separator style="-fx-background-color: #1a3326;"/>
 
     <!-- Footer -->
     <HBox alignment="CENTER_RIGHT" spacing="12">
-        <Button text="Hủy" onAction="#handleClose" style="-fx-border-color: #e2e8f0; -fx-text-fill: #475569; -fx-padding: 8 20; -fx-border-radius: 6; -fx-background-radius: 6; -fx-cursor: hand; -fx-font-weight: bold;"/>
-        <Button text="💾 Lưu thay đổi" onAction="#handleSave" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-padding: 8 20; -fx-background-radius: 6; -fx-cursor: hand; -fx-font-weight: bold;"/>
+        <Button text="Hủy" onAction="#handleClose"
+                style="-fx-background-color: #0f2218; -fx-text-fill: #5a9e7a; -fx-border-color: #1a3326; -fx-padding: 8 20; -fx-border-radius: 6; -fx-background-radius: 6; -fx-cursor: hand; -fx-font-weight: bold;"/>
+        <Button text="💾 Lưu thay đổi" onAction="#handleSave"
+                style="-fx-background-color: #00a854; -fx-text-fill: #020d06; -fx-padding: 8 20; -fx-background-radius: 6; -fx-cursor: hand; -fx-font-weight: bold;"/>
     </HBox>
 </VBox>
-

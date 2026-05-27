@@ -10,11 +10,11 @@
 
     <!-- Breadcrumb -->
     <HBox alignment="CENTER_LEFT" spacing="8" styleClass="breadcrumb">
-        <Label text="Trang ch&#7911;" style="-fx-text-fill: #64748b;"/>
+        <Label text="Trang ch&#7911;" style="-fx-text-fill: #2d6648;"/>
         <Label text="&#8250;" styleClass="breadcrumb-sep"/>
-        <Label text="Qu&#7843;n tr&#7883;" style="-fx-text-fill: #64748b;"/>
+        <Label text="Qu&#7843;n tr&#7883;" style="-fx-text-fill: #2d6648;"/>
         <Label text="&#8250;" styleClass="breadcrumb-sep"/>
-        <Label text="Qu&#7843;n l&#253; &#273;&#7845;u gi&#225;" style="-fx-text-fill: #1e293b; -fx-font-weight: bold;"/>
+        <Label text="Qu&#7843;n l&#253; &#273;&#7845;u gi&#225;" style="-fx-text-fill: #a7f3d0; -fx-font-weight: bold;"/>
     </HBox>
 
     <!-- STAT CARDS -->
@@ -22,37 +22,37 @@
         <!-- Tong phien -->
         <VBox HBox.hgrow="ALWAYS" spacing="4" alignment="CENTER_LEFT"
               style="-fx-background-color: #0d1a12; -fx-border-color: #1a3326; -fx-border-radius: 14; -fx-background-radius: 14; -fx-padding: 16 20; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.35), 6, 0, 0, 2);">
-            <Label text="&#128230; T&#7893;ng phi&#234;n" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
-            <Label fx:id="aucStatTotal" text="0" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #2563eb;"/>
+            <Label text="&#128230; T&#7893;ng phi&#234;n" style="-fx-text-fill: #4d8c6a; -fx-font-size: 12px;"/>
+            <Label fx:id="aucStatTotal" text="0" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #00e676;"/>
         </VBox>
         <!-- RUNNING -->
         <VBox HBox.hgrow="ALWAYS" spacing="4" alignment="CENTER_LEFT"
               style="-fx-background-color: #0d1a12; -fx-border-color: #1a3326; -fx-border-radius: 14; -fx-background-radius: 14; -fx-padding: 16 20; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.35), 6, 0, 0, 2);">
-            <Label text="&#9654; &#272;ang di&#7877;n ra" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
-            <Label fx:id="aucStatRunning" text="0" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #16a34a;"/>
+            <Label text="&#9654; &#272;ang di&#7877;n ra" style="-fx-text-fill: #4d8c6a; -fx-font-size: 12px;"/>
+            <Label fx:id="aucStatRunning" text="0" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #00c87a;"/>
         </VBox>
         <!-- OPEN -->
         <VBox HBox.hgrow="ALWAYS" spacing="4" alignment="CENTER_LEFT"
               style="-fx-background-color: #0d1a12; -fx-border-color: #1a3326; -fx-border-radius: 14; -fx-background-radius: 14; -fx-padding: 16 20; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.35), 6, 0, 0, 2);">
-            <Label text="&#128337; S&#7855;p di&#7877;n ra" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
+            <Label text="&#128337; S&#7855;p di&#7877;n ra" style="-fx-text-fill: #4d8c6a; -fx-font-size: 12px;"/>
             <Label fx:id="aucStatOpen" text="0" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #d97706;"/>
         </VBox>
         <!-- FINISHED -->
         <VBox HBox.hgrow="ALWAYS" spacing="4" alignment="CENTER_LEFT"
               style="-fx-background-color: #0d1a12; -fx-border-color: #1a3326; -fx-border-radius: 14; -fx-background-radius: 14; -fx-padding: 16 20; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.35), 6, 0, 0, 2);">
-            <Label text="&#9711; K&#7871;t th&#250;c" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
-            <Label fx:id="aucStatFinished" text="0" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #64748b;"/>
+            <Label text="&#9711; K&#7871;t th&#250;c" style="-fx-text-fill: #4d8c6a; -fx-font-size: 12px;"/>
+            <Label fx:id="aucStatFinished" text="0" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #4d8c6a;"/>
         </VBox>
         <!-- PAID -->
         <VBox HBox.hgrow="ALWAYS" spacing="4" alignment="CENTER_LEFT"
               style="-fx-background-color: #0d1a12; -fx-border-color: #1a3326; -fx-border-radius: 14; -fx-background-radius: 14; -fx-padding: 16 20; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.35), 6, 0, 0, 2);">
-            <Label text="&#10003; &#272;&#227; thanh to&#225;n" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
-            <Label fx:id="aucStatPaid" text="0" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #059669;"/>
+            <Label text="&#10003; &#272;&#227; thanh to&#225;n" style="-fx-text-fill: #4d8c6a; -fx-font-size: 12px;"/>
+            <Label fx:id="aucStatPaid" text="0" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #00c87a;"/>
         </VBox>
         <!-- CANCELED -->
         <VBox HBox.hgrow="ALWAYS" spacing="4" alignment="CENTER_LEFT"
               style="-fx-background-color: #0d1a12; -fx-border-color: #1a3326; -fx-border-radius: 14; -fx-background-radius: 14; -fx-padding: 16 20; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.35), 6, 0, 0, 2);">
-            <Label text="&#10005; &#272;&#227; h&#7911;y" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
+            <Label text="&#10005; &#272;&#227; h&#7911;y" style="-fx-text-fill: #4d8c6a; -fx-font-size: 12px;"/>
             <Label fx:id="aucStatCanceled" text="0" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #dc2626;"/>
         </VBox>
     </HBox>
@@ -61,7 +61,7 @@
     <VBox styleClass="section-card" VBox.vgrow="ALWAYS" spacing="16">
         <HBox alignment="CENTER_LEFT">
             <Label text="Danh s&#225;ch t&#7845;t c&#7843; phi&#234;n &#273;&#7845;u gi&#225;"
-                   style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #0f172a;"/>
+                   style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #a7f3d0;"/>
         </HBox>
 
         <TableView fx:id="tableAuctions" styleClass="data-table" VBox.vgrow="ALWAYS">

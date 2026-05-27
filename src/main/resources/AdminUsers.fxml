@@ -10,11 +10,11 @@
 
     <!-- Breadcrumb -->
     <HBox alignment="CENTER_LEFT" spacing="8" styleClass="breadcrumb">
-        <Label text="Trang ch&#7911;" style="-fx-text-fill: #64748b;"/>
+        <Label text="Trang ch&#7911;" style="-fx-text-fill: #2d6648;"/>
         <Label text="&#8250;" styleClass="breadcrumb-sep"/>
-        <Label text="Qu&#7843;n tr&#7883;" style="-fx-text-fill: #64748b;"/>
+        <Label text="Qu&#7843;n tr&#7883;" style="-fx-text-fill: #2d6648;"/>
         <Label text="&#8250;" styleClass="breadcrumb-sep"/>
-        <Label text="Qu&#7843;n l&#253; ng&#432;&#7901;i d&#249;ng" style="-fx-text-fill: #1e293b; -fx-font-weight: bold;"/>
+        <Label text="Qu&#7843;n l&#253; ng&#432;&#7901;i d&#249;ng" style="-fx-text-fill: #a7f3d0; -fx-font-weight: bold;"/>
     </HBox>
 
     <!-- STAT CARDS -->
@@ -22,34 +22,34 @@
         <!-- Tong dang ky -->
         <VBox HBox.hgrow="ALWAYS" spacing="4" alignment="CENTER_LEFT"
               style="-fx-background-color: #0d1a12; -fx-border-color: #1a3326; -fx-border-radius: 14; -fx-background-radius: 14; -fx-padding: 20 24; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.35), 6, 0, 0, 2);">
-            <Label text="&#128101; T&#7893;ng &#273;&#259;ng k&#253;" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
+            <Label text="&#128101; T&#7893;ng &#273;&#259;ng k&#253;" style="-fx-text-fill: #4d8c6a; -fx-font-size: 12px;"/>
             <Label fx:id="statTotalUsers" text="0"
-                   style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #2563eb;"/>
-            <Label text="t&#224;i kho&#7843;n" style="-fx-text-fill: #94a3b8; -fx-font-size: 11px;"/>
+                   style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #00e676;"/>
+            <Label text="t&#224;i kho&#7843;n" style="-fx-text-fill: #2d6648; -fx-font-size: 11px;"/>
         </VBox>
         <!-- Dang hoat dong -->
         <VBox HBox.hgrow="ALWAYS" spacing="4" alignment="CENTER_LEFT"
               style="-fx-background-color: #0d1a12; -fx-border-color: #1a3326; -fx-border-radius: 14; -fx-background-radius: 14; -fx-padding: 20 24; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.35), 6, 0, 0, 2);">
-            <Label text="&#9989; &#272;ang ho&#7841;t &#273;&#7897;ng" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
+            <Label text="&#9989; &#272;ang ho&#7841;t &#273;&#7897;ng" style="-fx-text-fill: #4d8c6a; -fx-font-size: 12px;"/>
             <Label fx:id="statActiveUsers" text="0"
-                   style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #059669;"/>
-            <Label text="t&#224;i kho&#7843;n" style="-fx-text-fill: #94a3b8; -fx-font-size: 11px;"/>
+                   style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #00c87a;"/>
+            <Label text="t&#224;i kho&#7843;n" style="-fx-text-fill: #2d6648; -fx-font-size: 11px;"/>
         </VBox>
         <!-- Bi khoa -->
         <VBox HBox.hgrow="ALWAYS" spacing="4" alignment="CENTER_LEFT"
               style="-fx-background-color: #0d1a12; -fx-border-color: #1a3326; -fx-border-radius: 14; -fx-background-radius: 14; -fx-padding: 20 24; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.35), 6, 0, 0, 2);">
-            <Label text="&#128274; B&#7883; kh&#243;a" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
+            <Label text="&#128274; B&#7883; kh&#243;a" style="-fx-text-fill: #4d8c6a; -fx-font-size: 12px;"/>
             <Label fx:id="statLockedUsers" text="0"
                    style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #dc2626;"/>
-            <Label text="t&#224;i kho&#7843;n" style="-fx-text-fill: #94a3b8; -fx-font-size: 11px;"/>
+            <Label text="t&#224;i kho&#7843;n" style="-fx-text-fill: #2d6648; -fx-font-size: 11px;"/>
         </VBox>
         <!-- Admin -->
         <VBox HBox.hgrow="ALWAYS" spacing="4" alignment="CENTER_LEFT"
               style="-fx-background-color: #0d1a12; -fx-border-color: #1a3326; -fx-border-radius: 14; -fx-background-radius: 14; -fx-padding: 20 24; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.35), 6, 0, 0, 2);">
-            <Label text="&#128081; Qu&#7843;n tr&#7883; vi&#234;n" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
+            <Label text="&#128081; Qu&#7843;n tr&#7883; vi&#234;n" style="-fx-text-fill: #4d8c6a; -fx-font-size: 12px;"/>
             <Label fx:id="statAdminUsers" text="0"
-                   style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #7c3aed;"/>
-            <Label text="t&#224;i kho&#7843;n" style="-fx-text-fill: #94a3b8; -fx-font-size: 11px;"/>
+                   style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #00e5ff;"/>
+            <Label text="t&#224;i kho&#7843;n" style="-fx-text-fill: #2d6648; -fx-font-size: 11px;"/>
         </VBox>
     </HBox>
 
@@ -57,7 +57,7 @@
     <VBox styleClass="section-card" VBox.vgrow="ALWAYS" spacing="16">
         <!-- Header row -->
         <HBox alignment="CENTER_LEFT">
-            <Label text="Danh s&#225;ch ng&#432;&#7901;i d&#249;ng" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #0f172a;"/>
+            <Label text="Danh s&#225;ch ng&#432;&#7901;i d&#249;ng" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #a7f3d0;"/>
             <Region HBox.hgrow="ALWAYS"/>
             <HBox spacing="8">
                 <Button text="&#128274; Kh&#243;a t&#224;i kho&#7843;n" onAction="#handleLockUser" styleClass="btn"
