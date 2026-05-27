@@ -4,7 +4,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 
-<VBox spacing="20" style="-fx-padding: 24;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+<VBox spacing="20" style="-fx-padding: 24; -fx-background-color: #080f0a;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.auction.client.controller.AdminController"
       stylesheets="@css/Admin.css">
 
@@ -21,7 +21,7 @@
     <HBox spacing="16">
         <!-- Tong dang ky -->
         <VBox HBox.hgrow="ALWAYS" spacing="4" alignment="CENTER_LEFT"
-              style="-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-radius: 14; -fx-background-radius: 14; -fx-padding: 20 24; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.06), 6, 0, 0, 2);">
+              style="-fx-background-color: #0d1a12; -fx-border-color: #1a3326; -fx-border-radius: 14; -fx-background-radius: 14; -fx-padding: 20 24; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.35), 6, 0, 0, 2);">
             <Label text="&#128101; T&#7893;ng &#273;&#259;ng k&#253;" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
             <Label fx:id="statTotalUsers" text="0"
                    style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #2563eb;"/>
@@ -29,7 +29,7 @@
         </VBox>
         <!-- Dang hoat dong -->
         <VBox HBox.hgrow="ALWAYS" spacing="4" alignment="CENTER_LEFT"
-              style="-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-radius: 14; -fx-background-radius: 14; -fx-padding: 20 24; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.06), 6, 0, 0, 2);">
+              style="-fx-background-color: #0d1a12; -fx-border-color: #1a3326; -fx-border-radius: 14; -fx-background-radius: 14; -fx-padding: 20 24; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.35), 6, 0, 0, 2);">
             <Label text="&#9989; &#272;ang ho&#7841;t &#273;&#7897;ng" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
             <Label fx:id="statActiveUsers" text="0"
                    style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #059669;"/>
@@ -37,7 +37,7 @@
         </VBox>
         <!-- Bi khoa -->
         <VBox HBox.hgrow="ALWAYS" spacing="4" alignment="CENTER_LEFT"
-              style="-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-radius: 14; -fx-background-radius: 14; -fx-padding: 20 24; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.06), 6, 0, 0, 2);">
+              style="-fx-background-color: #0d1a12; -fx-border-color: #1a3326; -fx-border-radius: 14; -fx-background-radius: 14; -fx-padding: 20 24; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.35), 6, 0, 0, 2);">
             <Label text="&#128274; B&#7883; kh&#243;a" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
             <Label fx:id="statLockedUsers" text="0"
                    style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #dc2626;"/>
@@ -45,7 +45,7 @@
         </VBox>
         <!-- Admin -->
         <VBox HBox.hgrow="ALWAYS" spacing="4" alignment="CENTER_LEFT"
-              style="-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-radius: 14; -fx-background-radius: 14; -fx-padding: 20 24; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.06), 6, 0, 0, 2);">
+              style="-fx-background-color: #0d1a12; -fx-border-color: #1a3326; -fx-border-radius: 14; -fx-background-radius: 14; -fx-padding: 20 24; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.35), 6, 0, 0, 2);">
             <Label text="&#128081; Qu&#7843;n tr&#7883; vi&#234;n" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
             <Label fx:id="statAdminUsers" text="0"
                    style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #7c3aed;"/>
@@ -63,7 +63,7 @@
                 <Button text="&#128274; Kh&#243;a t&#224;i kho&#7843;n" onAction="#handleLockUser" styleClass="btn"
                         style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand; -fx-padding: 8 16;"/>
                 <Button text="&#128275; M&#7903; kh&#243;a" onAction="#handleUnlockUser" styleClass="btn"
-                        style="-fx-background-color: #22c55e; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand; -fx-padding: 8 16;"/>
+                        style="-fx-background-color: #00a854; -fx-text-fill: #020d06; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand; -fx-padding: 8 16;"/>
             </HBox>
         </HBox>
 
@@ -87,19 +87,19 @@
         <!-- PAGINATION ROW -->
         <HBox alignment="CENTER" spacing="12" style="-fx-padding: 8 0 4 0;">
             <Button fx:id="btnFirstPage" text="&#171;" onAction="#goFirstPage"
-                    style="-fx-background-color: #f1f5f9; -fx-text-fill: #475569; -fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 6 12; -fx-font-weight: bold;"/>
+                    style="-fx-background-color: #0f2218; -fx-text-fill: #5a9e7a; -fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 6 12; -fx-font-weight: bold;"/>
             <Button fx:id="btnPrevPage" text="&#8249;" onAction="#goPrevPage"
-                    style="-fx-background-color: #f1f5f9; -fx-text-fill: #475569; -fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 6 12; -fx-font-size: 16; -fx-font-weight: bold;"/>
+                    style="-fx-background-color: #0f2218; -fx-text-fill: #5a9e7a; -fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 6 12; -fx-font-size: 16; -fx-font-weight: bold;"/>
 
             <HBox fx:id="pageButtonBox" spacing="6" alignment="CENTER"/>
 
             <Button fx:id="btnNextPage" text="&#8250;" onAction="#goNextPage"
-                    style="-fx-background-color: #f1f5f9; -fx-text-fill: #475569; -fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 6 12; -fx-font-size: 16; -fx-font-weight: bold;"/>
+                    style="-fx-background-color: #0f2218; -fx-text-fill: #5a9e7a; -fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 6 12; -fx-font-size: 16; -fx-font-weight: bold;"/>
             <Button fx:id="btnLastPage" text="&#187;" onAction="#goLastPage"
-                    style="-fx-background-color: #f1f5f9; -fx-text-fill: #475569; -fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 6 12; -fx-font-weight: bold;"/>
+                    style="-fx-background-color: #0f2218; -fx-text-fill: #5a9e7a; -fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 6 12; -fx-font-weight: bold;"/>
 
             <Label fx:id="lblPageInfo" text="Trang 1 / 1"
-                   style="-fx-text-fill: #64748b; -fx-font-size: 12px; -fx-padding: 0 0 0 8;"/>
+                   style="-fx-text-fill: #4d8c6a; -fx-font-size: 12px; -fx-padding: 0 0 0 8;"/>
         </HBox>
     </VBox>
 </VBox>

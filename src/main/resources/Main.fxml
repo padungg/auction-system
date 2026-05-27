@@ -11,15 +11,14 @@
 
     <BorderPane>
 
-
     <!-- ══════════════════════ SIDEBAR ══════════════════════ -->
     <left>
         <VBox prefWidth="260" styleClass="sidebar">
             <!-- Logo -->
             <HBox alignment="CENTER_LEFT" spacing="10"
-                  style="-fx-padding: 18 20 18 20; -fx-border-color: #f1f5f9; -fx-border-width: 0 0 1 0;">
-                <Label style="-fx-background-color: #2563eb; -fx-background-radius: 8; -fx-text-fill: white; -fx-alignment: center; -fx-pref-width: 32; -fx-pref-height: 32; -fx-font-size: 16;" text="🔨"/>
-                <Label text="UET Auction" style="-fx-font-weight: bold; -fx-font-size: 17px; -fx-text-fill: #2563eb;"/>
+                  style="-fx-padding: 18 20 18 20; -fx-border-color: #1a3326; -fx-border-width: 0 0 1 0;">
+                <Label style="-fx-background-color: #00a854; -fx-background-radius: 8; -fx-text-fill: #020d06; -fx-alignment: center; -fx-pref-width: 32; -fx-pref-height: 32; -fx-font-size: 16;" text="🔨"/>
+                <Label text="UET Auction" style="-fx-font-weight: bold; -fx-font-size: 17px; -fx-text-fill: #00e676;"/>
             </HBox>
 
             <!-- Nav Items -->
@@ -33,7 +32,7 @@
                 <Button fx:id="navDetail" text="   🔍  Chi tiết sản phẩm" prefWidth="236" prefHeight="38"
                         styleClass="nav-button" onAction="#showPageDetail" visible="false" managed="false"/>
 
-                <Separator style="-fx-padding: 10 0 10 0;"/>
+                <Separator style="-fx-padding: 10 0 10 0; -fx-background-color: #1a3326;"/>
 
                 <!-- Người bán -->
                 <VBox fx:id="sellerNav" spacing="2">
@@ -42,7 +41,7 @@
                             styleClass="nav-button" onAction="#showPageManage"/>
                 </VBox>
 
-                <Separator style="-fx-padding: 10 0 10 0;"/>
+                <Separator style="-fx-padding: 10 0 10 0; -fx-background-color: #1a3326;"/>
 
                 <!-- Admin (ẩn nếu không phải ADMIN) -->
                 <VBox fx:id="adminNav" spacing="2" visible="false" managed="false">
@@ -51,7 +50,7 @@
                             styleClass="nav-button" onAction="#showPageAdminUsers"/>
                     <Button fx:id="navAdminAuctions" text="   ⚙  Quản lý đấu giá" prefWidth="236" prefHeight="38"
                             styleClass="nav-button" onAction="#showPageAdminAuctions"/>
-                    <Separator style="-fx-padding: 10 0 10 0;"/>
+                    <Separator style="-fx-padding: 10 0 10 0; -fx-background-color: #1a3326;"/>
                 </VBox>
 
                 <!-- Cá nhân -->
@@ -65,7 +64,7 @@
             </VBox>
 
             <!-- Logout -->
-            <VBox style="-fx-padding: 12; -fx-border-color: #f1f5f9; -fx-border-width: 1 0 0 0;">
+            <VBox style="-fx-padding: 12; -fx-border-color: #1a3326; -fx-border-width: 1 0 0 0;">
                 <Button text="   🚪  Đăng xuất" prefWidth="236" prefHeight="38"
                         styleClass="nav-logout" onAction="#handleLogout"/>
             </VBox>
@@ -74,31 +73,31 @@
 
     <!-- ══════════════════════ CENTER ══════════════════════ -->
     <center>
-        <VBox>
+        <VBox style="-fx-background-color: #080f0a;">
             <!-- Header Bar -->
             <HBox alignment="CENTER_LEFT" prefHeight="60" styleClass="header-bar" spacing="16">
-                <!-- Back Button: ẩn mặc định, hiển thị khi ở trang chi tiết sản phẩm -->
+                <!-- Back Button -->
                 <Button fx:id="btnBack" text="← Quay lại" onAction="#handleBack"
                         visible="false" managed="false"
-                        style="-fx-background-color: white; -fx-text-fill: #2563eb; -fx-font-weight: bold;
-                               -fx-font-size: 13; -fx-padding: 7 16; -fx-border-color: #e2e8f0;
+                        style="-fx-background-color: #0d1a12; -fx-text-fill: #00c87a; -fx-font-weight: bold;
+                               -fx-font-size: 13; -fx-padding: 7 16; -fx-border-color: #1a3326;
                                -fx-border-radius: 8; -fx-background-radius: 8; -fx-cursor: hand;
-                               -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 4, 0, 0, 1);"/>
+                               -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 4, 0, 0, 1);"/>
 
                 <Label fx:id="headerTitle" text="Danh sách đấu giá" styleClass="page-title"/>
-                <Separator orientation="VERTICAL" style="-fx-padding: 0 0 0 0;">
+                <Separator orientation="VERTICAL" style="-fx-padding: 0 0 0 0; -fx-background-color: #1a3326;">
                     <HBox.margin><Insets top="15" bottom="15"/></HBox.margin>
                 </Separator>
                 <Label fx:id="headerGreeting" text="Xin chào!" styleClass="header-greeting"/>
                 <Region HBox.hgrow="ALWAYS"/>
-                
+
                 <!-- Clock -->
-                <Label fx:id="lblClock" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #64748b;"/>
-                
+                <Label fx:id="lblClock" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #4d8c6a;"/>
+
                 <!-- Icons -->
                 <Button fx:id="btnThemeToggle" text="🌙" onAction="#toggleTheme" styleClass="icon-btn"
                         style="-fx-background-color: transparent; -fx-cursor: hand; -fx-font-size: 16; -fx-padding: 4 8; -fx-border-radius: 50%;" />
-                
+
                 <StackPane>
                     <Button text="🔔" onAction="#toggleNotifications" styleClass="icon-btn"
                             style="-fx-background-color: transparent; -fx-cursor: hand; -fx-font-size: 16; -fx-padding: 4 8; -fx-border-radius: 50%;" />
@@ -109,12 +108,12 @@
                 <Label fx:id="headerBalance" text="💰 0 VNĐ" styleClass="balance-chip"/>
                 <HBox alignment="CENTER" spacing="8" styleClass="user-chip">
                     <Label fx:id="headerAvatar" text="?" styleClass="avatar-label"/>
-                    <Label fx:id="headerUsername" text="Khách" style="-fx-font-size: 13; -fx-font-weight: 500;"/>
+                    <Label fx:id="headerUsername" text="Khách" style="-fx-font-size: 13; -fx-font-weight: 500; -fx-text-fill: #c6f6e0;"/>
                 </HBox>
             </HBox>
 
-            <!-- Content Area (StackPane for page switching) -->
-            <StackPane fx:id="contentStack" VBox.vgrow="ALWAYS" style="">
+            <!-- Content Area -->
+            <StackPane fx:id="contentStack" VBox.vgrow="ALWAYS" style="-fx-background-color: #080f0a;">
                 <!-- Pages will be loaded programmatically -->
             </StackPane>
         </VBox>
@@ -123,20 +122,19 @@
 
     <!-- Notification Dropdown Overlay -->
     <VBox fx:id="notifDropdown" visible="false" managed="false"
-          StackPane.alignment="TOP_RIGHT" 
+          StackPane.alignment="TOP_RIGHT"
           styleClass="notif-dropdown"
           maxWidth="360" maxHeight="450"
           style="-fx-translate-y: 65; -fx-translate-x: -20;">
-        
+
         <HBox alignment="CENTER_RIGHT" styleClass="notif-header">
-            <Hyperlink text="Đánh dấu đã đọc" onAction="#markAllNotifsRead" style="-fx-text-fill: #2563eb; -fx-font-weight: bold;"/>
+            <Hyperlink text="Đánh dấu đã đọc" onAction="#markAllNotifsRead" style="-fx-text-fill: #00c87a; -fx-font-weight: bold;"/>
         </HBox>
         <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="scroll-pane">
-            <VBox fx:id="notifList" spacing="0">
-                <!-- Mock notifications will be injected here -->
+            <VBox fx:id="notifList" spacing="0" style="-fx-background-color: #0d1a12;">
+                <!-- Notifications injected here -->
             </VBox>
         </ScrollPane>
     </VBox>
 
 </StackPane>
-

@@ -4,15 +4,16 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 
-<VBox spacing="14" style="-fx-padding: 20;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+<VBox spacing="14" style="-fx-padding: 20; -fx-background-color: #080f0a;"
+      xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.auction.client.controller.AccountController"
       stylesheets="@css/Account.css">
 
     <!-- Breadcrumb -->
     <HBox alignment="CENTER_LEFT" spacing="8" styleClass="breadcrumb">
-        <Label text="Trang ch&#7911;" style="-fx-text-fill: #64748b;"/>
+        <Label text="Trang ch&#7911;" style="-fx-text-fill: #2d6648;"/>
         <Label text="&#8250;" styleClass="breadcrumb-sep"/>
-        <Label text="T&#224;i kho&#7843;n c&#7911;a t&#244;i" style="-fx-text-fill: #1e293b; -fx-font-weight: bold;"/>
+        <Label text="T&#224;i kho&#7843;n c&#7911;a t&#244;i" style="-fx-text-fill: #a7f3d0; -fx-font-weight: bold;"/>
     </HBox>
 
     <!-- PROFILE CARD — 2 columns -->
@@ -23,52 +24,52 @@
 
             <!-- Avatar -->
             <VBox alignment="CENTER" minWidth="64" maxWidth="64" minHeight="64" maxHeight="64"
-                  style="-fx-background-color: #2563eb; -fx-background-radius: 50%;">
-                <Label fx:id="lblAvatar" text="?" style="-fx-text-fill: white; -fx-font-size: 26; -fx-font-weight: bold;"/>
+                  style="-fx-background-color: #00a854; -fx-background-radius: 50%;">
+                <Label fx:id="lblAvatar" text="?" style="-fx-text-fill: #020d06; -fx-font-size: 26; -fx-font-weight: bold;"/>
             </VBox>
 
             <!-- Text info -->
             <VBox spacing="4" HBox.hgrow="ALWAYS">
                 <Label fx:id="lblName" text="..."
-                       style="-fx-font-size: 17; -fx-font-weight: bold; -fx-text-fill: #0f172a;"/>
+                       style="-fx-font-size: 17; -fx-font-weight: bold; -fx-text-fill: #c6f6e0;"/>
                 <HBox spacing="10" alignment="CENTER_LEFT">
-                    <Label fx:id="lblUsername" text="..." style="-fx-text-fill: #64748b; -fx-font-size: 12;"/>
-                    <Label fx:id="lblEmail"    text="..." style="-fx-text-fill: #64748b; -fx-font-size: 12;"/>
+                    <Label fx:id="lblUsername" text="..." style="-fx-text-fill: #4d8c6a; -fx-font-size: 12;"/>
+                    <Label fx:id="lblEmail"    text="..." style="-fx-text-fill: #4d8c6a; -fx-font-size: 12;"/>
                 </HBox>
                 <Label fx:id="lblRole"
-                       style="-fx-font-weight: bold; -fx-text-fill: #2563eb; -fx-font-size: 12; -fx-padding: 1 0 3 0;"/>
+                       style="-fx-font-weight: bold; -fx-text-fill: #00c87a; -fx-font-size: 12; -fx-padding: 1 0 3 0;"/>
 
                 <HBox spacing="6" alignment="CENTER_LEFT">
                     <Label text="&#128222;" style="-fx-font-size: 12;"/>
-                    <Label fx:id="lblPhone" text="..." style="-fx-text-fill: #475569; -fx-font-size: 13;"/>
+                    <Label fx:id="lblPhone" text="..." style="-fx-text-fill: #a7f3d0; -fx-font-size: 13;"/>
                 </HBox>
                 <HBox spacing="6" alignment="CENTER_LEFT">
                     <Label text="&#127968;" style="-fx-font-size: 12;"/>
-                    <Label fx:id="lblAddress" text="..." style="-fx-text-fill: #475569; -fx-font-size: 13;"/>
+                    <Label fx:id="lblAddress" text="..." style="-fx-text-fill: #a7f3d0; -fx-font-size: 13;"/>
                 </HBox>
                 <HBox fx:id="boxStore" spacing="6" alignment="CENTER_LEFT" managed="false" visible="false">
                     <Label text="&#127978;" style="-fx-font-size: 12;"/>
-                    <Label fx:id="lblStore" text="..." style="-fx-text-fill: #475569; -fx-font-size: 13;"/>
+                    <Label fx:id="lblStore" text="..." style="-fx-text-fill: #a7f3d0; -fx-font-size: 13;"/>
                 </HBox>
                 <HBox spacing="4" alignment="CENTER_LEFT">
                     <Label text="&#11088;" style="-fx-font-size: 12;"/>
-                    <Label text="Uy t&#237;n: " style="-fx-font-size: 12; -fx-text-fill: #64748b;"/>
+                    <Label text="Uy t&#237;n: " style="-fx-font-size: 12; -fx-text-fill: #4d8c6a;"/>
                     <Label fx:id="lblRating" text="0.0" style="-fx-text-fill: #f59e0b; -fx-font-weight: bold; -fx-font-size: 13;"/>
-                    <Label text="/5.0" style="-fx-font-size: 12; -fx-text-fill: #94a3b8;"/>
+                    <Label text="/5.0" style="-fx-font-size: 12; -fx-text-fill: #2d6648;"/>
                 </HBox>
             </VBox>
         </HBox>
 
         <!-- Vertical divider -->
-        <Separator orientation="VERTICAL"/>
+        <Separator orientation="VERTICAL" style="-fx-background-color: #1a3326;"/>
 
         <!-- RIGHT: Balance + Actions (40%) -->
         <VBox spacing="10" style="-fx-padding: 20 20 20 20;" alignment="TOP_LEFT" minWidth="260" maxWidth="300">
-            <Label text="S&#7889; d&#432; t&#224;i kho&#7843;n" style="-fx-text-fill: #64748b; -fx-font-size: 12;"/>
+            <Label text="S&#7889; d&#432; t&#224;i kho&#7843;n" style="-fx-text-fill: #4d8c6a; -fx-font-size: 12;"/>
             <Label fx:id="lblBalance" text="0 VND"
-                   style="-fx-font-size: 22; -fx-font-weight: 800; -fx-text-fill: #10b981;"/>
+                   style="-fx-font-size: 22; -fx-font-weight: 800; -fx-text-fill: #00e676;"/>
 
-            <Separator/>
+            <Separator style="-fx-background-color: #1a3326;"/>
 
             <!-- Amount input -->
             <TextField fx:id="txtAmount" promptText="Nh&#7853;p s&#7889; ti&#7873;n..." styleClass="form-input"
@@ -77,10 +78,10 @@
             <!-- Deposit / Withdraw buttons -->
             <HBox spacing="8">
                 <Button text="&#128184; R&#250;t ti&#7873;n" onAction="#handleWithdraw" HBox.hgrow="ALWAYS" maxWidth="Infinity"
-                        style="-fx-text-fill: #475569; -fx-border-color: #cbd5e1; -fx-border-radius: 7;
-                               -fx-background-radius: 7; -fx-cursor: hand; -fx-padding: 7 0; -fx-font-size: 12;"/>
+                        style="-fx-text-fill: #5a9e7a; -fx-border-color: #1a3326; -fx-border-radius: 7;
+                               -fx-background-color: #0d1a12; -fx-background-radius: 7; -fx-cursor: hand; -fx-padding: 7 0; -fx-font-size: 12;"/>
                 <Button text="&#128176; N&#7841;p ti&#7873;n" onAction="#handleDeposit" HBox.hgrow="ALWAYS" maxWidth="Infinity"
-                        style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold;
+                        style="-fx-background-color: #00a854; -fx-text-fill: #020d06; -fx-font-weight: bold;
                                -fx-border-radius: 7; -fx-background-radius: 7; -fx-cursor: hand;
                                -fx-padding: 7 0; -fx-font-size: 12;"/>
             </HBox>
@@ -88,7 +89,7 @@
             <!-- Edit profile button -->
             <Button text="&#9998; Ch&#7881;nh s&#7917;a h&#7891; s&#417;" onAction="#handleEditProfile"
                     maxWidth="Infinity"
-                    style="-fx-background-color: #f1f5f9; -fx-text-fill: #475569; -fx-font-size: 12;
+                    style="-fx-background-color: #0f2218; -fx-text-fill: #5a9e7a; -fx-font-size: 12;
                            -fx-border-radius: 7; -fx-background-radius: 7; -fx-cursor: hand; -fx-padding: 7 0;"/>
         </VBox>
     </HBox>
@@ -96,7 +97,7 @@
     <!-- BID HISTORY -->
     <VBox spacing="10" styleClass="section-card" VBox.vgrow="ALWAYS">
         <Label text="L&#7883;ch s&#7917; &#273;&#7863;t gi&#225; c&#7911;a t&#244;i"
-               style="-fx-font-size: 16; -fx-font-weight: bold; -fx-text-fill: #0f172a;"/>
+               style="-fx-font-size: 16; -fx-font-weight: bold; -fx-text-fill: #a7f3d0;"/>
 
         <TableView fx:id="tableHistory" VBox.vgrow="ALWAYS" styleClass="data-table">
             <columns>
@@ -114,16 +115,16 @@
         <!-- Pagination -->
         <HBox alignment="CENTER" spacing="8">
             <Button fx:id="histBtnFirst" text="&#171;" onAction="#histGoFirst"
-                    style="-fx-background-color: #f1f5f9; -fx-text-fill: #475569; -fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 5 10; -fx-font-weight: bold;"/>
+                    style="-fx-background-color: #0f2218; -fx-text-fill: #5a9e7a; -fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 5 10; -fx-font-weight: bold;"/>
             <Button fx:id="histBtnPrev" text="&#8249;" onAction="#histGoPrev"
-                    style="-fx-background-color: #f1f5f9; -fx-text-fill: #475569; -fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 5 10; -fx-font-size: 15; -fx-font-weight: bold;"/>
+                    style="-fx-background-color: #0f2218; -fx-text-fill: #5a9e7a; -fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 5 10; -fx-font-size: 15; -fx-font-weight: bold;"/>
             <HBox fx:id="histPageBox" spacing="5" alignment="CENTER"/>
             <Button fx:id="histBtnNext" text="&#8250;" onAction="#histGoNext"
-                    style="-fx-background-color: #f1f5f9; -fx-text-fill: #475569; -fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 5 10; -fx-font-size: 15; -fx-font-weight: bold;"/>
+                    style="-fx-background-color: #0f2218; -fx-text-fill: #5a9e7a; -fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 5 10; -fx-font-size: 15; -fx-font-weight: bold;"/>
             <Button fx:id="histBtnLast" text="&#187;" onAction="#histGoLast"
-                    style="-fx-background-color: #f1f5f9; -fx-text-fill: #475569; -fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 5 10; -fx-font-weight: bold;"/>
+                    style="-fx-background-color: #0f2218; -fx-text-fill: #5a9e7a; -fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 5 10; -fx-font-weight: bold;"/>
             <Label fx:id="histPageInfo" text="Trang 1 / 1"
-                   style="-fx-text-fill: #64748b; -fx-font-size: 12px; -fx-padding: 0 0 0 6;"/>
+                   style="-fx-text-fill: #4d8c6a; -fx-font-size: 12px; -fx-padding: 0 0 0 6;"/>
         </HBox>
     </VBox>
 </VBox>

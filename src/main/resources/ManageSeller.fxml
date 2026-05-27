@@ -6,19 +6,19 @@
 <?import java.lang.String?>
 <?import javafx.collections.FXCollections?>
 
-<ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-background: transparent;"
+<ScrollPane fitToWidth="true" style="-fx-background-color: #080f0a; -fx-background: #080f0a;"
             xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.auction.client.controller.ManageSellerController"
             stylesheets="@css/ManageSeller.css">
-    <VBox spacing="20" style="-fx-padding: 24;">
+    <VBox spacing="20" style="-fx-padding: 24; -fx-background-color: #080f0a;">
 
     <!-- Breadcrumb -->
     <HBox alignment="CENTER_LEFT" spacing="8" styleClass="breadcrumb">
-        <Label text="Trang chủ" style="-fx-text-fill: #64748b;"/>
+        <Label text="Trang chủ" style="-fx-text-fill: #2d6648;"/>
         <Label text="›" styleClass="breadcrumb-sep"/>
-        <Label text="Người bán" style="-fx-text-fill: #64748b;"/>
+        <Label text="Người bán" style="-fx-text-fill: #2d6648;"/>
         <Label text="›" styleClass="breadcrumb-sep"/>
-        <Label text="Quản lý sản phẩm" style="-fx-text-fill: #1e293b; -fx-font-weight: bold;"/>
+        <Label text="Quản lý sản phẩm" style="-fx-text-fill: #a7f3d0; -fx-font-weight: bold;"/>
     </HBox>
 
     <!-- Table -->
@@ -41,19 +41,19 @@
 
     <!-- Create Form -->
     <VBox styleClass="section-card" spacing="16">
-        <Label text="➕ Tạo phiên đấu giá mới" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #0f172a;"/>
-        
+        <Label text="➕ Tạo phiên đấu giá mới" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #a7f3d0;"/>
+
         <GridPane hgap="20" vgap="16">
             <columnConstraints>
                 <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
                 <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
             </columnConstraints>
-            
+
             <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
                 <Label text="Tên sản phẩm *" styleClass="form-label"/>
                 <TextField fx:id="txtName" promptText="Nhập tên sản phẩm..." styleClass="form-input"/>
             </VBox>
-            
+
             <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
                 <Label text="Loại sản phẩm *" styleClass="form-label"/>
                 <ComboBox fx:id="cbType" promptText="-- Chọn loại --" styleClass="form-select" maxWidth="Infinity">
@@ -66,17 +66,17 @@
                     </items>
                 </ComboBox>
             </VBox>
-            
+
             <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="1">
                 <Label text="Giá khởi điểm (VNĐ) *" styleClass="form-label"/>
                 <TextField fx:id="txtPrice" promptText="Ví dụ: 1000000" styleClass="form-input"/>
             </VBox>
-            
+
             <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="1">
                 <Label text="Bước giá tối thiểu (VNĐ) *" styleClass="form-label"/>
                 <TextField fx:id="txtStepPrice" promptText="Ví dụ: 50000" styleClass="form-input"/>
             </VBox>
-            
+
             <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="2">
                 <Label text="Thời hạn đấu giá *" styleClass="form-label"/>
                 <HBox spacing="8">
@@ -84,7 +84,7 @@
                     <TextField fx:id="txtDurationMinutes" promptText="Phút (VD: 30)" styleClass="form-input" HBox.hgrow="ALWAYS"/>
                 </HBox>
             </VBox>
-            
+
             <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="2">
                 <Label text="Tình trạng" styleClass="form-label"/>
                 <ComboBox fx:id="cbCondition" promptText="-- Tình trạng --" styleClass="form-select" maxWidth="Infinity">
@@ -103,30 +103,33 @@
                 <HBox spacing="8" alignment="CENTER_LEFT">
                     <DatePicker fx:id="dpStartDate" promptText="Chọn ngày" prefWidth="150" minWidth="150" styleClass="form-input"/>
                     <ComboBox fx:id="cbStartHour" promptText="Giờ" prefWidth="95" minWidth="95" styleClass="time-combo"/>
-                    <Label text="giờ" style="-fx-text-fill: #475569;"/>
-                    <Label text=":" style="-fx-font-weight: bold; -fx-text-fill: #475569;"/>
+                    <Label text="giờ" style="-fx-text-fill: #4d8c6a;"/>
+                    <Label text=":" style="-fx-font-weight: bold; -fx-text-fill: #4d8c6a;"/>
                     <ComboBox fx:id="cbStartMinute" promptText="Phút" prefWidth="95" minWidth="95" styleClass="time-combo"/>
-                    <Label text="phút" style="-fx-text-fill: #475569;"/>
+                    <Label text="phút" style="-fx-text-fill: #4d8c6a;"/>
                 </HBox>
             </VBox>
 
             <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.columnSpan="2">
                 <Label text="Hình ảnh sản phẩm" styleClass="form-label"/>
                 <HBox spacing="8" alignment="CENTER_LEFT">
-                    <Button fx:id="btnChooseImage" text="Chọn ảnh..." onAction="#handleChooseImage" styleClass="btn, btn-ghost" style="-fx-border-color: #cbd5e1; -fx-text-fill: #475569;"/>
-                    <Label fx:id="lblImageStatus" text="Chưa chọn ảnh" style="-fx-text-fill: #64748b; -fx-font-size: 13;"/>
+                    <Button fx:id="btnChooseImage" text="Chọn ảnh..." onAction="#handleChooseImage"
+                            style="-fx-background-color: #0f2218; -fx-text-fill: #5a9e7a; -fx-border-color: #1a3326; -fx-border-radius: 6; -fx-background-radius: 6; -fx-cursor: hand; -fx-padding: 6 12;"/>
+                    <Label fx:id="lblImageStatus" text="Chưa chọn ảnh" style="-fx-text-fill: #4d8c6a; -fx-font-size: 13;"/>
                 </HBox>
             </VBox>
-            
+
             <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="5" GridPane.columnSpan="2">
                 <Label text="Mô tả sản phẩm" styleClass="form-label"/>
                 <TextArea fx:id="txtDesc" promptText="Mô tả chi tiết sản phẩm..." prefRowCount="3" styleClass="form-textarea"/>
             </VBox>
         </GridPane>
-        
+
         <!-- Dynamic fields based on type -->
-        <VBox fx:id="paneElectronics" style="-fx-padding: 16; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;" spacing="16" visible="false" managed="false">
-            <Label text="💻 THÔNG TIN ELECTRONICS" style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #64748b;"/>
+        <VBox fx:id="paneElectronics"
+              style="-fx-padding: 16; -fx-background-radius: 8; -fx-border-color: #1a3326; -fx-border-radius: 8; -fx-background-color: #0a1810;"
+              spacing="16" visible="false" managed="false">
+            <Label text="💻 THÔNG TIN ELECTRONICS" style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #4d8c6a;"/>
             <GridPane hgap="20" vgap="16">
                 <columnConstraints>
                     <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
@@ -143,8 +146,10 @@
             </GridPane>
         </VBox>
 
-        <VBox fx:id="paneArt" style="-fx-padding: 16; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;" spacing="16" visible="false" managed="false">
-            <Label text="🎨 THÔNG TIN NGHỆ THUẬT" style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #64748b;"/>
+        <VBox fx:id="paneArt"
+              style="-fx-padding: 16; -fx-background-radius: 8; -fx-border-color: #1a3326; -fx-border-radius: 8; -fx-background-color: #0a1810;"
+              spacing="16" visible="false" managed="false">
+            <Label text="🎨 THÔNG TIN NGHỆ THUẬT" style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #4d8c6a;"/>
             <GridPane hgap="20" vgap="16">
                 <columnConstraints>
                     <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
@@ -165,8 +170,10 @@
             </GridPane>
         </VBox>
 
-        <VBox fx:id="paneVehicle" style="-fx-padding: 16; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;" spacing="16" visible="false" managed="false">
-            <Label text="🚗 THÔNG TIN PHƯƠNG TIỆN" style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #64748b;"/>
+        <VBox fx:id="paneVehicle"
+              style="-fx-padding: 16; -fx-background-radius: 8; -fx-border-color: #1a3326; -fx-border-radius: 8; -fx-background-color: #0a1810;"
+              spacing="16" visible="false" managed="false">
+            <Label text="🚗 THÔNG TIN PHƯƠNG TIỆN" style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #4d8c6a;"/>
             <GridPane hgap="20" vgap="16">
                 <columnConstraints>
                     <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
@@ -190,14 +197,16 @@
                 </VBox>
             </GridPane>
         </VBox>
-        
-        <HBox alignment="CENTER_RIGHT" spacing="12" style="-fx-padding: 16 0 0 0; -fx-border-color: #f1f5f9; -fx-border-width: 1 0 0 0;">
-            <Label fx:id="lblSuccess" text="🎉 Tạo phiên đấu giá thành công!" visible="false" managed="false" style="-fx-background-color: #22c55e; -fx-text-fill: white; -fx-padding: 8 16; -fx-background-radius: 6; -fx-font-weight: bold;"/>
+
+        <HBox alignment="CENTER_RIGHT" spacing="12"
+              style="-fx-padding: 16 0 0 0; -fx-border-color: #1a3326; -fx-border-width: 1 0 0 0;">
+            <Label fx:id="lblSuccess" text="🎉 Tạo phiên đấu giá thành công!" visible="false" managed="false"
+                   style="-fx-background-color: #00a854; -fx-text-fill: #020d06; -fx-padding: 8 16; -fx-background-radius: 6; -fx-font-weight: bold;"/>
             <Region HBox.hgrow="ALWAYS"/>
-            <Button text="Xóa trắng" onAction="#handleClear" styleClass="btn, btn-ghost" style="-fx-border-color: #cbd5e1; -fx-text-fill: #475569;"/>
-            <Button fx:id="btnCreateSubmit" text="🔨 Tạo phiên đấu giá" onAction="#handleCreate" styleClass="btn, btn-primary"/>
+            <Button text="Xóa trắng" onAction="#handleClear"
+                    style="-fx-background-color: #0f2218; -fx-text-fill: #5a9e7a; -fx-border-color: #1a3326; -fx-border-radius: 6; -fx-background-radius: 6; -fx-cursor: hand; -fx-padding: 8 16;"/>
+            <Button fx:id="btnCreateSubmit" text="🔨 Tạo phiên đấu giá" onAction="#handleCreate" styleClass="btn-primary"/>
         </HBox>
     </VBox>
     </VBox>
 </ScrollPane>
-

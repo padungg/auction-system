@@ -28,21 +28,21 @@
         </Label>
         <!-- Type label (top-right) -->
         <Label fx:id="lblType" text="Điện tử"
-               style="-fx-background-color: rgba(255,255,255,0.9); -fx-text-fill: #475569; -fx-font-size: 11; -fx-font-weight: bold; -fx-padding: 3 10 3 10; -fx-background-radius: 99;"
+               style="-fx-background-color: rgba(0,200,100,0.15); -fx-text-fill: #00c87a; -fx-font-size: 11; -fx-font-weight: bold; -fx-padding: 3 10 3 10; -fx-background-radius: 99;"
                StackPane.alignment="TOP_RIGHT">
             <StackPane.margin><Insets top="10" right="10"/></StackPane.margin>
         </Label>
     </StackPane>
 
     <!-- Card Body -->
-    <VBox spacing="4" style="-fx-padding: 14 16 10 16;">
+    <VBox spacing="4" style="-fx-padding: 14 16 10 16; -fx-background-color: #0d1a12;">
         <Label fx:id="lblProductName" text="Tên sản phẩm" styleClass="card-name"
                maxWidth="322" wrapText="false"/>
         <Label fx:id="lblSeller" text="Người bán: N/A"
-               style="-fx-font-size: 12; -fx-text-fill: #94a3b8;"/>
+               style="-fx-font-size: 12; -fx-text-fill: #4d8c6a;"/>
         <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-padding: 10 0 0 0;">
             <VBox>
-                <Label text="Giá hiện tại" style="-fx-font-size: 11; -fx-text-fill: #94a3b8;"/>
+                <Label text="Giá hiện tại" style="-fx-font-size: 11; -fx-text-fill: #4d8c6a;"/>
                 <Label fx:id="lblCurrentPrice" text="0 VNĐ" styleClass="card-price" minWidth="-Infinity"/>
             </VBox>
             <Region HBox.hgrow="ALWAYS"/>
@@ -51,11 +51,11 @@
     </VBox>
 
     <!-- Card Footer -->
-    <HBox alignment="CENTER_LEFT" style="-fx-padding: 10 16 10 16; -fx-border-color: #f1f5f9; -fx-border-width: 1 0 0 0;">
+    <HBox alignment="CENTER_LEFT" style="-fx-padding: 10 16 10 16; -fx-border-color: #1a3326; -fx-border-width: 1 0 0 0; -fx-background-color: #0d1a12;">
         <Label fx:id="lblStartPrice" text="Khởi điểm: 0 VNĐ"
-               style="-fx-font-size: 12; -fx-text-fill: #94a3b8;" minWidth="-Infinity"/>
+               style="-fx-font-size: 12; -fx-text-fill: #4d8c6a;" minWidth="-Infinity"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Label fx:id="lblBidCount" text="🔨 0 lượt đặt giá"
-               style="-fx-font-size: 12; -fx-text-fill: #64748b; -fx-font-weight: 500;" minWidth="-Infinity"/>
+               style="-fx-font-size: 12; -fx-text-fill: #4d8c6a; -fx-font-weight: 500;" minWidth="-Infinity"/>
     </HBox>
 </VBox>
