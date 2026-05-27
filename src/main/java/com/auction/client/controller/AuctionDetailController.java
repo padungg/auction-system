@@ -72,6 +72,7 @@ public class AuctionDetailController implements AuctionEventObserver {
     private String auctionId;
     private AuctionDetailDTO currentAuction;
     private Timeline countdownTimeline;
+    private Timeline antiSnipeHideTimeline;
     private final ObservableList<BidTransaction> bidHistory = FXCollections.observableArrayList();
 
     public void initData(String auctionId) {
@@ -389,11 +390,6 @@ public class AuctionDetailController implements AuctionEventObserver {
             lblCdH.setText(String.format("%02d", seconds / 3600));
             lblCdM.setText(String.format("%02d", (seconds % 3600) / 60));
             lblCdS.setText(String.format("%02d", seconds % 60));
-
-            if (seconds < 30) {
-                paneAntiSnipe.setVisible(true);
-                paneAntiSnipe.setManaged(true);
-            }
         }));
         countdownTimeline.setCycleCount(Timeline.INDEFINITE);
         countdownTimeline.play();
@@ -404,6 +400,19 @@ public class AuctionDetailController implements AuctionEventObserver {
             countdownTimeline.stop();
             countdownTimeline = null;
         }
+    }
+
+    private void showAntiSnipeWarningWithTimeout() {
+        if (antiSnipeHideTimeline != null) {
+            antiSnipeHideTimeline.stop();
+        }
+        paneAntiSnipe.setVisible(true);
+        paneAntiSnipe.setManaged(true);
+        antiSnipeHideTimeline = new Timeline(new KeyFrame(Duration.seconds(10), _ -> {
+            paneAntiSnipe.setVisible(false);
+            paneAntiSnipe.setManaged(false);
+        }));
+        antiSnipeHideTimeline.play();
     }
 
     private void subscribeToUpdates() {
@@ -436,8 +445,7 @@ public class AuctionDetailController implements AuctionEventObserver {
                     if (payload.has("newEndTime") && !payload.get("newEndTime").isJsonNull()) {
                         currentAuction.setEndTime(LocalDateTime.parse(payload.get("newEndTime").getAsString()));
                         startCountdown(); // Restart countdown
-                        paneAntiSnipe.setVisible(true);
-                        paneAntiSnipe.setManaged(true);
+                        showAntiSnipeWarningWithTimeout();
                     }
                 }
                 // Nạp lại danh sách lịch sử đặt giá để hiển thị dòng mới nhất lên bảng
@@ -449,8 +457,7 @@ public class AuctionDetailController implements AuctionEventObserver {
                     currentAuction.setEndTime(LocalDateTime.parse(payload.get("newEndTime").getAsString()));
                 }
                 // Hiển thị nhãn cảnh báo kích hoạt Anti-Snipe trên UI để thông báo cho người dùng
-                paneAntiSnipe.setVisible(true);
-                paneAntiSnipe.setManaged(true);
+                showAntiSnipeWarningWithTimeout();
             }
             case "AUCTION_CLOSED" -> {
                 // Sự kiện đóng phiên: Dừng bộ đếm ngược thời gian và tải lại chi tiết phiên để cập nhật giao diện kết quả chung cuộc
@@ -486,7 +493,7 @@ public class AuctionDetailController implements AuctionEventObserver {
                                     + String.format("%,.0f VNĐ", minRequiredBid));
                     return;
                 }
-            } 
+            }
             // Trường hợp 2: Đã có người đặt giá trước đó, yêu cầu giá mới phải lớn hơn hoặc bằng (Giá hiện hành + Bước giá)
             else {
                 minRequiredBid = currentAuction.getCurrentPrice() + currentAuction.getStepPrice();
@@ -605,6 +612,10 @@ public class AuctionDetailController implements AuctionEventObserver {
     @FXML
     public void goBack() {
         stopCountdown();
+        if (antiSnipeHideTimeline != null) {
+            antiSnipeHideTimeline.stop();
+            antiSnipeHideTimeline = null;
+        }
         ClientSocketManager.getInstance().removeObserver(this);
         if (MainController.getInstance() != null) {
             MainController.getInstance().showPageList();
