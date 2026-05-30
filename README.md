@@ -132,10 +132,10 @@ Sau khi Server báo khởi động thành công, người dùng có thể mở n
    ```
 
 ### Bước 3: Đăng nhập và Trải nghiệm
-Dự án đã chuẩn bị sẵn các tài khoản có sẵn dữ liệu mẫu để thử nghiệm ngay lập tức:
+Bạn có thể tự do **Đăng ký (Register)** tài khoản mới trực tiếp ngay trên giao diện ứng dụng Client, hoặc sử dụng nhanh các tài khoản có sẵn dữ liệu mẫu dưới đây để trải nghiệm hệ thống lập tức:
 * **Tài khoản Admin (Quản trị viên)**:
   * Tên đăng nhập: `admin` | Mật khẩu: `123456`
-* **Tài khoản Thành viên (Đóng vai trò người mua/bán)**:
+* **Tài khoản Thành viên mẫu (Người mua/bán)**:
   * Tên đăng nhập: `member` | Mật khẩu: `123456`
 
 ---
@@ -212,6 +212,6 @@ Dưới đây là bảng phân công công việc chi tiết của các thành v
 
 ## 8. Tài liệu Báo cáo & Video Demo
 
-* **Tài liệu Báo cáo PDF**: [nhom10_baocao_auction-system_2526II_UET.CS2043_1.pdf](./nhom10_baocao_auction-system_2526II_UET.CS2043_1.pdf?raw=true)
+* **Tài liệu Báo cáo PDF**: [nhom10_baocao_auction-system_2526II_UET.CS2043_1.pdf](./nhom10_baocao_auction-system_2526II_UET.CS2043_1.pdf)
 * **Thiết kế UML & Luồng hệ thống**: [UML_Auction_System.md](./UML_Auction_System.md)
 * **Video Demo Hệ thống**:
