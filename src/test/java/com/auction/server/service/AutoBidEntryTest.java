@@ -14,10 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
-* Unit tests cho AutoBidEntry.
-* Kiểm tra FCFS ordering thông qua Comparable + PriorityQueue.
-*/
+/** Unit tests cho AutoBidEntry. */
 @DisplayName("AutoBidEntry Tests")
 class AutoBidEntryTest {
 
@@ -55,11 +52,11 @@ class AutoBidEntryTest {
     AutoBidEntry e3 = new AutoBidEntry("user-C", "auc", 1_000.0, 100.0, t3);
 
     PriorityQueue<AutoBidEntry> pq = new PriorityQueue<>();
-    pq.add(e3); // thêm theo thứ tự ngẫu nhiên
+    pq.add(e3);
     pq.add(e1);
     pq.add(e2);
 
-    // PQ phải trả về theo thứ tự FCFS
+
     assertEquals("user-A", pq.poll().getUserId());
     assertEquals("user-B", pq.poll().getUserId());
     assertEquals("user-C", pq.poll().getUserId());
@@ -106,8 +103,8 @@ class AutoBidEntryTest {
     List<AutoBidEntry> list = new ArrayList<>(List.of(e2, e3, e1));
     Collections.sort(list);
 
-    assertEquals("A", list.get(0).getUserId()); // t1 sớm nhất
-    assertEquals("C", list.get(1).getUserId()); // t3
-    assertEquals("B", list.get(2).getUserId()); // t2 muộn nhất
+    assertEquals("A", list.get(0).getUserId());
+    assertEquals("C", list.get(1).getUserId());
+    assertEquals("B", list.get(2).getUserId());
   }
 }

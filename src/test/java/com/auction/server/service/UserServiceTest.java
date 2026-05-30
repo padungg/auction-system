@@ -26,18 +26,15 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
-* Unit tests cho UserService — sử dụng stub thủ công (không cần Mockito).
-* Tương thích với Java 25.
-*/
+/** Unit tests cho UserService. */
 @DisplayName("UserService Tests")
 class UserServiceTest {
 
-  // STUB: UserDAO in-memory thay vì Mockito mock
+
   static class UserDAOStub implements UserDAO {
     private final Map<String, User> byUsername = new HashMap<>();
     private final Map<String, User> byId = new HashMap<>();
-    private boolean saveReturnValue = true; // điều khiển kết quả save()
+    private boolean saveReturnValue = true;
 
     void addUser(User u) {
       byUsername.put(u.getUsername(), u);
@@ -208,7 +205,7 @@ class UserServiceTest {
       assertEquals("newuser", payload.getUsername());
       assertEquals(UserRole.MEMBER, payload.getRole());
       assertEquals(0.0, payload.getBalance(), 0.001);
-      // Kiểm tra user đã được lưu vào stub DB
+
       assertNotNull(userDAO.findByUsername("newuser"));
     }
 

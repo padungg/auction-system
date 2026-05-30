@@ -26,10 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Unit tests cho AuctionService.
- * Sử dụng manual stubs cho DAO interfaces để tránh lỗi Mockito Java 25.
- */
+/** Unit tests cho AuctionService. */
 @DisplayName("AuctionService Tests")
 class AuctionServiceTest {
 
@@ -234,7 +231,7 @@ class AuctionServiceTest {
 
     itemService = new ItemService(itemDAO);
     auctionMapper = new AuctionMapper(itemDAO, userDAO, bidTransactionDAO);
-    autoBidService = new AutoBidService(auctionDAO, new AutoBidDAOStub());
+    autoBidService = new AutoBidService(auctionDAO, new AutoBidDAOStub(), itemDAO);
     auctionService = new AuctionService(auctionDAO, userDAO, itemService, auctionMapper, autoBidService);
 
     seller = new User("seller-001", "seller1", "pass", "s@mail.com",
@@ -256,7 +253,7 @@ class AuctionServiceTest {
     auctionDAO.addAuction(runningAuction);
   }
 
-  // CREATE AUCTION
+
   @Nested
   @DisplayName("createAuction()")
   class CreateAuctionTests {
@@ -332,7 +329,7 @@ class AuctionServiceTest {
     }
   }
 
-  // UPDATE AUCTION
+
   @Nested
   @DisplayName("updateAuction()")
   class UpdateAuctionTests {
@@ -381,7 +378,7 @@ class AuctionServiceTest {
     }
   }
 
-  // DELETE AUCTION
+
   @Nested
   @DisplayName("deleteAuctionItem()")
   class DeleteAuctionTests {
@@ -417,7 +414,7 @@ class AuctionServiceTest {
     }
   }
 
-  // GET ACTIVE AUCTIONS
+
   @Nested
   @DisplayName("getAllAuctions()")
   class GetActiveAuctionsTests {
@@ -431,14 +428,13 @@ class AuctionServiceTest {
 
       @SuppressWarnings("unchecked")
       List<AuctionSummaryDTO> list = (List<AuctionSummaryDTO>) res.getPayload();
-      // getAllAuctions() trả về TẤT CẢ phiên (không lọc theo status),
-      // setup có 2 phiên: auc-pending (OPEN) và auc-running (RUNNING)
+      // Setup có 2 phiên: auc-pending (OPEN) và auc-running (RUNNING)
       assertEquals(2, list.size());
       assertTrue(list.stream().anyMatch(dto -> "auc-running".equals(dto.getAuctionId())));
     }
   }
 
-  // CLOSE AUCTION
+
   @Nested
   @DisplayName("closeAuction()")
   class CloseAuctionTests {

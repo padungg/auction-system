@@ -15,13 +15,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Chuyên trách xử lý nghiệp vụ Ví tiền (Wallet):
- * Nạp tiền, Rút tiền, Cập nhật hồ sơ.
+ * Nghiệp vụ Ví tiền (Wallet): nạp, rút, cập nhật hồ sơ.
  */
 public class WalletService {
     private static final Logger LOGGER = LoggerFactory.getLogger(WalletService.class);
 
-    /** Phí nền tảng 2% — tham chiếu từ PaymentService */
+    /** Phí nền tảng 2% */
     private static final double PLATFORM_FEE = PaymentService.PLATFORM_FEE_PERCENTAGE;
 
     private final UserDAO userDAO;
@@ -34,23 +33,17 @@ public class WalletService {
         this.userMapper = userMapper;
     }
 
-    /**
-     * Nạp tiền vào tài khoản.
-     */
+    /** Nạp tiền. */
     public Response deposit(String userId, double amount) {
         return processTransaction(userId, amount, true);
     }
 
-    /**
-     * Rút tiền khỏi tài khoản.
-     */
+    /** Rút tiền. */
     public Response withdraw(String userId, double amount) {
         return processTransaction(userId, amount, false);
     }
 
-    /**
-     * Lấy thông tin tài khoản (để refresh số dư).
-     */
+    /** Lấy thông tin tài khoản. */
     public Response getMyProfile(String userId) {
         if (userId == null) {
             return new Response(ResponseStatus.UNAUTHORIZED, "Chưa đăng nhập", null);
@@ -62,9 +55,7 @@ public class WalletService {
         return new Response(ResponseStatus.SUCCESS, "OK", userMapper.toFullDTO(user));
     }
 
-    /**
-     * Cập nhật hồ sơ cá nhân (thread-safe).
-     */
+    /** Cập nhật hồ sơ cá nhân. */
     public Response updateProfile(String userId, Map<String, String> payload) {
         if (userId == null) {
             return new Response(ResponseStatus.UNAUTHORIZED, "Chưa đăng nhập", null);
@@ -104,7 +95,6 @@ public class WalletService {
         }
     }
 
-        // PRIVATE
 
     private Response processTransaction(String userId, double amount, boolean isDeposit) {
         if (userId == null) {
@@ -124,7 +114,7 @@ public class WalletService {
             if (isDeposit) {
                 user.deposit(amount);
             } else {
-                // Tính tổng tiền đang bị "giữ lại" cho các phiên thắng chưa thanh toán
+                // Tính tiền bị giữ cho các phiên thắng chưa thanh toán
                 double reservedAmount = calculateReservedAmount(userId);
 
                 double availableBalance = user.getBalance() - reservedAmount;
@@ -142,7 +132,7 @@ public class WalletService {
 
             boolean success = userDAO.update(user);
             if (!success) {
-                // Khôi phục bộ nhớ RAM
+                // Rollback memory
                 if (isDeposit) {
                     user.withdraw(amount);
                 } else {
@@ -168,10 +158,7 @@ public class WalletService {
         }
     }
 
-    /**
-     * Tính tổng số tiền bị "giữ lại" cho các phiên thắng nhưng chưa thanh toán.
-     * Mỗi phiên cần: giá hiện tại + 2% phí nền tảng.
-     */
+    /** Tính số tiền bị giữ (giá thắng + 2% phí). */
     private double calculateReservedAmount(String userId) {
         List<Auction> wonAuctions = auctionDAO.findByCurrentWinnerId(userId);
         double reserved = 0.0;

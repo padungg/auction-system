@@ -19,7 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Service xử lý giao dịch thanh toán và tính phí nền tảng.
+ * Xử lý giao dịch thanh toán và phí nền tảng.
  */
 public class PaymentService {
     private static final Logger LOGGER = LoggerFactory.getLogger(PaymentService.class);
@@ -29,7 +29,7 @@ public class PaymentService {
     private final ItemDAO itemDAO;
     private final AuctionMapper auctionMapper;
 
-    // Phí nền tảng  là 2%
+    // Phí nền tảng 2%
     public static final double PLATFORM_FEE_PERCENTAGE = 0.02;
 
     public PaymentService(AuctionDAO auctionDAO, UserDAO userDAO, ItemDAO itemDAO, AuctionMapper auctionMapper) {
@@ -39,9 +39,7 @@ public class PaymentService {
         this.auctionMapper = auctionMapper;
     }
 
-    /**
-     * Lấy danh sách phiên chờ thanh toán (user đã thắng nhưng chưa thanh toán).
-     */
+    /** Lấy danh sách phiên chờ thanh toán. */
     public Response getPendingPayments(String userId) {
         if (userId == null) {
             return new Response(ResponseStatus.UNAUTHORIZED, "Bạn chưa đăng nhập", null);
@@ -57,9 +55,7 @@ public class PaymentService {
         return new Response(ResponseStatus.SUCCESS, "Lấy danh sách chờ thanh toán thành công", pending);
     }
 
-    /**
-     * Lấy lịch sử thanh toán (các phiên đã thanh toán).
-     */
+    /** Lấy lịch sử thanh toán. */
     public Response getPaymentHistory(String userId) {
         if (userId == null) {
             return new Response(ResponseStatus.UNAUTHORIZED, "Bạn chưa đăng nhập", null);
@@ -90,9 +86,7 @@ public class PaymentService {
         }
     }
 
-    /**
-     * Helper kiểm tra tính hợp lệ của phiên đấu giá để thanh toán.
-     */
+    /** Kiểm tra tính hợp lệ trước khi thanh toán. */
     private Response validateAuctionForPayment(Auction auction, String userId) {
         if (auction == null) {
             return new Response(ResponseStatus.NOT_FOUND, "Không tìm thấy phiên đấu giá", null);
@@ -106,9 +100,7 @@ public class PaymentService {
         return null;
     }
 
-    /**
-     * Thanh toán phiên đấu giá đã thắng.
-     */
+    /** Thanh toán phiên đấu giá đã thắng. */
     public Response payAuction(String auctionId, String userId) throws ValidationException {
         if (userId == null) {
             return new Response(ResponseStatus.UNAUTHORIZED, "Bạn chưa đăng nhập", null);
@@ -120,7 +112,7 @@ public class PaymentService {
             return validation;
         }
 
-        // Tìm sellerId từ Item để khóa
+        // Tìm sellerId để khóa
         Item item = itemDAO.findById(auction.getItemId());
         final String sellerId = (item != null) ? item.getSellerId() : null;
 
@@ -128,7 +120,7 @@ public class PaymentService {
         User admin = userDAO.findFirstByRole(com.auction.model.entity.UserRole.ADMIN);
         String adminId = (admin != null) ? admin.getId() : null;
 
-        // Tạo danh sách Lock và sắp xếp alphabetically để tránh deadlock
+        // Sắp xếp lock để tránh deadlock
         List<String> lockIds = new ArrayList<>();
         lockIds.add(userId);
         if (sellerId != null) lockIds.add(sellerId);
@@ -141,7 +133,7 @@ public class PaymentService {
                 .collect(java.util.stream.Collectors.toList());
 
         return executeWithUserLocks(sortedLocks, 0, () -> {
-            // Re-fetch auction inside lock block to guarantee data consistency
+            // Re-fetch để đảm bảo nhất quán
             Auction lockedAuction = auctionDAO.findById(auctionId);
             Response lockedValidation = validateAuctionForPayment(lockedAuction, userId);
             if (lockedValidation != null) {
@@ -165,23 +157,23 @@ public class PaymentService {
                         null);
             }
 
-            // Thực hiện giao dịch tài chính với cơ chế Rollback thủ công
+            // Giao dịch tài chính có rollback thủ công
             boolean txSuccess = processPaymentTransaction(user, basePrice, platformFee, totalRequired, lockedAuction.getItemId());
             if (!txSuccess) {
                 return new Response(ResponseStatus.ERROR, "Lỗi máy chủ: Không thể xử lý giao dịch tài chính trong Database", null);
             }
 
-            // Chuyển status sang PAID
+            // Cập nhật trạng thái PAID
             lockedAuction.setStatus(AuctionStatus.PAID);
             boolean auctionSuccess = auctionDAO.update(lockedAuction);
             if (!auctionSuccess) {
                 LOGGER.error("PAY_FAILED: Không thể cập nhật trạng thái đấu giá thành PAID cho phiên {}. Đang hoàn tiền cho các bên...", auctionId);
 
-                // 1. Hoàn tiền cho buyer
+                // Rollback buyer
                 user.deposit(totalRequired);
                 userDAO.update(user);
 
-                // 2. Trừ tiền seller
+                // Rollback seller
                 if (sellerId != null) {
                     User sellerObj = userDAO.findById(sellerId);
                     if (sellerObj != null) {
@@ -190,7 +182,7 @@ public class PaymentService {
                     }
                 }
 
-                // 3. Trừ tiền admin
+                // Rollback admin
                 if (adminId != null) {
                     User adminObj = userDAO.findById(adminId);
                     if (adminObj != null) {
@@ -199,7 +191,7 @@ public class PaymentService {
                     }
                 }
 
-                // Khôi phục trạng thái đối tượng trong RAM
+                // Rollback RAM
                 lockedAuction.setStatus(AuctionStatus.FINISHED);
                 return new Response(ResponseStatus.ERROR, "Lỗi máy chủ: Không thể cập nhật trạng thái thanh toán của phiên đấu giá trong Database", null);
             }
@@ -214,11 +206,9 @@ public class PaymentService {
         });
     }
 
-    /**
-     * Xử lý giao dịch với rollback thủ công (Manual Transaction Compensation) để bảo toàn số dư nếu DB lỗi nửa chừng.
-     */
+    /** Giao dịch có rollback thủ công nếu lỗi DB giữa chừng. */
     private boolean processPaymentTransaction(User buyer, double basePrice, double platformFee, double totalRequired, String itemId) {
-        // 1. Trừ tiền buyer
+        // Trừ tiền buyer
         buyer.withdraw(totalRequired);
         if (!userDAO.update(buyer)) {
             buyer.deposit(totalRequired); // rollback memory
@@ -226,7 +216,7 @@ public class PaymentService {
             return false;
         }
 
-        // 2. Cộng tiền cho seller
+        // Cộng tiền seller
         Item item = itemDAO.findById(itemId);
         User seller = null;
         if (item != null && item.getSellerId() != null) {
@@ -244,7 +234,7 @@ public class PaymentService {
             }
         }
 
-        // 3. Cộng phí cho Admin
+        // Cộng phí Admin
         User admin = userDAO.findFirstByRole(com.auction.model.entity.UserRole.ADMIN);
         if (admin != null) {
             admin.deposit(platformFee);

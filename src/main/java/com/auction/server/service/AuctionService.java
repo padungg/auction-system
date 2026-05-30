@@ -25,12 +25,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Service xử lý nghiệp vụ liên quan đến Phiên Đấu Giá.
+ * Nghiệp vụ liên quan đến Phiên Đấu Giá.
  */
 public class AuctionService {
     private static final Logger LOGGER = LoggerFactory.getLogger(AuctionService.class);
 
-    // --- SERVER-SIDE IN-MEMORY CACHE ---
+
     private static final ConcurrentHashMap<String, AuctionSummaryDTO> CACHE = new ConcurrentHashMap<>();
     private static boolean isCacheLoaded = false;
     private static final Object cacheLock = new Object();
@@ -139,10 +139,8 @@ public class AuctionService {
             return new Response(ResponseStatus.BAD_REQUEST, "Thời gian kết thúc phải sau thời gian bắt đầu", null);
         }
 
-        // Tạo Item thông qua ItemService
         Item item = itemService.createItem(dto, sellerId);
 
-        // Tạo Auction
         Auction auction = new Auction(
                 UUID.randomUUID().toString(),
                 item.getId(),
@@ -202,7 +200,7 @@ public class AuctionService {
                 }
             }
 
-            // Dọn dẹp AutoBid queue để tránh Memory Leak
+            // Dọn AutoBid queue
             autoBidService.clearAuction(auctionId);
 
             AuctionManager.getInstance().notifyAuctionClosed(
@@ -281,7 +279,6 @@ public class AuctionService {
                 }
             }
 
-            // Tránh memory leak
             com.auction.server.util.LockManager.removeAuctionLock(auctionId);
 
             LOGGER.info("DELETE: auctionId={} by seller={}", auction.getId(), sellerId);
@@ -289,7 +286,7 @@ public class AuctionService {
         }
     }
 
-    // ADMIN OPERATIONS
+
 
     public Response adminCancelAuction(String auctionId) throws ValidationException {
         Object lock = com.auction.server.util.LockManager.getAuctionLock(auctionId);
@@ -309,10 +306,9 @@ public class AuctionService {
                 }
             }
 
-            // Dọn dẹp AutoBid queue để tránh Memory Leak
+            // Dọn AutoBid queue
             autoBidService.clearAuction(auctionId);
 
-            // Tránh memory leak trong LockManager
             com.auction.server.util.LockManager.removeAuctionLock(auctionId);
 
             LOGGER.info("ADMIN_CANCEL_AUCTION: auctionId={}", auctionId);

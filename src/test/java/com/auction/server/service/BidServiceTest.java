@@ -27,11 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
-* Unit tests cho BidService.
-* Đã thay thế Mockito bằng manual stubs (in-memory DAOs) để tương thích Java
-* 25.
-*/
+/** Unit tests cho BidService. */
 @DisplayName("BidService Tests")
 class BidServiceTest {
 
@@ -164,7 +160,7 @@ class BidServiceTest {
     autoBidDAO = new AutoBidDAOStub();
     itemDAO = new ItemDAOStub();
 
-    autoBidService = new AutoBidService(auctionDAO, autoBidDAO);
+    autoBidService = new AutoBidService(auctionDAO, autoBidDAO, itemDAO);
     bidService = new BidService(auctionDAO, bidTransactionDAO, autoBidService, itemDAO, null);
     autoBidService.setBidService(bidService);
 
@@ -210,18 +206,18 @@ class BidServiceTest {
     @Test
     @DisplayName("TC-BID-05: Đặt giá thấp hơn hoặc bằng giá hiện tại → BAD_REQUEST")
     void placeBid_bidTooLow() {
-      // Case 1: First bid is lower than startingPrice (startingPrice is 1_000_000.0)
+
       assertEquals(ResponseStatus.BAD_REQUEST,
           bidService.placeBid(new BidRequestDTO("auc-001", 900_000.0), "user-001").getStatus());
 
-      // Set stepPrice to 50,000 for the running auction
+
       runningAuction.setStepPrice(50_000.0);
       
-      // Assume another user placed a valid bid at 1,100,000.0
+
       runningAuction.setCurrentPrice(1_100_000.0);
       runningAuction.setCurrentWinnerId("user-002");
       
-      // Next bid must be >= 1,150,000.0. A bid of 1,120,000.0 should be BAD_REQUEST
+
       assertEquals(ResponseStatus.BAD_REQUEST,
           bidService.placeBid(new BidRequestDTO("auc-001", 1_120_000.0), "user-001").getStatus());
     }

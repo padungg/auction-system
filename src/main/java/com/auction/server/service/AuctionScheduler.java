@@ -13,7 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Trình lên lịch chạy ngầm để tự động đóng các phiên đấu giá hết hạn.
+ * Trình lên lịch tự động mở/đóng phiên đấu giá.
  */
 public class AuctionScheduler {
 
@@ -29,11 +29,9 @@ public class AuctionScheduler {
         this.auctionService = auctionService;
     }
 
-    // VÒNG ĐỜI
 
-    /**
-     * Khởi động scheduler.
-     */
+
+    /** Khởi động scheduler. */
     public void start() {
         scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
             Thread t = new Thread(r, "AuctionScheduler-Thread");
@@ -49,9 +47,7 @@ public class AuctionScheduler {
         LOGGER.info("START: kiểm tra mỗi {}s", INTERVAL_SECONDS);
     }
 
-    /**
-     * Dừng scheduler an toàn khi server tắt.
-     */
+    /** Dừng scheduler an toàn. */
     public void stop() {
         if (scheduler != null && !scheduler.isShutdown()) {
             scheduler.shutdown();
@@ -69,13 +65,13 @@ public class AuctionScheduler {
         }
     }
 
-    // LOGIC KIỂM TRA
+
 
     private void checkExpiredAuctions() {
         try {
             LocalDateTime now = LocalDateTime.now();
 
-            // 1. Kích hoạt các phiên OPEN đã đến giờ bắt đầu
+            // Kích hoạt phiên OPEN đến giờ
             List<Auction> openAuctions = auctionDAO.findAllByStatus(AuctionStatus.OPEN);
             int startedCount = 0;
             for (Auction auction : openAuctions) {
@@ -92,7 +88,7 @@ public class AuctionScheduler {
                                     startedCount++;
                                     LOGGER.info("SCHEDULER: Phiên đấu giá {} bắt đầu hoạt động (RUNNING).", currentAuction.getId());
                                 } else {
-                                    currentAuction.setStatus(AuctionStatus.OPEN); // rollback memory
+                                    currentAuction.setStatus(AuctionStatus.OPEN); // Rollback memory
                                     LOGGER.error("SCHEDULER: Không thể cập nhật trạng thái RUNNING cho phiên {} trong Database.", currentAuction.getId());
                                 }
                             }
@@ -106,7 +102,7 @@ public class AuctionScheduler {
                 LOGGER.info("CHECK: Đã kích hoạt {} phiên đấu giá mới", startedCount);
             }
 
-            // 2. Đóng các phiên RUNNING đã hết hạn
+            // Đóng phiên RUNNING hết hạn
             List<Auction> runningAuctions = auctionDAO.findAllByStatus(AuctionStatus.RUNNING);
             int closedCount = 0;
             for (Auction auction : runningAuctions) {

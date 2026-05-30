@@ -18,8 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Dịch vụ quản lý tài khoản người dùng.
- * Chịu trách nhiệm: Đăng nhập, Đăng ký, Quản lý trạng thái tài khoản (Admin).
+ * Dịch vụ quản lý tài khoản (Đăng nhập, Đăng ký, Khóa/Mở khóa).
  */
 public class UserService {
     private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
@@ -32,17 +31,14 @@ public class UserService {
         this.userMapper = userMapper;
     }
 
-    /** Convenience constructor — tạo UserMapper mặc định. */
+    /** Constructor tiện lợi với UserMapper mặc định. */
     public UserService(UserDAO userDAO) {
         this(userDAO, new UserMapper());
     }
 
-    // AUTH
 
-    /**
-     * Xử lý đăng nhập.
-     * Trả về UserResponseDTO đầy đủ (không chứa password).
-     */
+
+    /** Đăng nhập. */
     public Response login(LoginDTO dto) {
         if (dto == null || dto.getUsername() == null || dto.getPassword() == null) {
             return new Response(ResponseStatus.BAD_REQUEST, "Thiếu thông tin đăng nhập", null);
@@ -65,9 +61,7 @@ public class UserService {
         return new Response(ResponseStatus.SUCCESS, "Đăng nhập thành công!", userMapper.toFullDTO(user));
     }
 
-    /**
-     * Xử lý đăng ký tài khoản mới.
-     */
+    /** Đăng ký tài khoản mới. */
     public Response register(RegisterDTO dto) {
         if (dto == null) {
             return new Response(ResponseStatus.BAD_REQUEST, "Thiếu thông tin đăng ký", null);
@@ -105,10 +99,8 @@ public class UserService {
         return new Response(ResponseStatus.SUCCESS, "Đăng ký thành công!", userMapper.toFullDTO(newUser));
     }
 
-    // ADMIN
-    /**
-     * Lấy danh sách tất cả user (Admin).
-     */
+
+    /** Lấy tất cả người dùng (Admin). */
     public Response getAllUsers() {
         List<User> users = userDAO.findAll();
         List<UserResponseDTO> dtos = new ArrayList<>();
@@ -119,21 +111,17 @@ public class UserService {
         return new Response(ResponseStatus.SUCCESS, "Lấy danh sách người dùng thành công", dtos);
     }
 
-    /**
-     * Khóa tài khoản user (Admin).
-     */
+    /** Khóa tài khoản (Admin). */
     public Response lockUser(String userId) {
         return toggleUserStatus(userId, false, "LOCK_USER", "Đã khóa tài khoản: ");
     }
 
-    /**
-     * Mở khóa tài khoản user (Admin).
-     */
+    /** Mở khóa tài khoản (Admin). */
     public Response unlockUser(String userId) {
         return toggleUserStatus(userId, true, "UNLOCK_USER", "Đã mở khóa tài khoản: ");
     }
 
-    // PRIVATE
+
 
     private Response toggleUserStatus(String userId, boolean status, String logAction, String successMsg) {
         if (userId == null || userId.trim().isEmpty()) {
@@ -149,7 +137,7 @@ public class UserService {
             user.setActive(status);
             boolean success = userDAO.update(user);
             if (!success) {
-                user.setActive(!status); // rollback memory
+                user.setActive(!status); // Rollback memory
                 return new Response(ResponseStatus.ERROR, "Lỗi máy chủ: Không thể cập nhật trạng thái người dùng trong Database", null);
             }
             LOGGER.info("{}: {}", logAction, user.getUsername());
@@ -157,9 +145,7 @@ public class UserService {
         }
     }
 
-    /**
-     * Kiểm tra xem người dùng có phải là Admin hay không.
-     */
+    /** Kiểm tra quyền Admin. */
     public boolean isAdmin(String userId) {
         if (userId == null || userId.trim().isEmpty()) {
             return false;

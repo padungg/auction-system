@@ -24,9 +24,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
-* Unit tests cho AutoBidService — Sử dụng stub thủ công thay thế Mockito.
-*/
+/** Unit tests cho AutoBidService. */
 @DisplayName("AutoBidService Tests")
 class AutoBidServiceTest {
 
@@ -149,7 +147,7 @@ class AutoBidServiceTest {
     autoBidDAO = new AutoBidDAOStub();
     itemDAO = new ItemDAOStub();
 
-    autoBidService = new AutoBidService(auctionDAO, autoBidDAO);
+    autoBidService = new AutoBidService(auctionDAO, autoBidDAO, itemDAO);
     bidService = new BidService(auctionDAO, bidTransactionDAO, autoBidService, itemDAO, null);
     autoBidService.setBidService(bidService);
 
@@ -210,7 +208,7 @@ class AutoBidServiceTest {
     @Test
     @DisplayName("TC-AUTO-REG-07: maxBid <= currentPrice → BAD_REQUEST")
     void register_maxBidTooLow() {
-      // currentPrice = 1_000_000, maxBid = 900_000 → không hợp lệ
+
       Response res = autoBidService.register(
           new AutoBidDTO("auc-001", 900_000.0, 50_000.0), "user-001");
       assertEquals(ResponseStatus.BAD_REQUEST, res.getStatus());

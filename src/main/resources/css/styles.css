@@ -266,6 +266,11 @@
     -fx-border-width: 0 0 1 0;
 }
 
+.table-view .table-row-cell:empty {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
 .table-view .table-row-cell:hover {
     -fx-background-color: #f8fafc;
 }
@@ -653,6 +658,12 @@
 
 .dark-mode .table-row-cell:odd {
     -fx-background-color: #0f172a;
+}
+
+.dark-mode .table-row-cell:empty,
+.dark-mode .table-row-cell:empty:odd {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
 }
 
 .dark-mode .table-row-cell:selected {

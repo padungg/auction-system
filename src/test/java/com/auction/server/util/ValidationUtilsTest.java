@@ -10,14 +10,11 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
-* Unit tests cho ValidationUtils.
-* Kiểm tra requireNonBlank() và requireValidEmail().
-*/
+/** Unit tests cho ValidationUtils. */
 @DisplayName("ValidationUtils Tests")
 class ValidationUtilsTest {
 
-  // requireNonBlank
+
 
   @Test
   @DisplayName("TC-VAL-01: requireNonBlank với chuỗi hợp lệ → không ném exception")
@@ -44,7 +41,7 @@ class ValidationUtilsTest {
     assertTrue(ex.getMessage().contains("Username"));
   }
 
-  // requireValidEmail
+
 
   @ParameterizedTest
   @ValueSource(strings = {
@@ -79,7 +76,7 @@ class ValidationUtilsTest {
   @Test
   @DisplayName("TC-VAL-06: requireValidEmail với null → không ném exception (null được bỏ qua)")
   void requireValidEmail_null_noException() {
-    // Theo code: if (email != null && ...) → null được bỏ qua
+
     assertDoesNotThrow(() -> ValidationUtils.requireValidEmail(null));
   }
 }

@@ -11,15 +11,11 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-/**
-* Unit tests cho AuctionUtils.applyAntiSnipe().
-* Kiểm tra logic gia hạn Anti-Sniping từ phía utility (static helper).
-* Sử dụng stub thủ công thay cho Mockito.
-*/
+/** Unit tests cho AuctionUtils. */
 @DisplayName("AuctionUtils Tests")
 class AuctionUtilsTest {
 
-  // Stub cho AuctionDAO
+
   static class AuctionDAOStub implements AuctionDAO {
     int updateCount = 0;
     Auction lastUpdatedAuction = null;
@@ -79,9 +75,7 @@ class AuctionUtilsTest {
 
     AuctionUtils.applyAntiSnipe(auction, daoStub);
 
-    // endTime phải tăng thêm 60 giây
     assertEquals(endBefore.plusSeconds(60), auction.getEndTime());
-    // dao.update phải được gọi 1 lần
     assertEquals(1, daoStub.updateCount);
     assertEquals(auction, daoStub.lastUpdatedAuction);
   }
@@ -106,8 +100,8 @@ class AuctionUtilsTest {
 
     AuctionUtils.applyAntiSnipe(auction, daoStub);
 
-    assertEquals(endBefore, auction.getEndTime()); // không thay đổi
-    assertEquals(0, daoStub.updateCount); // KHÔNG gọi update
+    assertEquals(endBefore, auction.getEndTime());
+    assertEquals(0, daoStub.updateCount);
   }
 
   @Test
@@ -135,8 +129,6 @@ class AuctionUtilsTest {
     AuctionUtils.applyAntiSnipe(auction, daoStub); // t0 + 60
     AuctionUtils.applyAntiSnipe(auction, daoStub); // endTime mới = t0+60, còn 75s > 30 → KHÔNG gia hạn lần 2
 
-    // Sau lần 1: endTime = t0 + 60 (giờ còn ~75s → ngoài threshold)
-    // Sau lần 2: không thay đổi nữa
     assertEquals(t0.plusSeconds(60), auction.getEndTime());
     assertEquals(1, daoStub.updateCount); // chỉ 1 lần update
   }

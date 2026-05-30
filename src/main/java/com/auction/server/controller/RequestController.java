@@ -20,8 +20,7 @@ import java.util.EnumMap;
 import java.util.Map;
 
 /**
- * CONTROLLER — Router trung tâm của server.
- * Nhận Request từ ClientHandler,  gọi các Handler tương ứng qua Registry Pattern, trả Response.
+ * Router trung tâm nhận Request từ ClientHandler và điều hướng đến các Handler tương ứng.
  */
 public class RequestController {
 
@@ -38,7 +37,7 @@ public class RequestController {
 
         handlerMap = new EnumMap<>(RequestType.class);
 
-        // Khởi tạo các handlers
+
         UserHandler userHandler = new UserHandler(userService);
         AuctionHandler auctionHandler = new AuctionHandler(auctionService);
         BidHandler bidHandler = new BidHandler(bidService);
@@ -47,7 +46,7 @@ public class RequestController {
         AccountHandler accountHandler = new AccountHandler(walletService);
         PaymentHandler paymentHandler = new PaymentHandler(paymentService);
 
-        // Thêm các request vào MAP
+
         // USER
         handlerMap.put(RequestType.LOGIN, userHandler);
         handlerMap.put(RequestType.REGISTER, userHandler);
@@ -87,11 +86,9 @@ public class RequestController {
         handlerMap.put(RequestType.PAY_AUCTION, paymentHandler);
     }
 
-    // ROUTER CHÍNH
 
-    /**
-     * Điều hướng Request đến đúng Handler tự động thông qua Map.
-     */
+
+    /** Điều hướng Request đến đúng Handler. */
     public Response handle(Request request, String loggedInUserId) {
         if (request == null || request.getType() == null) {
             return new Response(ResponseStatus.BAD_REQUEST, "Request không hợp lệ", null);
