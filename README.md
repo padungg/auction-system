@@ -4,7 +4,7 @@
 [![JavaFX](https://img.shields.io/badge/JavaFX-22.0.1-blue.svg)](https://openjfx.io/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase-336791.svg)](https://supabase.com/)
 [![Maven](https://img.shields.io/badge/Maven-Build-red.svg)](https://maven.apache.org/)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/padungg/auction-system/maven.yml?branch=main&label=CI%2FCD)](https://github.com/padungg/auction-system/actions)
+[![Build Status](https://img.shields.io/badge/GitHub%20Actions-passing-brightgreen?logo=github)](https://github.com/padungg/auction-system/actions)
 
 ---
 
@@ -214,4 +214,4 @@ Dưới đây là bảng phân công công việc chi tiết của các thành v
 
 * **Tài liệu Báo cáo PDF**: [nhom10_baocao_auction-system_2526II_UET.CS2043_1.pdf](./nhom10_baocao_auction-system_2526II_UET.CS2043_1.pdf)
 * **Thiết kế UML & Luồng hệ thống**: [UML_Auction_System.md](./UML_Auction_System.md)
-* **Video Demo Hệ thống**:
+* **Video Demo**: [https://drive.google.com/file/d/1jM915lFbHlYyqo0A4F9RSKjTLOOLMXOy/view?usp=sharing](https://drive.google.com/file/d/1jM915lFbHlYyqo0A4F9RSKjTLOOLMXOy/view?usp=sharing)
