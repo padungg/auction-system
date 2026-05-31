@@ -229,7 +229,7 @@ public class ManageSellerController {
 
                             // Thiết lập icon cho dialog
                             try {
-                                dialogStage.getIcons().add(new javafx.scene.image.Image(getClass().getResourceAsStream("/images/gavel-light-blue.png")));
+                                dialogStage.getIcons().add(new javafx.scene.image.Image(getClass().getResourceAsStream("/images/gavel-solid.png")));
                             } catch (Exception ex) {
                                 LOGGER.warn("Không thể nạp icon dialog chỉnh sửa sản phẩm: {}", ex.getMessage());
                             }

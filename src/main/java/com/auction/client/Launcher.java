@@ -39,11 +39,11 @@ public class Launcher extends Application {
             primaryStage.setTitle("UET Auction System");
             primaryStage.setResizable(false);
 
-            // Thiết lập icon cho ứng dụng (hình búa đấu giá màu xanh sáng)
+            // Thiết lập icon cho ứng dụng (hình búa đấu giá)
             try {
-                primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/images/gavel-light-blue.png")));
+                primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/images/gavel-solid.png")));
             } catch (Exception e) {
-                LOGGER.warn("Không thể nạp icon búa đấu giá màu xanh sáng: {}", e.getMessage());
+                LOGGER.warn("Không thể nạp icon búa đấu giá: {}", e.getMessage());
             }
 
             // Đăng ký sự kiện đóng cửa sổ để ngắt kết nối và giải phóng tài nguyên
