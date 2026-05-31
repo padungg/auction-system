@@ -1,242 +1,456 @@
 package com.auction.client.controller;
 
 import com.auction.client.network.ClientSocketManager;
+import com.auction.client.util.AlertUtils;
 import com.auction.client.util.SessionManager;
 import com.auction.model.dto.AuctionSummaryDTO;
-import com.auction.model.dto.BidRequestDTO;
+import com.auction.model.dto.UserResponseDTO;
 import com.auction.model.protocol.Request;
 import com.auction.model.protocol.RequestType;
 import com.auction.model.protocol.Response;
 import com.auction.model.protocol.ResponseStatus;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.reflect.TypeToken;
 import javafx.application.Platform;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.Node;
-import javafx.event.ActionEvent;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.image.ImageView;
-import javafx.stage.Stage;
+import javafx.scene.layout.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.List;
-
+/**
+ * Controller quản lý phân hệ Giao dịch, Hóa đơn và Tất toán tài chính phía Client.
+ */
 public class PaymentController {
 
-    @FXML private Label lblItemName;
-    @FXML private Label lblStatusBadge;
-    @FXML private ImageView imgProduct;
-    @FXML private Label lblSpec1;
-    @FXML private Label lblSpec2;
-    @FXML private Label lblSpec3;
-    @FXML private Label lblDescription;
+    private static final Logger LOGGER = LoggerFactory.getLogger(PaymentController.class);
 
-    @FXML private Label lblCurrentPrice;
-    @FXML private Label lblStartPrice;
-    @FXML private TextField txtBidInput;
-    @FXML private Button btnBid;
+    // THÀNH PHẦN CHUYỂN ĐỔI TAB FXML
+    @FXML private Button btnTabPending;
+    @FXML private Button btnTabHistory;
 
-    @FXML private TableView<Bid> tableBidHistory;
-    @FXML private TableColumn<Bid, String> colBidUser;
-    @FXML private TableColumn<Bid, String> colBidPrice;
-    @FXML private TableColumn<Bid, String> colBidTime;
+    // CÁC KHUNG GIAO DIỆN CHÍNH FXML
+    @FXML private VBox panelPending;
+    @FXML private VBox panelHistory;
+    @FXML private VBox cardContainer;
+    @FXML private Label lblNoPending;
 
-    private long currentPrice = 0;
-    private String auctionId = "";
-    private ObservableList<Bid> list = FXCollections.observableArrayList();
+    // BẢNG LỊCH SỬ GIAO DỊCH FXML
+    @FXML private TableView<AuctionSummaryDTO> tableHistory;
+    @FXML private TableColumn<AuctionSummaryDTO, String> colHistName;
+    @FXML private TableColumn<AuctionSummaryDTO, Double> colHistPrice;
+    @FXML private TableColumn<AuctionSummaryDTO, String> colHistTime;
+    @FXML private TableColumn<AuctionSummaryDTO, String> colHistStatus;
+
+    // NÚT PHÂN TRANG GIAO DỊCH FXML
+    @FXML private HBox histPageBox;
+    @FXML private Label histPageInfo;
+    @FXML private Button histBtnFirst;
+    @FXML private Button histBtnPrev;
+    @FXML private Button histBtnNext;
+    @FXML private Button histBtnLast;
+
+    private static final int HIST_PAGE_SIZE = 10;
+    private int histCurrentPage = 0;
+
+    private final java.util.List<AuctionSummaryDTO> allHistory = new java.util.ArrayList<>();
+    private final ObservableList<AuctionSummaryDTO> historyList = FXCollections.observableArrayList();
 
     @FXML
     public void initialize() {
-        if (colBidUser != null) colBidUser.setCellValueFactory(new PropertyValueFactory<>("user"));
-        if (colBidPrice != null) colBidPrice.setCellValueFactory(new PropertyValueFactory<>("price"));
-        if (colBidTime != null) colBidTime.setCellValueFactory(new PropertyValueFactory<>("time"));
-        if (tableBidHistory != null) tableBidHistory.setItems(list);
-
-        if (btnBid != null) {
-            btnBid.setOnAction(e -> handleBid());
-        }
-
-        registerRealTimeListener();
+        setupHistoryTable();
+        loadPending();
+        loadHistory();
     }
 
     /**
-     * Nhận dữ liệu từ Dashboard truyền sang
+     * Cấu hình TableView lịch sử giao dịch.
      */
-    public void initData(AuctionSummaryDTO auction) {
-        this.auctionId = auction.getAuctionId();
-        this.currentPrice = (long) auction.getCurrentPrice();
+    private void setupHistoryTable() {
+        colHistName.setCellValueFactory(new PropertyValueFactory<>("itemName"));
 
-        lblItemName.setText(auction.getItemName());
-        lblStartPrice.setText("Giá khởi điểm: " + currentPrice + " đ");
-        lblCurrentPrice.setText(currentPrice + " đ");
-        lblStatusBadge.setText(auction.getStatus().equals("OPENING") ? "🟢 ĐANG DIỄN RA" : auction.getStatus());
-
-        loadBidHistory();
-
-        // Đăng ký nhận notify cho auction này
-        subscribeToAuction();
-    }
-
-    private void loadBidHistory() {
-        if (auctionId == null || auctionId.isEmpty()) return;
-        new Thread(() -> {
-            try {
-                ClientSocketManager client = ClientSocketManager.getInstance();
-                if (!client.isConnected()) return;
-
-                Request request = new Request(RequestType.GET_BID_HISTORY, auctionId);
-                Response response = client.sendRequest(request);
-
-                if (response.getStatus() == ResponseStatus.SUCCESS) {
-                    Gson gson = client.getGson();
-                    // Server trả về List<BidResponseDTO>, nhưng tạm thời map sang Bid class
-                    // Cần parse payload cẩn thận
-                    // Tạm thời để trống hoặc dùng local mock nếu server chưa hỗ trợ chuẩn
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }).start();
-    }
-
-    private void subscribeToAuction() {
-        new Thread(() -> {
-            try {
-                ClientSocketManager client = ClientSocketManager.getInstance();
-                if (client.isConnected() && auctionId != null) {
-                    client.sendRequest(new Request(RequestType.SUBSCRIBE_AUCTION, auctionId));
-                }
-            } catch (Exception e) { e.printStackTrace(); }
-        }).start();
-    }
-
-    @FXML
-    private void handleBid() {
-        if (txtBidInput == null || auctionId.isEmpty()) return;
-        String input = txtBidInput.getText();
-        if (input.isEmpty()) return;
-
-        try {
-            long newPrice = Long.parseLong(input);
-            if (newPrice <= currentPrice) {
-                showAlert("Lỗi", "Giá đặt phải lớn hơn giá hiện tại!");
-                return;
-            }
-
-            new Thread(() -> {
-                try {
-                    ClientSocketManager client = ClientSocketManager.getInstance();
-                    if (client.isConnected()) {
-                        BidRequestDTO dto = new BidRequestDTO(auctionId, (double) newPrice);
-                        Request request = new Request(RequestType.PLACE_BID, dto);
-                        Response response = client.sendRequest(request);
-
-                        Platform.runLater(() -> {
-                            if (response != null && response.getStatus() == ResponseStatus.SUCCESS) {
-                                currentPrice = newPrice;
-                                lblCurrentPrice.setText(currentPrice + " đ");
-                                txtBidInput.clear();
-                                // Note: Không add vào list ngay, chờ Server push BID_UPDATE
-                            } else {
-                                showAlert("Lỗi", response != null ? response.getMessage() : "Timeout");
-                            }
-                        });
+        colHistPrice.setCellValueFactory(new PropertyValueFactory<>("currentPrice"));
+        colHistPrice.setCellFactory(_ -> new TableCell<>() {
+            @Override
+            protected void updateItem(Double price, boolean empty) {
+                super.updateItem(price, empty);
+                if (empty || price == null) {
+                    setText(null);
+                    setGraphic(null);
+                    getStyleClass().remove("pay-hist-price");
+                } else {
+                    setText(String.format("%,.0f VNĐ", price));
+                    setGraphic(null);
+                    if (!getStyleClass().contains("pay-hist-price")) {
+                        getStyleClass().add("pay-hist-price");
                     }
-                } catch (Exception e) { e.printStackTrace(); }
-            }).start();
-        } catch (NumberFormatException e) {
-            showAlert("Lỗi", "Vui lòng nhập số hợp lệ");
+                }
+            }
+        });
+
+        colHistTime.setCellValueFactory(new PropertyValueFactory<>("endTime"));
+
+        colHistStatus.setCellFactory(_ -> new TableCell<>() {
+            private final Label lbl = new Label("✅ Đã thanh toán");
+            {
+                lbl.getStyleClass().add("pay-hist-status");
+                setAlignment(Pos.CENTER);
+            }
+            @Override
+            protected void updateItem(String s, boolean empty) {
+                super.updateItem(s, empty);
+                if (empty) {
+                    setGraphic(null);
+                    setText(null);
+                } else {
+                    setGraphic(lbl);
+                    setText(null);
+                }
+            }
+        });
+
+        tableHistory.setItems(historyList);
+        tableHistory.setFixedCellSize(50);
+    }
+
+    /**
+     * Chuyển tab sang "Chờ thanh toán".
+     */
+    @FXML
+    void switchTabPending() {
+        btnTabPending.setStyle(null);
+        btnTabHistory.setStyle(null);
+        setTabActive(btnTabPending);
+        setTabInactive(btnTabHistory);
+        panelPending.setVisible(true);
+        panelPending.setManaged(true);
+        panelHistory.setVisible(false);
+        panelHistory.setManaged(false);
+        loadPending();
+    }
+
+    /**
+     * Chuyển tab sang "Lịch sử thanh toán".
+     */
+    @FXML
+    void switchTabHistory() {
+        btnTabPending.setStyle(null);
+        btnTabHistory.setStyle(null);
+        setTabActive(btnTabHistory);
+        setTabInactive(btnTabPending);
+        panelHistory.setVisible(true);
+        panelHistory.setManaged(true);
+        panelPending.setVisible(false);
+        panelPending.setManaged(false);
+        loadHistory();
+    }
+
+    private void setTabActive(Button btn) {
+        btn.getStyleClass().remove("pay-tab-inactive");
+        if (!btn.getStyleClass().contains("pay-tab-active")) {
+            btn.getStyleClass().add("pay-tab-active");
         }
     }
 
-    private void registerRealTimeListener() {
-        ClientSocketManager client = ClientSocketManager.getInstance();
-        client.setNotificationListener(push -> {
-            Platform.runLater(() -> {
-                try {
-                    String event = push.has("event") ? push.get("event").getAsString() : "";
-                    if ("BID_UPDATE".equals(event)) {
-                        String pushAuctionId = push.get("auctionId").getAsString();
-                        if (pushAuctionId.equals(this.auctionId)) {
-                            long newPrice = push.get("newPrice").getAsLong();
-                            String bidderId = push.has("bidderId") ? push.get("bidderId").getAsString() : "Khách";
-                            String bidTime = push.has("bidTime") ? push.get("bidTime").getAsString() : "Vừa xong";
+    private void setTabInactive(Button btn) {
+        btn.getStyleClass().remove("pay-tab-active");
+        if (!btn.getStyleClass().contains("pay-tab-inactive")) {
+            btn.getStyleClass().add("pay-tab-inactive");
+        }
+    }
 
-                            this.currentPrice = newPrice;
-                            lblCurrentPrice.setText(newPrice + " đ");
-
-                            list.add(0, new Bid(bidTime, bidderId, String.valueOf(newPrice)));
-                        }
-                    } else if ("AUCTION_CLOSED".equals(event)) {
-                        String pushAuctionId = push.get("auctionId").getAsString();
-                        if (pushAuctionId.equals(this.auctionId)) {
-                            lblStatusBadge.setText("🔴 ĐÃ KẾT THÚC");
-                            btnBid.setDisable(true);
-                            txtBidInput.setDisable(true);
-                        }
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
+    /**
+     * Tải danh sách hóa đơn chờ từ server.
+     */
+    private void loadPending() {
+        ClientSocketManager.getInstance().execute(() -> {
+            try {
+                Request req = new Request(RequestType.GET_PENDING_PAYMENTS, null);
+                Response res = ClientSocketManager.getInstance().sendRequest(req);
+                if (res != null && res.getStatus() == ResponseStatus.SUCCESS) {
+                    AuctionSummaryDTO[] arr = res.getPayloadAs(AuctionSummaryDTO[].class);
+                    Platform.runLater(() -> buildPendingCards(arr));
+                } else {
+                    Platform.runLater(() -> AlertUtils.showError("Lỗi kết nối", "Không thể lấy danh sách chờ thanh toán từ máy chủ!"));
                 }
-            });
+            } catch (Exception e) {
+                LOGGER.error("Lỗi tải chờ thanh toán", e);
+            }
         });
     }
 
-    private void showAlert(String title, String content) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(content);
-        alert.showAndWait();
+    /**
+     * Dựng giao diện thẻ cho các phiên chờ tất toán.
+     */
+    private void buildPendingCards(AuctionSummaryDTO[] arr) {
+        cardContainer.getChildren().clear();
+        if (arr == null || arr.length == 0) {
+            lblNoPending.setVisible(true);
+            lblNoPending.setManaged(true);
+            return;
+        }
+        lblNoPending.setVisible(false);
+        lblNoPending.setManaged(false);
+
+        UserResponseDTO currentUser = SessionManager.getInstance().getCurrentUser();
+        double userBalance = currentUser != null ? currentUser.getBalance() : 0;
+
+        for (AuctionSummaryDTO dto : arr) {
+            cardContainer.getChildren().add(buildCard(dto, userBalance));
+        }
     }
 
-    @FXML
-    private void handleDashboard(ActionEvent event) {
-        // Rời khỏi chi tiết thì unsubscribe
-        new Thread(() -> {
+    /**
+     * Thiết kế card hiển thị chi tiết hóa đơn chờ.
+     */
+    private HBox buildCard(AuctionSummaryDTO dto, double userBalance) {
+        HBox card = new HBox(16);
+        card.setAlignment(Pos.CENTER_LEFT);
+        card.getStyleClass().add("pay-card");
+
+        Label icon = new Label("🖥");
+        icon.getStyleClass().add("pay-icon");
+        if ("ART".equalsIgnoreCase(dto.getItemType())) {
+            icon.setText("🎨");
+        } else if ("VEHICLE".equalsIgnoreCase(dto.getItemType())) {
+            icon.setText("🚗");
+        }
+
+        VBox info = new VBox(4);
+        HBox.setHgrow(info, Priority.ALWAYS);
+
+        Label nameLabel = new Label(dto.getItemName() != null ? dto.getItemName() : "Không rõ");
+        nameLabel.getStyleClass().add("pay-name-label");
+
+        String itemType = dto.getItemType();
+        String displayType;
+        String typeClass = "card-badge-open";
+        if ("ELECTRONICS".equalsIgnoreCase(itemType)) {
+            displayType = "Điện tử";
+            typeClass = "card-badge-open";
+        } else if ("ART".equalsIgnoreCase(itemType)) {
+            displayType = "Nghệ thuật";
+            typeClass = "card-badge-cancelled";
+        } else if ("VEHICLE".equalsIgnoreCase(itemType)) {
+            displayType = "Phương tiện";
+            typeClass = "card-badge-paid";
+        } else {
+            displayType = itemType != null ? itemType : "";
+        }
+        Label typeBadge = new Label(displayType);
+        typeBadge.getStyleClass().add(typeClass);
+
+        HBox metaBox = new HBox(8);
+        metaBox.setAlignment(Pos.CENTER_LEFT);
+        metaBox.getChildren().add(typeBadge);
+
+        Label condLabel = new Label("🟡 Tình trạng: Như mới");
+        condLabel.getStyleClass().add("pay-cond-label");
+        metaBox.getChildren().add(condLabel);
+
+        Label endLabel = new Label("⏱ Kết thúc: " + (dto.getEndTime() != null ? dto.getEndTime() : "N/A"));
+        endLabel.getStyleClass().add("pay-end-label");
+
+        String deadline = "3 ngày sau khi kết thúc";
+        HBox deadlineBox = new HBox(6);
+        deadlineBox.setAlignment(Pos.CENTER_LEFT);
+        deadlineBox.getStyleClass().add("pay-deadline-box");
+        Label deadlineIcon = new Label("⏰");
+        Label deadlineLabel = new Label("Hạn thanh toán: " + deadline);
+        deadlineLabel.getStyleClass().add("pay-deadline-label");
+        deadlineBox.getChildren().addAll(deadlineIcon, deadlineLabel);
+
+        Label auctionIdLabel = new Label("Mã phiên: #" + dto.getAuctionId());
+        auctionIdLabel.getStyleClass().add("pay-auction-id-label");
+
+        info.getChildren().addAll(nameLabel, metaBox, endLabel, deadlineBox, auctionIdLabel);
+
+        double price = dto.getCurrentPrice();
+        double fee = price * 0.02;
+        double total = price + fee;
+        boolean canPay = userBalance >= total;
+
+        VBox priceBlock = new VBox(4);
+        priceBlock.setAlignment(Pos.TOP_RIGHT);
+        priceBlock.setMinWidth(200);
+
+        Label priceCaption = new Label("GIÁ TRÚNG");
+        priceCaption.getStyleClass().add("pay-price-caption");
+
+        Label priceLabel = new Label(String.format("%,.0f VNĐ", price));
+        priceLabel.getStyleClass().add("pay-price-label");
+
+        Label feeLabel = new Label(String.format("Phí DV (2%%): %,.0f VNĐ", fee));
+        feeLabel.getStyleClass().add("pay-fee-label");
+
+        Label totalLabel = new Label(String.format("Tổng: %,.0f VNĐ", total));
+        totalLabel.getStyleClass().add("pay-total-label");
+
+        Button btnView = new Button("🔍 Xem sản phẩm");
+        btnView.getStyleClass().add("pay-btn-view");
+        btnView.setOnAction(_ -> MainController.getInstance().openAuctionDetail(dto.getAuctionId()));
+
+        Button btnPay = new Button("💳 Nạp tiền & Thanh toán");
+        if (canPay) {
+            btnPay.setText("💳 Thanh toán ngay");
+            btnPay.getStyleClass().add("pay-btn-pay-now");
+        } else {
+            btnPay.getStyleClass().add("pay-btn-pay-insufficient");
+        }
+        btnPay.setOnAction(_ -> handlePayForAuction(dto));
+
+        HBox btnRow = new HBox(8);
+        btnRow.setAlignment(Pos.CENTER_RIGHT);
+        btnRow.getChildren().addAll(btnView, btnPay);
+
+        if (!canPay) {
+            double needed = total - userBalance;
+            Label balWarning = new Label(String.format("⚠ Số dư không đủ — cần thêm %,.0f VNĐ", needed));
+            balWarning.getStyleClass().add("pay-bal-warning");
+            priceBlock.getChildren().addAll(priceCaption, priceLabel, feeLabel, totalLabel, btnRow, balWarning);
+        } else {
+            priceBlock.getChildren().addAll(priceCaption, priceLabel, feeLabel, totalLabel, btnRow);
+        }
+
+        card.getChildren().addAll(icon, info, priceBlock);
+        return card;
+    }
+
+    /**
+     * Xử lý thanh toán phiên đấu giá.
+     */
+    private void handlePayForAuction(AuctionSummaryDTO dto) {
+        ClientSocketManager.getInstance().execute(() -> {
             try {
-                ClientSocketManager client = ClientSocketManager.getInstance();
-                if (client.isConnected() && auctionId != null && !auctionId.isEmpty()) {
-                    client.sendRequest(new Request(RequestType.UNSUBSCRIBE_AUCTION, auctionId));
-                    client.setNotificationListener(null);
-                }
-            } catch (Exception e) { e.printStackTrace(); }
-        }).start();
+                Request req = new Request(RequestType.PAY_AUCTION, dto.getAuctionId());
+                Response res = ClientSocketManager.getInstance().sendRequest(req);
 
-        try {
-            Parent root = FXMLLoader.load(getClass().getResource("/view.fxml"));
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.setTitle("Danh sách đấu giá");
-        } catch (IOException e) {
-            e.printStackTrace();
+                Platform.runLater(() -> {
+                    if (res != null && res.getStatus() == ResponseStatus.SUCCESS) {
+                        AlertUtils.showInfo("Thanh toán thành công! 🎉",
+                                "Bạn đã thanh toán thành công cho sản phẩm: " + dto.getItemName());
+                        loadPending();
+                        loadHistory();
+                        if (MainController.getInstance() != null) {
+                            MainController.getInstance().refreshBalanceFromServer();
+                        }
+                    } else {
+                        String errorMsg = (res != null) ? res.getMessage() : "Không thể kết nối máy chủ";
+                        AlertUtils.showError("Lỗi thanh toán", errorMsg);
+                    }
+                });
+            } catch (Exception e) {
+                Platform.runLater(() -> AlertUtils.showError("Lỗi kết nối", e.getMessage()));
+            }
+        });
+    }
+
+    /**
+     * Tải lịch sử tất toán thành công từ server.
+     */
+    private void loadHistory() {
+        ClientSocketManager.getInstance().execute(() -> {
+            try {
+                Request req = new Request(RequestType.GET_PAYMENT_HISTORY, null);
+                Response res = ClientSocketManager.getInstance().sendRequest(req);
+                if (res != null && res.getStatus() == ResponseStatus.SUCCESS) {
+                    AuctionSummaryDTO[] arr = res.getPayloadAs(AuctionSummaryDTO[].class);
+                    Platform.runLater(() -> {
+                        allHistory.clear();
+                        if (arr != null) {
+                            java.util.Collections.addAll(allHistory, arr);
+                        }
+                        histCurrentPage = 0;
+                        renderHistPage();
+                    });
+                }
+            } catch (Exception e) {
+                LOGGER.error("Lỗi tải lịch sử thanh toán", e);
+            }
+        });
+    }
+
+    /**
+     * Thuật toán phân trang lịch sử giao dịch.
+     */
+    private void renderHistPage() {
+        int total = allHistory.size();
+        int totalPages = Math.max(1, (int) Math.ceil((double) total / HIST_PAGE_SIZE));
+        int from = histCurrentPage * HIST_PAGE_SIZE;
+        int to = Math.min(from + HIST_PAGE_SIZE, total);
+
+        historyList.clear();
+        historyList.addAll(allHistory.subList(from, to));
+
+        if (histPageInfo != null) {
+            histPageInfo.setText("Trang " + (histCurrentPage + 1) + " / " + totalPages
+                    + "  (" + total + " giao dịch)");
+        }
+
+        if (histBtnFirst != null) {
+            histBtnFirst.setDisable(histCurrentPage == 0);
+        }
+        if (histBtnPrev != null) {
+            histBtnPrev.setDisable(histCurrentPage == 0);
+        }
+        if (histBtnNext != null) {
+            histBtnNext.setDisable(histCurrentPage >= totalPages - 1);
+        }
+        if (histBtnLast != null) {
+            histBtnLast.setDisable(histCurrentPage >= totalPages - 1);
+        }
+
+        if (histPageBox != null) {
+            histPageBox.getChildren().clear();
+            int maxBtn = 5;
+            int startP = Math.max(0, histCurrentPage - 2);
+            int endP = Math.min(totalPages, startP + maxBtn);
+            if (endP - startP < maxBtn) {
+                startP = Math.max(0, endP - maxBtn);
+            }
+            for (int p = startP; p < endP; p++) {
+                final int pg = p;
+                Button btn = new Button(String.valueOf(p + 1));
+                btn.getStyleClass().add(p == histCurrentPage
+                        ? "pay-pagination-active"
+                        : "pay-pagination-inactive");
+                btn.setOnAction(_ -> {
+                    histCurrentPage = pg;
+                    renderHistPage();
+                });
+                histPageBox.getChildren().add(btn);
+            }
         }
     }
 
     @FXML
-    private void handleViewDetail(ActionEvent event) {}
+    public void histGoFirst() {
+        histCurrentPage = 0;
+        renderHistPage();
+    }
 
-    public static class Bid {
-        private String time;
-        private String user;
-        private String price;
-
-        public Bid(String time, String user, String price) {
-            this.time = time;
-            this.user = user;
-            this.price = price;
+    @FXML
+    public void histGoPrev() {
+        if (histCurrentPage > 0) {
+            histCurrentPage--;
+            renderHistPage();
         }
+    }
 
-        public String getTime() { return time; }
-        public String getUser() { return user; }
-        public String getPrice() { return price; }
+    @FXML
+    public void histGoNext() {
+        int t = Math.max(1, (int) Math.ceil((double) allHistory.size() / HIST_PAGE_SIZE));
+        if (histCurrentPage < t - 1) {
+            histCurrentPage++;
+            renderHistPage();
+        }
+    }
+
+    @FXML
+    public void histGoLast() {
+        histCurrentPage = Math.max(0, (int) Math.ceil((double) allHistory.size() / HIST_PAGE_SIZE) - 1);
+        renderHistPage();
     }
 }

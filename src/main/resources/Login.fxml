@@ -3,12 +3,16 @@
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import java.net.URL?>
 
 <HBox prefWidth="1000.0" prefHeight="650.0"
       xmlns="http://javafx.com/javafx/17"
       xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.auction.client.controller.LoginController"
-      stylesheets="@styles.css">
+      fx:controller="com.auction.client.controller.LoginController">
+    <stylesheets>
+        <URL value="@css/styles.css" />
+        <URL value="@css/Login.css" />
+    </stylesheets>
 
     <!-- LEFT BRAND PANEL -->
     <VBox alignment="CENTER_LEFT" prefWidth="520" spacing="22"
@@ -19,8 +23,8 @@
                style="-fx-font-size: 16; -fx-text-fill: rgba(255,255,255,0.75);"/>
         <VBox spacing="12" style="-fx-padding: 20 0 0 0;">
             <Label text="&#9989; &#272;&#7845;u gi&#225; th&#7901;i gian th&#7921;c" style="-fx-text-fill: rgba(255,255,255,0.9); -fx-font-size: 14;"/>
-            <Label text="&#9989; Auto-bid th&#244;ng minh" style="-fx-text-fill: rgba(255,255,255,0.9); -fx-font-size: 14;"/>
-            <Label text="&#9989; Anti-sniping t&#432;&#417;ng &#273;&#432;&#417;ng" style="-fx-text-fill: rgba(255,255,255,0.9); -fx-font-size: 14;"/>
+            <Label text="&#9989; Tự động đặt giá thông minh" style="-fx-text-fill: rgba(255,255,255,0.9); -fx-font-size: 14;"/>
+            <Label text="&#9989; Chống sụp giá phút chốt tự động" style="-fx-text-fill: rgba(255,255,255,0.9); -fx-font-size: 14;"/>
             <Label text="&#9989; B&#7843;o m&#7853;t &amp; minh b&#7841;ch" style="-fx-text-fill: rgba(255,255,255,0.9); -fx-font-size: 14;"/>
         </VBox>
     </VBox>

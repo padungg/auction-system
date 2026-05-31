@@ -1,0 +1,172 @@
+/* ══════════════════════════════════════════════════════
+   UET Auction - Admin Console Stylesheet
+   ══════════════════════════════════════════════════════ */
+
+/* Role Badges */
+.role-badge-admin {
+    -fx-background-color: #f3e8ff;
+    -fx-text-fill: #7e22ce;
+    -fx-padding: 4 12;
+    -fx-background-radius: 12;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+}
+.role-badge-user {
+    -fx-background-color: #d1fae5;
+    -fx-text-fill: #047857;
+    -fx-padding: 4 12;
+    -fx-background-radius: 12;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+}
+
+/* Active Status Labels */
+.status-lbl-active {
+    -fx-text-fill: #059669;
+    -fx-font-weight: bold;
+}
+.status-lbl-locked {
+    -fx-text-fill: #d97706;
+    -fx-font-weight: bold;
+}
+
+/* Product Info Cell Items */
+.prod-title-lbl {
+    -fx-font-weight: bold;
+    -fx-text-fill: #0f172a;
+}
+.prod-id-lbl {
+    -fx-text-fill: #64748b;
+    -fx-font-size: 11px;
+}
+.prod-type-electronics {
+    -fx-background-color: #f3e8ff;
+    -fx-text-fill: #7e22ce;
+    -fx-padding: 2 6;
+    -fx-background-radius: 8;
+    -fx-font-weight: bold;
+    -fx-font-size: 9px;
+}
+.prod-type-art {
+    -fx-background-color: #fce7f3;
+    -fx-text-fill: #be185d;
+    -fx-padding: 2 6;
+    -fx-background-radius: 8;
+    -fx-font-weight: bold;
+    -fx-font-size: 9px;
+}
+.prod-type-vehicle {
+    -fx-background-color: #d1fae5;
+    -fx-text-fill: #047857;
+    -fx-padding: 2 6;
+    -fx-background-radius: 8;
+    -fx-font-weight: bold;
+    -fx-font-size: 9px;
+}
+.prod-type-default {
+    -fx-background-color: #f1f5f9;
+    -fx-text-fill: #64748b;
+    -fx-padding: 2 6;
+    -fx-background-radius: 8;
+    -fx-font-weight: bold;
+    -fx-font-size: 9px;
+}
+
+/* Auction Badges */
+.auc-badge-running {
+    -fx-background-color: #dcfce7;
+    -fx-text-fill: #16a34a;
+    -fx-padding: 4 12;
+    -fx-background-radius: 12;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+}
+.auc-badge-open {
+    -fx-background-color: #ffe4e6;
+    -fx-text-fill: #e11d48;
+    -fx-padding: 4 12;
+    -fx-background-radius: 12;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+}
+.auc-badge-finished {
+    -fx-background-color: #f1f5f9;
+    -fx-text-fill: #64748b;
+    -fx-padding: 4 12;
+    -fx-background-radius: 12;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+}
+.auc-badge-paid {
+    -fx-background-color: #d1fae5;
+    -fx-text-fill: #059669;
+    -fx-padding: 4 12;
+    -fx-background-radius: 12;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+}
+.auc-badge-canceled {
+    -fx-background-color: #f3e8ff;
+    -fx-text-fill: #9333ea;
+    -fx-padding: 4 12;
+    -fx-background-radius: 12;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+}
+
+/* Action Buttons */
+.btn-action-view {
+    -fx-background-color: #f8fafc;
+    -fx-text-fill: #334155;
+    -fx-border-color: #cbd5e1;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+    -fx-padding: 4 8;
+}
+.btn-action-close {
+    -fx-background-color: #ef4444;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+    -fx-padding: 4 8;
+}
+.btn-action-paid {
+    -fx-background-color: #3b82f6;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+    -fx-padding: 4 8;
+}
+.btn-action-cancel {
+    -fx-background-color: white;
+    -fx-text-fill: #475569;
+    -fx-border-color: #cbd5e1;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+    -fx-padding: 4 8;
+}
+
+/* Dark mode overrides for Admin Badges & Buttons */
+.dark-mode .prod-title-lbl {
+    -fx-text-fill: #f8fafc;
+}
+.dark-mode .status-lbl-active {
+    -fx-text-fill: #34d399;
+}
+.dark-mode .status-lbl-locked {
+    -fx-text-fill: #f59e0b;
+}
+.dark-mode .btn-action-view {
+    -fx-background-color: #334155;
+    -fx-text-fill: #cbd5e1;
+    -fx-border-color: #475569;
+}
+.dark-mode .btn-action-cancel {
+    -fx-background-color: #334155;
+    -fx-text-fill: #cbd5e1;
+    -fx-border-color: #475569;
+}

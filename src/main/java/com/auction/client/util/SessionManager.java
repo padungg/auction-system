@@ -3,40 +3,52 @@ package com.auction.client.util;
 import com.auction.model.dto.UserResponseDTO;
 
 /**
- * Singleton lưu trữ thông tin user đang đăng nhập.
- * Sau khi login thành công, Controller lưu UserResponseDTO vào đây.
- * Các Controller khác truy cập qua SessionManager.getInstance().getCurrentUser().
+ * Quản lý thông tin phiên đăng nhập (User Session) phía Client.
+ * Sử dụng Singleton Pattern để đảm bảo an toàn truy cập từ nhiều luồng.
  */
 public class SessionManager {
 
-    private static SessionManager instance;
-    private UserResponseDTO currentUser;
+    private volatile UserResponseDTO currentUser;
 
     private SessionManager() {
     }
 
-    public static SessionManager getInstance() {
-        if (instance == null) {
-            instance = new SessionManager();
-        }
-        return instance;
+    private static class InstanceHolder {
+        private static final SessionManager INSTANCE = new SessionManager();
     }
 
+    /**
+     * Lấy instance duy nhất (Singleton) của SessionManager.
+     */
+    public static SessionManager getInstance() {
+        return InstanceHolder.INSTANCE;
+    }
+
+    /**
+     * Lấy thông tin người dùng đang đăng nhập.
+     */
     public UserResponseDTO getCurrentUser() {
         return currentUser;
     }
 
+    /**
+     * Thiết lập thông tin người dùng đăng nhập.
+     */
     public void setCurrentUser(UserResponseDTO currentUser) {
         this.currentUser = currentUser;
     }
 
     /**
-     * Xóa session khi logout.
+     * Đăng xuất, xóa thông tin phiên hiện tại.
      */
     public void clear() {
         this.currentUser = null;
     }
 
+    /**
+     * Kiểm tra xem người dùng đã đăng nhập chưa.
+     */
+    @SuppressWarnings("unused")
     public boolean isLoggedIn() {
         return currentUser != null;
     }

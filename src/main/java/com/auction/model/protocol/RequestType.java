@@ -22,7 +22,6 @@ public enum RequestType {
     LOCK_USER,              // Khóa tài khoản user
     UNLOCK_USER,            // Mở khóa tài khoản user
     ADMIN_CANCEL_AUCTION,   // Hủy phiên đấu giá
-    ADMIN_MARK_PAID,        // Đánh dấu thanh toán
 
     // ACCOUNT
     GET_MY_PROFILE,         // Lấy thông tin tài khoản hiện tại (refresh từ DB)

@@ -3,94 +3,60 @@ package com.auction.server.service;
 import com.auction.model.entity.Auction;
 import com.auction.model.entity.AuctionStatus;
 import com.auction.server.dao.AuctionDAO;
-import com.auction.server.observer.AuctionManager;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Scheduler tự động đóng phiên đấu giá đã hết hạn.
- *
- * Cơ chế:
- *   - Chạy ngầm (background thread) mỗi INTERVAL_SECONDS giây
- *   - Quét tất cả phiên đang OPENING
- *   - Phiên nào có endTime < now → đóng + notify Observer
- *
- * Vòng đời:
- *   ServerApp.main():
- *     scheduler.start()   ← bắt đầu khi server khởi động
- *     ...
- *     scheduler.stop()    ← dừng khi server tắt
- *
- * Thread-safety:
- *   - ScheduledExecutorService quản lý thread pool 1 thread
- *   - Không cần synchronized thêm vì chỉ 1 thread gọi checkExpired()
+ * Trình lên lịch tự động mở/đóng phiên đấu giá.
  */
 public class AuctionScheduler {
 
-    /** Chu kỳ kiểm tra: 30 giây/lần */
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuctionScheduler.class);
     private static final int INTERVAL_SECONDS = 30;
 
-    private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("HH:mm:ss");
-
     private final AuctionDAO auctionDAO;
+    private final AuctionService auctionService;
     private ScheduledExecutorService scheduler;
 
-    public AuctionScheduler(AuctionDAO auctionDAO) {
+    public AuctionScheduler(AuctionDAO auctionDAO, AuctionService auctionService) {
         this.auctionDAO = auctionDAO;
+        this.auctionService = auctionService;
     }
 
-    // ════════════════════════════════════════════════════════════════
-    // VÒNG ĐỜI
-    // ════════════════════════════════════════════════════════════════
 
-    /**
-     * Khởi động scheduler — gọi 1 lần khi ServerApp.main() chạy.
-     *
-     * scheduleAtFixedRate(task, initialDelay, period, unit):
-     *   - initialDelay = 0  : chạy ngay lập tức lần đầu
-     *   - period = 30       : sau đó cứ 30 giây chạy lại
-     */
+
+    /** Khởi động scheduler. */
     public void start() {
         scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
             Thread t = new Thread(r, "AuctionScheduler-Thread");
-            t.setDaemon(true); // tự tắt khi JVM tắt, không cần gọi stop() thủ công
+            t.setDaemon(true);
             return t;
         });
-        // initialDelay = 0: chạy ngay khi start → tự động đóng các phiên đã hết hạn từ trước lần restart
-        // → giải quyết trường hợp server crash giữa chừng rồi restart lại
         scheduler.scheduleAtFixedRate(
                 this::checkExpiredAuctions,
                 0,
                 INTERVAL_SECONDS,
                 TimeUnit.SECONDS
         );
-        System.out.println("[AuctionScheduler] START: kiểm tra mỗi " + INTERVAL_SECONDS + "s");
+        LOGGER.info("START: kiểm tra mỗi {}s", INTERVAL_SECONDS);
     }
 
-    /**
-     * Dừng scheduler — gọi khi server tắt (Ctrl+C hoặc ServerApp shutdown hook).
-     *
-     * awaitTermination(10s):
-     *   - Không kill thread ngay lập tức.
-     *   - Chờ tối đa 10 giây để task đang chạy (checkExpiredAuctions) hoàn thành.
-     *   - Sau 10s mà chưa xong → mới force-stop.
-     *   → Đảm bảo không bị cắt giữa chừng khi đang update DB.
-     */
+    /** Dừng scheduler an toàn. */
     public void stop() {
         if (scheduler != null && !scheduler.isShutdown()) {
-            scheduler.shutdown(); // Dừng nhận task mới
+            scheduler.shutdown();
             try {
-                // Chờ tối đa 10s để task hiện tại hoàn thành
                 if (!scheduler.awaitTermination(10, TimeUnit.SECONDS)) {
-                    scheduler.shutdownNow(); // Quá 10s → force stop
-                    System.out.println("[AuctionScheduler] FORCE_STOP: task bị hủy sau 10s");
+                    scheduler.shutdownNow();
+                    LOGGER.warn("FORCE_STOP: Task bị hủy sau 10s");
                 } else {
-                    System.out.println("[AuctionScheduler] STOP: dừng sạch, không có task bị cắt");
+                    LOGGER.info("STOP: Dừng an toàn");
                 }
             } catch (InterruptedException e) {
                 scheduler.shutdownNow();
@@ -99,67 +65,63 @@ public class AuctionScheduler {
         }
     }
 
-    // ════════════════════════════════════════════════════════════════
-    // LOGIC KIỂM TRA
-    // ════════════════════════════════════════════════════════════════
 
-    /**
-     * Quét toàn bộ phiên OPENING → đóng những phiên đã hết hạn.
-     *
-     * Được gọi tự động mỗi INTERVAL_SECONDS giây bởi scheduler.
-     *
-     * Luồng:
-     *   1. Lấy danh sách phiên OPENING
-     *   2. Với mỗi phiên: so sánh endTime với now
-     *   3. Nếu quá hạn → CLOSED + update DB + notify Observer
-     */
+
     private void checkExpiredAuctions() {
         try {
             LocalDateTime now = LocalDateTime.now();
-            List<Auction> openingAuctions = auctionDAO.findAllByStatus(AuctionStatus.RUNNING);
 
+            // Kích hoạt phiên OPEN đến giờ
+            List<Auction> openAuctions = auctionDAO.findAllByStatus(AuctionStatus.OPEN);
+            int startedCount = 0;
+            for (Auction auction : openAuctions) {
+                if (!now.isBefore(auction.getStartTime())) {
+                    Object lock = com.auction.server.util.LockManager.getAuctionLock(auction.getId());
+                    synchronized (lock) {
+                        try {
+                            Auction currentAuction = auctionDAO.findById(auction.getId());
+                            if (currentAuction != null && currentAuction.getStatus() == AuctionStatus.OPEN) {
+                                currentAuction.setStatus(AuctionStatus.RUNNING);
+                                boolean success = auctionDAO.update(currentAuction);
+                                if (success) {
+                                    AuctionService.updateCachedStatus(currentAuction.getId(), AuctionStatus.RUNNING.name());
+                                    startedCount++;
+                                    LOGGER.info("SCHEDULER: Phiên đấu giá {} bắt đầu hoạt động (RUNNING).", currentAuction.getId());
+                                } else {
+                                    currentAuction.setStatus(AuctionStatus.OPEN); // Rollback memory
+                                    LOGGER.error("SCHEDULER: Không thể cập nhật trạng thái RUNNING cho phiên {} trong Database.", currentAuction.getId());
+                                }
+                            }
+                        } catch (Exception e) {
+                            LOGGER.error("Lỗi khi chuyển trạng thái phiên đấu giá sang RUNNING: {}", auction.getId(), e);
+                        }
+                    }
+                }
+            }
+            if (startedCount > 0) {
+                LOGGER.info("CHECK: Đã kích hoạt {} phiên đấu giá mới", startedCount);
+            }
+
+            // Đóng phiên RUNNING hết hạn
+            List<Auction> runningAuctions = auctionDAO.findAllByStatus(AuctionStatus.RUNNING);
             int closedCount = 0;
-            for (Auction auction : openingAuctions) {
+            for (Auction auction : runningAuctions) {
                 if (now.isAfter(auction.getEndTime())) {
-                    closeExpiredAuction(auction, now);
-                    closedCount++;
+                    try {
+                        auctionService.closeAuction(auction.getId());
+                        closedCount++;
+                    } catch (Exception e) {
+                        LOGGER.error("Lỗi khi đóng phiên hết hạn: {}", auction.getId(), e);
+                    }
                 }
             }
 
-            // Chỉ log nếu có phiên bị đóng (tránh spam log mỗi 30s)
             if (closedCount > 0) {
-                System.out.println("[AuctionScheduler] CHECK " + now.format(FMT)
-                        + ": đóng " + closedCount + " phiên hết hạn");
+                LOGGER.info("CHECK: Đã đóng {} phiên hết hạn", closedCount);
             }
 
         } catch (Exception e) {
-            // Bắt mọi exception để scheduler không bị dừng đột ngột
-            System.out.println("[AuctionScheduler] ERROR: " + e.getMessage());
+            LOGGER.error("ERROR khi kiểm tra phiên đấu giá", e);
         }
-    }
-
-    /**
-     * Đóng 1 phiên đã hết hạn và thông báo realtime cho client.
-     */
-    private void closeExpiredAuction(Auction auction, LocalDateTime now) {
-        // Bước 1: Update DB TRƯỚC — đảm bảo dữ liệu nhất quán
-        // Nếu sau bước này server crash → restart lại vẫn đọc được CLOSED từ DB
-        auction.setStatus(AuctionStatus.FINISHED);
-        auctionDAO.update(auction);
-
-        // Bước 2: Notify sau khi DB đã an toàn
-        // Dùng notifyAuctionClosed() (không phải notifyBidUpdate) để client phân biệt
-        // được đây là sự kiện đóng phiên → khóa form bid, hiển thị "Phiên đã kết thúc"
-        AuctionManager.getInstance().notifyAuctionClosed(
-                auction.getId(),
-                auction.getCurrentPrice(),
-                auction.getCurrentWinnerId()
-        );
-
-        System.out.println("[AuctionScheduler] CLOSE: auctionId=" + auction.getId()
-                + " | hết hạn lúc=" + auction.getEndTime().format(FMT)
-                + " | giá cuối=" + String.format("%,.0f", auction.getCurrentPrice()) + " VNĐ"
-                + " | winner=" + (auction.getCurrentWinnerId() != null
-                                  ? auction.getCurrentWinnerId() : "Không có"));
     }
 }

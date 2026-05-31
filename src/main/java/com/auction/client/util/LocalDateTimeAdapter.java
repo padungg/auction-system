@@ -6,19 +6,24 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Gson adapter cho java.time.LocalDateTime.
- * Cần thiết vì Gson mặc định không hỗ trợ serialize/deserialize LocalDateTime.
- * Dùng cho AuctionDetailDTO có trường startTime, endTime kiểu LocalDateTime.
+ * Adapter chuyển đổi kiểu LocalDateTime cho thư viện Gson theo chuẩn ISO_LOCAL_DATE_TIME.
  */
+@SuppressWarnings("unused")
 public class LocalDateTimeAdapter implements JsonSerializer<LocalDateTime>, JsonDeserializer<LocalDateTime> {
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
+    /**
+     * Chuyển đổi LocalDateTime thành chuỗi JSON.
+     */
     @Override
     public JsonElement serialize(LocalDateTime src, Type typeOfSrc, JsonSerializationContext context) {
         return new JsonPrimitive(src.format(FORMATTER));
     }
 
+    /**
+     * Khôi phục LocalDateTime từ chuỗi JSON.
+     */
     @Override
     public LocalDateTime deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
             throws JsonParseException {

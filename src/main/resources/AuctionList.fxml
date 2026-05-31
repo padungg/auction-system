@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox spacing="20" style="-fx-padding: 28;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.AuctionListController" stylesheets="@css/AuctionList.css">
+
+    <!-- Breadcrumb -->
+    <HBox spacing="6" styleClass="breadcrumb">
+        <Label text="Trang chủ"/>
+        <Label text="›" styleClass="breadcrumb-sep"/>
+        <Label text="Tất cả sản phẩm" styleClass="breadcrumb-active"/>
+    </HBox>
+
+    <!-- Stats Row -->
+    <HBox spacing="16">
+        <children>
+            <VBox HBox.hgrow="ALWAYS" styleClass="stat-card" style="-fx-padding: 20 0 20 0;">
+                <Label fx:id="statActive" text="0" style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: #2563eb;"/>
+                <Label text="Đang diễn ra" style="-fx-font-size: 13; -fx-text-fill: #64748b;"/>
+            </VBox>
+            <VBox HBox.hgrow="ALWAYS" styleClass="stat-card" style="-fx-padding: 20 0 20 0;">
+                <Label fx:id="statFinished" text="0" style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                <Label text="Đã kết thúc" style="-fx-font-size: 13; -fx-text-fill: #64748b;"/>
+            </VBox>
+            <VBox HBox.hgrow="ALWAYS" styleClass="stat-card" style="-fx-padding: 20 0 20 0;">
+                <Label fx:id="statTotal" text="0" style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                <Label text="Sản phẩm" style="-fx-font-size: 13; -fx-text-fill: #64748b;"/>
+            </VBox>
+            <VBox HBox.hgrow="ALWAYS" styleClass="stat-card" style="-fx-padding: 20 0 20 0;">
+                <Label fx:id="statBids" text="0" style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: #d97706;"/>
+                <Label text="Lượt đặt giá" style="-fx-font-size: 13; -fx-text-fill: #64748b;"/>
+            </VBox>
+        </children>
+    </HBox>
+
+    <!-- Search & Filter Bar -->
+    <VBox spacing="12">
+        <!-- Top Row: Category Tabs + Search -->
+        <HBox alignment="CENTER_LEFT" spacing="10">
+            <HBox spacing="8">
+                <Button fx:id="filterAll" text="🔨 Tất cả sản phẩm" styleClass="filter-btn-active" onAction="#handleFilterCategory"/>
+                <Button fx:id="filterElectronics" text="💻 Điện tử" styleClass="filter-btn" onAction="#handleFilterCategory"/>
+                <Button fx:id="filterArt" text="🎨 Nghệ thuật" styleClass="filter-btn" onAction="#handleFilterCategory"/>
+                <Button fx:id="filterVehicle" text="🚗 Phương tiện" styleClass="filter-btn" onAction="#handleFilterCategory"/>
+            </HBox>
+            <Region HBox.hgrow="ALWAYS"/>
+            <TextField fx:id="txtSearch" promptText="🔍 Tìm kiếm sản phẩm..." prefWidth="260" styleClass="form-input"/>
+        </HBox>
+
+        <!-- Bottom Row: Status Filter -->
+        <HBox alignment="CENTER_LEFT" spacing="10">
+            <Label text="Trạng thái:" style="-fx-font-size: 13; -fx-text-fill: #64748b; -fx-font-weight: bold;"/>
+            <HBox spacing="8">
+                <Button fx:id="statusAll" text="🔨 Tất cả" styleClass="filter-btn-active" onAction="#handleFilterStatus"/>
+                <Button fx:id="statusRunning" text="● Đang diễn ra" styleClass="filter-btn" onAction="#handleFilterStatus"/>
+                <Button fx:id="statusOpen" text="⏳ Sắp diễn ra" styleClass="filter-btn" onAction="#handleFilterStatus"/>
+                <Button fx:id="statusFinished" text="⏹ Đã kết thúc" styleClass="filter-btn" onAction="#handleFilterStatus"/>
+            </HBox>
+        </HBox>
+    </VBox>
+
+    <!-- Auction Grid -->
+    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent; -fx-background: transparent;">
+        <FlowPane fx:id="auctionGrid" hgap="18" vgap="18" prefWrapLength="2000" alignment="TOP_CENTER">
+            <!-- Product cards will be added here -->
+        </FlowPane>
+    </ScrollPane>
+
+</VBox>

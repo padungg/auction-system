@@ -1,0 +1,98 @@
+/* ══════════════════════════════════════════════════════
+   UET Auction - Seller Management Stylesheet
+   ══════════════════════════════════════════════════════ */
+
+/* ── SELLER MANAGEMENT TABLE STYLES ── */
+.seller-type-badge {
+    -fx-background-color: #f3e8ff;
+    -fx-text-fill: #9333ea;
+    -fx-padding: 4 12 4 12;
+    -fx-background-radius: 20;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+}
+.seller-current-price {
+    -fx-text-fill: #2563eb;
+    -fx-font-weight: bold;
+}
+.seller-status-running {
+    -fx-background-color: #dcfce7;
+    -fx-text-fill: #16a34a;
+    -fx-padding: 4 12 4 12;
+    -fx-background-radius: 20;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+}
+.seller-status-finished {
+    -fx-background-color: #f1f5f9;
+    -fx-text-fill: #64748b;
+    -fx-padding: 4 12 4 12;
+    -fx-background-radius: 20;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+}
+.seller-status-other {
+    -fx-background-color: #fef9c3;
+    -fx-text-fill: #ca8a04;
+    -fx-padding: 4 12 4 12;
+    -fx-background-radius: 20;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+}
+.seller-btn-view {
+    -fx-background-color: transparent;
+    -fx-text-fill: #475569;
+    -fx-cursor: hand;
+}
+.seller-btn-view:hover {
+    -fx-text-fill: #1e293b;
+}
+.seller-btn-edit {
+    -fx-background-color: #f59e0b;
+    -fx-text-fill: white;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+    -fx-padding: 4 8 4 8;
+    -fx-font-weight: bold;
+}
+.seller-btn-edit:hover {
+    -fx-background-color: #d97706;
+}
+.seller-btn-del {
+    -fx-background-color: #ef4444;
+    -fx-text-fill: white;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+    -fx-padding: 4 8 4 8;
+    -fx-font-weight: bold;
+}
+.seller-btn-del:hover {
+    -fx-background-color: #dc2626;
+}
+
+/* ── DARK MODE OVERRIDES ── */
+.dark-mode .seller-type-badge {
+    -fx-background-color: #581c87;
+    -fx-text-fill: #e9d5ff;
+}
+.dark-mode .seller-current-price {
+    -fx-text-fill: #60a5fa;
+}
+.dark-mode .seller-status-running {
+    -fx-background-color: #064e3b;
+    -fx-text-fill: #a7f3d0;
+}
+.dark-mode .seller-status-finished {
+    -fx-background-color: #334155;
+    -fx-text-fill: #cbd5e1;
+}
+.dark-mode .seller-status-other {
+    -fx-background-color: #78350f;
+    -fx-text-fill: #fef08a;
+}
+.dark-mode .seller-btn-view {
+    -fx-text-fill: #94a3b8;
+}
+.dark-mode .seller-btn-view:hover {
+    -fx-text-fill: #f8fafc;
+}
