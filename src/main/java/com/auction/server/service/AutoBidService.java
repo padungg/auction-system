@@ -95,8 +95,8 @@ public class AutoBidService {
             }
 
             // Không cho chủ sản phẩm tự đăng ký auto-bid
-            Item item = itemDAO.findById(auction.getItemId());
-            if (item != null && userId.equals(item.getSellerId())) {
+            Item item = itemDAO.findById(auction.getItemId().trim());
+            if (item != null && userId.trim().equals(item.getSellerId().trim())) {
                 return new Response(ResponseStatus.BAD_REQUEST,
                         "Bạn không thể đăng ký auto-bid cho sản phẩm của chính mình!", null);
             }
@@ -106,7 +106,7 @@ public class AutoBidService {
 
             AutoBidEntry oldEntry = null;
             for (AutoBidEntry e : queue) {
-                if (e.getUserId().equals(userId)) {
+                if (e.getUserId().trim().equals(userId.trim())) {
                     oldEntry = e;
                     break;
                 }
@@ -159,7 +159,7 @@ public class AutoBidService {
 
             AutoBidEntry target = null;
             for (AutoBidEntry e : queue) {
-                if (e.getUserId().equals(userId)) {
+                if (e.getUserId().trim().equals(userId.trim())) {
                     target = e;
                     break;
                 }
@@ -227,7 +227,7 @@ public class AutoBidService {
                     continue;
                 }
 
-                if (entry.getUserId().equals(currentWinnerId)) {
+                if (currentWinnerId != null && entry.getUserId().trim().equals(currentWinnerId.trim())) {
                     continue;
                 }
 

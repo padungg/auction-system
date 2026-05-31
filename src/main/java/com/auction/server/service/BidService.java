@@ -87,8 +87,8 @@ public class BidService {
             }
 
             // Không cho chủ sản phẩm tự đặt giá
-            Item item = itemDAO.findById(auction.getItemId());
-            if (item != null && bidderId.equals(item.getSellerId())) {
+            Item item = itemDAO.findById(auction.getItemId().trim());
+            if (item != null && bidderId.trim().equals(item.getSellerId().trim())) {
                 return new Response(ResponseStatus.BAD_REQUEST, "Bạn không thể đặt giá cho sản phẩm của chính mình!", null);
             }
 
@@ -108,7 +108,7 @@ public class BidService {
                             "Giá đặt tối thiểu phải là " + String.format("%,.0f", minRequiredBid) + " VNĐ (Giá hiện tại + Bước giá tối thiểu " + String.format("%,.0f", auction.getStepPrice()) + " VNĐ)", null);
                 }
             }
-            if (bidderId.equals(auction.getCurrentWinnerId())) {
+            if (auction.getCurrentWinnerId() != null && bidderId.trim().equals(auction.getCurrentWinnerId().trim())) {
                 return new Response(ResponseStatus.BAD_REQUEST, "Bạn đang là người đặt giá cao nhất, không cần bid thêm!",
                         null);
             }

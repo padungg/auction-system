@@ -94,7 +94,7 @@ public class PaymentService {
         if (auction.getStatus() != AuctionStatus.FINISHED) {
             return new Response(ResponseStatus.BAD_REQUEST, "Phiên chưa kết thúc hoặc đã thanh toán rồi", null);
         }
-        if (!userId.equals(auction.getCurrentWinnerId())) {
+        if (auction.getCurrentWinnerId() == null || !userId.trim().equals(auction.getCurrentWinnerId().trim())) {
             return new Response(ResponseStatus.UNAUTHORIZED, "Bạn không phải người thắng phiên này", null);
         }
         return null;
@@ -175,7 +175,7 @@ public class PaymentService {
 
                 // Rollback seller
                 if (sellerId != null) {
-                    User sellerObj = userDAO.findById(sellerId);
+                    User sellerObj = userDAO.findById(sellerId.trim());
                     if (sellerObj != null) {
                         sellerObj.withdraw(basePrice);
                         userDAO.update(sellerObj);
@@ -184,7 +184,7 @@ public class PaymentService {
 
                 // Rollback admin
                 if (adminId != null) {
-                    User adminObj = userDAO.findById(adminId);
+                    User adminObj = userDAO.findById(adminId.trim());
                     if (adminObj != null) {
                         adminObj.withdraw(platformFee);
                         userDAO.update(adminObj);
@@ -220,7 +220,7 @@ public class PaymentService {
         Item item = itemDAO.findById(itemId);
         User seller = null;
         if (item != null && item.getSellerId() != null) {
-            seller = userDAO.findById(item.getSellerId());
+            seller = userDAO.findById(item.getSellerId().trim());
             if (seller != null) {
                 seller.deposit(basePrice);
                 if (!userDAO.update(seller)) {

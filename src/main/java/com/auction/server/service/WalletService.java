@@ -48,7 +48,7 @@ public class WalletService {
         if (userId == null) {
             return new Response(ResponseStatus.UNAUTHORIZED, "Chưa đăng nhập", null);
         }
-        User user = userDAO.findById(userId);
+        User user = userDAO.findById(userId.trim());
         if (user == null) {
             return new Response(ResponseStatus.NOT_FOUND, "Không tìm thấy tài khoản", null);
         }
@@ -61,9 +61,9 @@ public class WalletService {
             return new Response(ResponseStatus.UNAUTHORIZED, "Chưa đăng nhập", null);
         }
 
-        Object lock = LockManager.getUserLock(userId);
+        Object lock = LockManager.getUserLock(userId.trim());
         synchronized (lock) {
-            User user = userDAO.findById(userId);
+            User user = userDAO.findById(userId.trim());
             if (user == null) {
                 return new Response(ResponseStatus.NOT_FOUND, "Không tìm thấy tài khoản", null);
             }
@@ -104,9 +104,9 @@ public class WalletService {
             return new Response(ResponseStatus.BAD_REQUEST, "Số tiền phải lớn hơn 0", null);
         }
 
-        Object lock = LockManager.getUserLock(userId);
+        Object lock = LockManager.getUserLock(userId.trim());
         synchronized (lock) {
-            User user = userDAO.findById(userId);
+            User user = userDAO.findById(userId.trim());
             if (user == null) {
                 return new Response(ResponseStatus.NOT_FOUND, "Không tìm thấy tài khoản", null);
             }
@@ -160,7 +160,7 @@ public class WalletService {
 
     /** Tính số tiền bị giữ (giá thắng + 2% phí). */
     private double calculateReservedAmount(String userId) {
-        List<Auction> wonAuctions = auctionDAO.findByCurrentWinnerId(userId);
+        List<Auction> wonAuctions = auctionDAO.findByCurrentWinnerId(userId.trim());
         double reserved = 0.0;
         for (Auction auction : wonAuctions) {
             if (auction.getStatus() == AuctionStatus.FINISHED) {

@@ -35,7 +35,7 @@ public class ItemService {
 
     public void updateItem(String itemId, UpdateAuctionDTO dto, String sellerId) throws ValidationException {
         Item item = itemDAO.findById(itemId);
-        if (item == null || !item.getSellerId().equals(sellerId)) {
+        if (item == null || !item.getSellerId().trim().equals(sellerId.trim())) {
             throw new ValidationException("Bạn không có quyền sửa sản phẩm này");
         }
 
@@ -58,7 +58,7 @@ public class ItemService {
 
     public void deleteItem(String itemId, String sellerId) throws ValidationException {
         Item item = itemDAO.findById(itemId);
-        if (item == null || !item.getSellerId().equals(sellerId)) {
+        if (item == null || !item.getSellerId().trim().equals(sellerId.trim())) {
             throw new ValidationException("Bạn không có quyền xóa sản phẩm này");
         }
         boolean success = itemDAO.delete(itemId);
